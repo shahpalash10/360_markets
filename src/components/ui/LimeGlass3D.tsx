@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, TrendingUp } from "lucide-react";
 
@@ -17,6 +17,41 @@ declare global {
 }
 
 export function LimeGlass3D() {
+  // Shadow-DOM Hack to remove the "Built with Spline" watermark logo
+  useEffect(() => {
+    const removeSplineLogo = () => {
+      const viewer = document.querySelector("spline-viewer");
+      if (viewer && viewer.shadowRoot) {
+        const logo = viewer.shadowRoot.querySelector("#logo");
+        if (logo) {
+          logo.remove();
+          return true; // logo removed successfully
+        }
+      }
+      return false;
+    };
+
+    // Try immediately
+    if (removeSplineLogo()) return;
+
+    // Retry periodically as Spline downloads and mounts the WebGL canvas
+    const interval = setInterval(() => {
+      if (removeSplineLogo()) {
+        clearInterval(interval);
+      }
+    }, 250);
+
+    // Timeout safety to prevent infinite polling
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, []);
+
   return (
     <div className="relative w-full h-[540px] lg:h-[620px] bg-[#0B0B0B] border border-[#262626] overflow-hidden flex items-center justify-center select-none">
       {/* Subtle radial background glow */}
@@ -50,10 +85,11 @@ export function LimeGlass3D() {
         <div className="text-[#8A8A8A] text-xs">ID: TRD-928184 • 12.4K Investors</div>
       </motion.div>
 
+      {/* Market Data Badge - Lowered and positioned to overlap the bottom-right corner */}
       <motion.div
-        animate={{ y: [0, 10, 0] }}
+        animate={{ y: [0, 6, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-12 right-8 z-20 bg-[#161616]/90 border border-[#D9D9D9]/30 p-4 shadow-2xl backdrop-blur-md font-mono"
+        className="absolute bottom-4 right-4 z-20 bg-[#161616]/95 border border-[#D9D9D9]/30 p-4 shadow-2xl backdrop-blur-md font-mono"
       >
         <div className="text-xs text-neutral-400">MARKET DATA</div>
         <div className="text-3xl font-display font-light text-white tracking-tighter">
