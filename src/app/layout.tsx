@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SmoothScrollProvider } from "@/motion/components/SmoothScrollProvider";
 import { ScrollProgress } from "@/motion/components/ScrollProgress";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "MARKETS — The Educational Marketplace for Knowledge",
@@ -28,6 +29,12 @@ export default function RootLayout({
               <Header />
               <main className="flex-1 bg-[#0B0B0B] text-white">{children}</main>
               <Footer />
+              {/* Load Spline Web Component Viewer Script */}
+              <Script
+                src="https://unpkg.com/@splinetool/viewer@1.9.0/build/spline-viewer.js"
+                type="module"
+                strategy="lazyOnload"
+              />
             </SmoothScrollProvider>
           </LanguageProvider>
         </AuthProvider>
