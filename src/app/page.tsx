@@ -55,12 +55,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left side: Oversized Editorial Typography */}
             <div className="lg:col-span-7 space-y-8">
-              <Reveal delay={0.05}>
-                <div className="inline-flex items-center gap-2 border border-[#0B0B0B] px-3 py-1 text-xs font-mono font-medium uppercase tracking-wider bg-[#FAFAFA]">
-                  <span className="w-2 h-2 rounded-full bg-[#8BE000] inline-block animate-pulse" />
-                  {t.heroTag}
-                </div>
-              </Reveal>
+
 
               <SplitTextReveal
                 lines={[t.heroLine1, t.heroLine2, t.heroLine3, t.heroLine4]}

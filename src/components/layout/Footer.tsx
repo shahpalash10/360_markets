@@ -30,10 +30,7 @@ export function Footer() {
             <p className="text-neutral-400 text-xs leading-relaxed max-w-sm">
               {t.footerTagline}
             </p>
-            <div className="flex items-center gap-2 text-[#8BE000] text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-[#8BE000] animate-pulse" />
-              <span>{t.footerStatus}</span>
-            </div>
+
           </div>
 
           {/* Col 2: Quick Links */}
@@ -75,11 +72,11 @@ export function Footer() {
               {t.footerSecNotice}
             </p>
             <div className="pt-2 flex items-center gap-4 text-neutral-400">
-              <a href="#" className="hover:text-white transition">{t.footerPrivacy}</a>
+              <Link href="/privacy" className="hover:text-white transition">{t.footerPrivacy}</Link>
               <span>•</span>
-              <a href="#" className="hover:text-white transition">{t.footerTerms}</a>
+              <Link href="/terms" className="hover:text-white transition">{t.footerTerms}</Link>
               <span>•</span>
-              <a href="#" className="hover:text-white transition">{t.footerDisclaimers}</a>
+              <Link href="/disclaimers" className="hover:text-white transition">{t.footerDisclaimers}</Link>
             </div>
           </div>
         </div>
