@@ -112,7 +112,6 @@ export function Header() {
                       isActive ? "text-[#8BE000] font-bold" : "text-neutral-300 hover:text-white"
                     }`}
                   >
-                    {link.isPro && <span className="text-[10px] mr-0.5 animate-pulse">🔴</span>}
                     <span>{link.label}</span>
                     {isActive && (
                       <motion.div
