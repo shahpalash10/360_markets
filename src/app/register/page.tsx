@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, Role, UserProfile } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
+import { Language } from "@/lib/translations";
 import { supabase } from "@/lib/supabase";
 import {
   TrendingUp,
@@ -20,7 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function FullScreenOnboardingPage() {
   const router = useRouter();
   const { setUserProfile } = useAuth();
-  const { setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   // Directional Animation State (+1 for Next, -1 for Back)
@@ -35,7 +36,6 @@ export default function FullScreenOnboardingPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [signupLang, setSignupLang] = useState<"EN" | "JA" | "ZH">("EN");
 
   // Investor Personalization
   const [interests, setInterests] = useState<string[]>(["Stock Trading", "Options Strategies"]);
@@ -54,6 +54,216 @@ export default function FullScreenOnboardingPage() {
   const [isSuccessThreshold, setIsSuccessThreshold] = useState(false);
 
   const TOTAL_STEPS = 9;
+
+  // Localized Multi-language Onboarding Content Dictionary
+  const ONBOARDING_TRANSLATIONS = {
+    EN: {
+      welcomeTitle: "WELCOME",
+      welcomeTitle2: "TO 360° MARKETS.",
+      welcomeSub: "A better way to learn, share stock trading knowledge, and build your quantitative portfolio.",
+      btnStart: "Get Started",
+      signInText: "Already have an account? Sign in →",
+      roleTitle: "WHAT ARE YOU",
+      roleTitle2: "HERE TO DO?",
+      roleSub: "Choose how you'll use the platform to customize your experience.",
+      learnTitle: "LEARN",
+      learnDesc: "Discover verified stock courses, quantitative models, options pricing strategies, and live market webinars.",
+      teachTitle: "TEACH",
+      teachDesc: "Share your stock trading expertise, build masterclasses, sell Python algorithms, and host live sessions.",
+      btnInvestor: "Continue as Investor",
+      btnTrader: "Continue as Trader",
+      firstNameTitle: "WHAT SHOULD",
+      firstNameTitle2: "WE CALL YOU?",
+      firstNameSub: "Enter your first name to get started.",
+      firstNamePlaceholder: "Palash",
+      enterMsg: "Press Enter ↵ to continue",
+      lastNameTitle: "AND YOUR",
+      lastNameTitle2: "LAST NAME?",
+      lastNamePlaceholder: "Shah",
+      backBtn: "Back",
+      continueBtn: "Continue",
+      emailTitle: "WHERE SHOULD WE",
+      emailTitle2: "SEND UPDATES?",
+      emailSub: "Enter your primary email address for session authentication.",
+      emailPlaceholder: "palash@investor.io",
+      passwordTitle: "CREATE A",
+      passwordTitle2: "SECURE PASSWORD.",
+      passwordSub: "Minimum 6 characters for encrypted session storage.",
+      investorInterestsTitle: "NICE TO MEET YOU, {name}.",
+      investorInterestsTitle2: "WHAT ARE YOU INTERESTED IN?",
+      investorInterestsSub: "Select topics to personalize your marketplace feed.",
+      traderProfileTitle: "LET'S BUILD YOUR",
+      traderProfileTitle2: "EDUCATOR PROFILE.",
+      traderProfileSub: "Enter your professional title and background.",
+      traderTitlePlaceholder: "Ex-Hedge Fund Stock Quant",
+      traderBioPlaceholder: "Specializing in US equity order execution, algorithmic momentum strategies...",
+      investorGoalTitle: "WHAT ARE YOU",
+      investorGoalTitle2: "LOOKING TO ACHIEVE?",
+      traderExpTitle: "HOW LONG HAVE YOU",
+      traderExpTitle2: "BEEN TRADING?",
+      investorTimeTitle: "HOW MUCH TIME DO YOU",
+      investorTimeTitle2: "HAVE TO LEARN?",
+      traderWebTitle: "WHERE CAN PEOPLE",
+      traderWebTitle2: "LEARN MORE ABOUT YOU?",
+      traderWebSub: "Enter your professional website or portfolio link.",
+      reviewTitle: "CONFIRM YOUR",
+      reviewTitle2: "PROFILE DETAILS.",
+      headerName: "FULL NAME",
+      headerEmail: "EMAIL ADDRESS",
+      headerRole: "ACCOUNT TYPE",
+      headerInterests: "INTERESTS",
+      headerGoal: "GOAL",
+      headerTitle: "TITLE",
+      headerStatus: "CERTIFICATION STATUS",
+      pendingText: "PENDING VERIFICATION",
+      editAnswers: "Edit Answers",
+      createAccountBtn: "Create {role} Account →",
+      successTitle: "YOU'RE READY. ✓",
+      successSub: "INITIALIZING YOUR DATABASE SESSION...",
+      validateFirst: "Please enter your first name.",
+      validateLast: "Please enter your last name.",
+      validateEmail: "Please enter a valid email address.",
+      validatePass: "Password must be at least 6 characters.",
+    },
+    JA: {
+      welcomeTitle: "ウェルカム",
+      welcomeTitle2: "360° MARKETSへ。",
+      welcomeSub: "株式トレードの知識を学び、共有し、クオンツポートフォリオを構築するためのより良いプラットフォームです。",
+      btnStart: "始める",
+      signInText: "すでにアカウントをお持ちですか？ ログイン →",
+      roleTitle: "どのような目的で",
+      roleTitle2: "ご利用されますか？",
+      roleSub: "利用目的に合わせてプラットフォームの体験をパーソナライズします。",
+      learnTitle: "学ぶ",
+      learnDesc: "認証済み株式コース、クオンツモデル、オプション価格戦略、米株寄り付き実況ライブ配信を閲覧。",
+      teachTitle: "教える",
+      teachDesc: "株式トレードの専門知識を共有し、マスタークラスの作成、Pythonアルゴリズムの販売、配信の主催。",
+      btnInvestor: "受講生として進む",
+      btnTrader: "エデュケーターとして進む",
+      firstNameTitle: "何とお呼び",
+      firstNameTitle2: "しましょうか？",
+      firstNameSub: "お名前（名）を入力してください。",
+      firstNamePlaceholder: "太郎",
+      enterMsg: "Enter ↵ キーを押して進む",
+      lastNameTitle: "お名前の",
+      lastNameTitle2: "苗字（姓）は？",
+      lastNamePlaceholder: "山田",
+      backBtn: "戻る",
+      continueBtn: "次へ",
+      emailTitle: "メールアドレスを",
+      emailTitle2: "教えてください",
+      emailSub: "セッションの認証に使用するメインのアドレスを入力してください。",
+      emailPlaceholder: "taro@investor.jp",
+      passwordTitle: "パスワードを",
+      passwordTitle2: "作成してください",
+      passwordSub: "暗号化セッション保管のため、最低6文字必要です。",
+      investorInterestsTitle: "はじめまして、{name}さん。",
+      investorInterestsTitle2: "どの分野に興味がありますか？",
+      investorInterestsSub: "マーケットプレイスの表示をカスタマイズするためのトピックを選択してください。",
+      traderProfileTitle: "エデュケーター",
+      traderProfileTitle2: "プロフィールを作成しましょう。",
+      traderProfileSub: "肩書きと経歴・バックグラウンドを入力してください。",
+      traderTitlePlaceholder: "例：元ヘッジファンド株式クオンツ",
+      traderBioPlaceholder: "米国株注文執行、アルゴリズム・モメンタム戦略、板情報のミクロ構造などを専門とする...",
+      investorGoalTitle: "どのような目標を",
+      investorGoalTitle2: "お持ちですか？",
+      traderExpTitle: "トレード経験年数は",
+      traderExpTitle2: "どのくらいですか？",
+      investorTimeTitle: "1日あたりどのくらいの時間",
+      investorTimeTitle2: "学習できますか？",
+      traderWebTitle: "実績や詳細を",
+      traderWebTitle2: "発信しているサイトは？",
+      traderWebSub: "ウェブサイトやポートフォリオのリンクを入力してください。",
+      reviewTitle: "登録情報を",
+      reviewTitle2: "確認してください。",
+      headerName: "氏名",
+      headerEmail: "メールアドレス",
+      headerRole: "アカウント種別",
+      headerInterests: "興味のある分野",
+      headerGoal: "目標",
+      headerTitle: "肩書き",
+      headerStatus: "申請ステータス",
+      pendingText: "審査保留中",
+      editAnswers: "回答を編集",
+      createAccountBtn: "{role}アカウントを作成 →",
+      successTitle: "準備が整いました。✓",
+      successSub: "データベースセッションの初期化中...",
+      validateFirst: "お名前（名）を入力してください。",
+      validateLast: "お名前（姓）を入力してください。",
+      validateEmail: "有効なメールアドレスを入力してください。",
+      validatePass: "パスワードは6文字以上で設定してください。",
+    },
+    ZH: {
+      welcomeTitle: "欢迎",
+      welcomeTitle2: "来到 360° MARKETS。",
+      welcomeSub: "一个更高效的学习、分享股票交易知识以及构建量化投资组合的新平台。",
+      btnStart: "开始使用",
+      signInText: "已有账号？ 登录 →",
+      roleTitle: "您在此平台",
+      roleTitle2: "的主要目的是？",
+      roleSub: "选择您的角色以定制专属您的个性化平台使用体验。",
+      learnTitle: "学习",
+      learnDesc: "探索经认证的股票交易课程、量化模型、期权策略和美股开盘实盘直播。",
+      teachTitle: "教学",
+      teachDesc: "分享股票交易专长、创建大师课、出售量化算法并主持在线直播。",
+      btnInvestor: "作为投资者继续",
+      btnTrader: "作为交易员继续",
+      firstNameTitle: "我们该如何",
+      firstNameTitle2: "称呼您？",
+      firstNameSub: "请输入您的名字以开始。",
+      firstNamePlaceholder: "建国",
+      enterMsg: "按 Enter ↵ 键继续",
+      lastNameTitle: "以及您的",
+      lastNameTitle2: "姓氏？",
+      lastNamePlaceholder: "李",
+      backBtn: "返回",
+      continueBtn: "继续",
+      emailTitle: "您接收通知",
+      emailTitle2: "的电子邮箱？",
+      emailSub: "请输入您的常用电子邮箱地址以进行登录会话身份验证。",
+      emailPlaceholder: "jianguo@investor.cn",
+      passwordTitle: "请设置一个",
+      passwordTitle2: "高安全性密码。",
+      passwordSub: "密码长度至少需要 6 个字符以保证账号数据加密安全。",
+      investorInterestsTitle: "很高兴认识您，{name}。",
+      investorInterestsTitle2: "您最感兴趣的是什么？",
+      investorInterestsSub: "选择兴趣话题以定制您在市场上的个性化推送内容。",
+      traderProfileTitle: "让我们开始构建您的",
+      traderProfileTitle2: "导师个人资料。",
+      traderProfileSub: "输入您的专业头衔和背景简介。",
+      traderTitlePlaceholder: "例如：前对冲基金量化交易员",
+      traderBioPlaceholder: "擅长美股订单流执行、量化动量交易系统、Level-2微观结构...",
+      investorGoalTitle: "您的目标是",
+      investorGoalTitle2: "达成什么成果？",
+      traderExpTitle: "您的交易经验",
+      traderExpTitle2: "总共有多少年？",
+      investorTimeTitle: "您每天有多少时间",
+      investorTimeTitle2: "可以用来学习？",
+      traderWebTitle: "大家可以在哪里",
+      traderWebTitle2: "了解更多您的背景？",
+      traderWebSub: "输入您的个人专业网站或投资组合链接。",
+      reviewTitle: "确认您的",
+      reviewTitle2: "注册详细资料。",
+      headerName: "姓名",
+      headerEmail: "电子邮箱",
+      headerRole: "账户类型",
+      headerInterests: "感兴趣的话题",
+      headerGoal: "学习目标",
+      headerTitle: "专业头衔",
+      headerStatus: "认证状态",
+      pendingText: "等待管理员审核",
+      editAnswers: "编辑答案",
+      createAccountBtn: "创建 {role} 账户 →",
+      successTitle: "您已准备就绪。✓",
+      successSub: "正在初始化您的数据库会话...",
+      validateFirst: "请输入您的名字。",
+      validateLast: "请输入您的姓氏。",
+      validateEmail: "请输入有效的电子邮箱地址。",
+      validatePass: "密码必须至少为 6 个字符。",
+    },
+  };
+
+  const ot = ONBOARDING_TRANSLATIONS[language] || ONBOARDING_TRANSLATIONS.EN;
 
   const INTERESTS_LIST = [
     "Stock Trading",
@@ -115,19 +325,19 @@ export default function FullScreenOnboardingPage() {
 
     // Step Validation
     if (step === 2 && !firstName.trim()) {
-      setErrorMsg("Please enter your first name.");
+      setErrorMsg(ot.validateFirst);
       return;
     }
     if (step === 3 && !lastName.trim()) {
-      setErrorMsg("Please enter your last name.");
+      setErrorMsg(ot.validateLast);
       return;
     }
     if (step === 4 && (!email.trim() || !email.includes("@"))) {
-      setErrorMsg("Please enter a valid email address.");
+      setErrorMsg(ot.validateEmail);
       return;
     }
     if (step === 5 && password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters.");
+      setErrorMsg(ot.validatePass);
       return;
     }
 
@@ -163,7 +373,6 @@ export default function FullScreenOnboardingPage() {
             last_name: lastName,
             display_name: `${firstName} ${lastName}`,
             role,
-            language: signupLang,
           },
         },
       });
@@ -187,7 +396,7 @@ export default function FullScreenOnboardingPage() {
             ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"
             : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80",
         country: "United States",
-        language: signupLang,
+        language,
         onboardingCompleted: true,
         onboardingStep: 4,
         isCertified: role === "TRADER" ? false : undefined,
@@ -201,7 +410,7 @@ export default function FullScreenOnboardingPage() {
         last_name: lastName,
         display_name: `${firstName} ${lastName}`,
         country: "United States",
-        language: signupLang,
+        language,
         role,
         onboarding_completed: true,
         onboarding_step: 4,
@@ -285,6 +494,21 @@ export default function FullScreenOnboardingPage() {
           </span>
         </Link>
 
+        {/* Global Language Selector (EN, JA, ZH) */}
+        <div className="flex items-center gap-2 bg-[#121212] border border-[#222] p-1 text-[10px]">
+          {(["EN", "JA", "ZH"] as Language[]).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`px-2.5 py-1 font-bold transition-all ${
+                language === lang ? "bg-[#8BE000] text-black" : "text-neutral-400 hover:text-white"
+              }`}
+            >
+              {lang}
+            </button>
+          ))}
+        </div>
+
         {step > 0 && step < 10 && (
           <div className="flex items-center gap-4 text-xs font-mono">
             <span className="text-neutral-500 font-medium">0{step} / 0{TOTAL_STEPS}</span>
@@ -329,12 +553,12 @@ export default function FullScreenOnboardingPage() {
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>INSTITUTIONAL KNOWLEDGE PORTAL</span>
                 </div>
-                <h1 className="text-6xl sm:text-8xl font-display font-light leading-[0.95] tracking-tighter text-white">
-                  WELCOME<br />
-                  <span className="text-[#8BE000] font-normal">TO 360° MARKETS.</span>
+                <h1 className="text-6xl sm:text-8xl font-display font-light leading-[0.95] tracking-tighter text-white uppercase">
+                  {ot.welcomeTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.welcomeTitle2}</span>
                 </h1>
                 <p className="text-neutral-300 text-xl font-light max-w-lg leading-relaxed pt-2">
-                  A better way to learn, share stock trading knowledge, and build your quantitative portfolio.
+                  {ot.welcomeSub}
                 </p>
               </div>
 
@@ -346,14 +570,14 @@ export default function FullScreenOnboardingPage() {
                   }}
                   className="btn-lime w-full text-base py-4 font-bold flex items-center justify-between px-6 group"
                 >
-                  <span>Get Started</span>
+                  <span>{ot.btnStart}</span>
                   <ArrowRight className="w-5 h-5 text-black group-hover:translate-x-1 transition-transform" />
                 </button>
 
                 <div className="text-xs text-neutral-400">
-                  Already have an account?{" "}
+                  {ot.signInText.split("?")[0]}?{" "}
                   <Link href="/login" className="text-[#8BE000] underline font-semibold hover:text-white">
-                    Sign in →
+                    {ot.signInText.includes("→") ? ot.signInText.split("?")[1]?.trim() || "Sign in →" : "Sign in →"}
                   </Link>
                 </div>
               </div>
@@ -374,11 +598,11 @@ export default function FullScreenOnboardingPage() {
             >
               <div className="space-y-2">
                 <span className="text-xs text-[#8BE000] font-bold">01 / 0{TOTAL_STEPS}</span>
-                <h2 className="text-5xl sm:text-7xl font-display font-light tracking-tight text-white leading-none">
-                  WHAT ARE YOU<br />
-                  <span className="text-[#8BE000] font-normal">HERE TO DO?</span>
+                <h2 className="text-5xl sm:text-7xl font-display font-light tracking-tight text-white leading-none uppercase">
+                  {ot.roleTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.roleTitle2}</span>
                 </h2>
-                <p className="text-xs text-neutral-400">Choose how you'll use the platform to customize your experience.</p>
+                <p className="text-xs text-neutral-400">{ot.roleSub}</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
@@ -400,13 +624,13 @@ export default function FullScreenOnboardingPage() {
                     <div className="w-12 h-12 bg-black border border-[#262626] text-[#8BE000] flex items-center justify-center">
                       <TrendingUp className="w-6 h-6" />
                     </div>
-                    <h3 className="text-4xl font-display font-bold text-white group-hover:text-[#8BE000]">LEARN</h3>
+                    <h3 className="text-4xl font-display font-bold text-white group-hover:text-[#8BE000]">{ot.learnTitle}</h3>
                     <p className="text-xs text-neutral-400 font-light leading-relaxed">
-                      Discover verified stock courses, quantitative models, options pricing strategies, and live market webinars.
+                      {ot.learnDesc}
                     </p>
                   </div>
                   <div className="flex items-center justify-between text-xs text-[#8BE000] font-bold pt-2">
-                    <span>Continue as Investor</span>
+                    <span>{ot.btnInvestor}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
@@ -429,13 +653,13 @@ export default function FullScreenOnboardingPage() {
                     <div className="w-12 h-12 bg-black border border-[#262626] text-[#8BE000] flex items-center justify-center">
                       <ShieldCheck className="w-6 h-6" />
                     </div>
-                    <h3 className="text-4xl font-display font-bold text-white group-hover:text-[#8BE000]">TEACH</h3>
+                    <h3 className="text-4xl font-display font-bold text-white group-hover:text-[#8BE000]">{ot.teachTitle}</h3>
                     <p className="text-xs text-neutral-400 font-light leading-relaxed">
-                      Share your stock trading expertise, build masterclasses, sell Python algorithms, and host live sessions.
+                      {ot.teachDesc}
                     </p>
                   </div>
                   <div className="flex items-center justify-between text-xs text-[#8BE000] font-bold pt-2">
-                    <span>Continue as Trader</span>
+                    <span>{ot.btnTrader}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
@@ -457,11 +681,11 @@ export default function FullScreenOnboardingPage() {
             >
               <div className="space-y-2">
                 <span className="text-xs text-[#8BE000] font-bold">02 / 0{TOTAL_STEPS}</span>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none">
-                  WHAT SHOULD<br />
-                  <span className="text-[#8BE000] font-normal">WE CALL YOU?</span>
+                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
+                  {ot.firstNameTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.firstNameTitle2}</span>
                 </h2>
-                <p className="text-xs text-neutral-400">Enter your first name to get started.</p>
+                <p className="text-xs text-neutral-400">{ot.firstNameSub}</p>
               </div>
 
               <div className="space-y-4 pt-4">
@@ -470,14 +694,14 @@ export default function FullScreenOnboardingPage() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Palash"
+                  placeholder={ot.firstNamePlaceholder}
                   className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
                 />
 
                 <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
-                  <span>Press <kbd className="bg-[#262626] text-white px-2 py-0.5 rounded">Enter ↵</kbd> to continue</span>
+                  <span>{ot.enterMsg}</span>
                   <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>Continue</span>
+                    <span>{ot.continueBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -503,9 +727,9 @@ export default function FullScreenOnboardingPage() {
                   <span className="text-neutral-500">•</span>
                   <span className="font-bold">{firstName} ✓</span>
                 </div>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none">
-                  AND YOUR<br />
-                  <span className="text-[#8BE000] font-normal">LAST NAME?</span>
+                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
+                  {ot.lastNameTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.lastNameTitle2}</span>
                 </h2>
               </div>
 
@@ -515,16 +739,16 @@ export default function FullScreenOnboardingPage() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Shah"
+                  placeholder={ot.lastNamePlaceholder}
                   className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
                 />
 
                 <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
                   <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                    <ChevronLeft className="w-4 h-4" /> Back
+                    <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
                   </button>
                   <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>Continue</span>
+                    <span>{ot.continueBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -550,11 +774,11 @@ export default function FullScreenOnboardingPage() {
                   <span className="text-neutral-500">•</span>
                   <span className="font-bold">{firstName} {lastName} ✓</span>
                 </div>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none">
-                  WHERE SHOULD WE<br />
-                  <span className="text-[#8BE000] font-normal">SEND UPDATES?</span>
+                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
+                  {ot.emailTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.emailTitle2}</span>
                 </h2>
-                <p className="text-xs text-neutral-400">Enter your primary email address for session authentication.</p>
+                <p className="text-xs text-neutral-400">{ot.emailSub}</p>
               </div>
 
               <div className="space-y-4 pt-4">
@@ -563,16 +787,16 @@ export default function FullScreenOnboardingPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="palash@investor.io"
+                  placeholder={ot.emailPlaceholder}
                   className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
                 />
 
                 <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
                   <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                    <ChevronLeft className="w-4 h-4" /> Back
+                    <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
                   </button>
                   <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>Continue</span>
+                    <span>{ot.continueBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -598,11 +822,11 @@ export default function FullScreenOnboardingPage() {
                   <span className="text-neutral-500">•</span>
                   <span className="font-bold">{email} ✓</span>
                 </div>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none">
-                  CREATE A<br />
-                  <span className="text-[#8BE000] font-normal">SECURE PASSWORD.</span>
+                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
+                  {ot.passwordTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.passwordTitle2}</span>
                 </h2>
-                <p className="text-xs text-neutral-400">Minimum 6 characters for encrypted session storage.</p>
+                <p className="text-xs text-neutral-400">{ot.passwordSub}</p>
               </div>
 
               <div className="space-y-4 pt-4">
@@ -617,10 +841,10 @@ export default function FullScreenOnboardingPage() {
 
                 <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
                   <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                    <ChevronLeft className="w-4 h-4" /> Back
+                    <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
                   </button>
                   <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>Continue</span>
+                    <span>{ot.continueBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -644,11 +868,11 @@ export default function FullScreenOnboardingPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs text-[#8BE000] font-bold">06 / 0{TOTAL_STEPS}</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none">
-                      NICE TO MEET YOU, {firstName.toUpperCase()}.<br />
-                      <span className="text-[#8BE000] font-normal">WHAT ARE YOU INTERESTED IN?</span>
+                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
+                      {ot.investorInterestsTitle.replace("{name}", firstName.toUpperCase())}<br />
+                      <span className="text-[#8BE000] font-normal">{ot.investorInterestsTitle2}</span>
                     </h2>
-                    <p className="text-xs text-neutral-400">Select topics to personalize your marketplace feed.</p>
+                    <p className="text-xs text-neutral-400">{ot.investorInterestsSub}</p>
                   </div>
 
                   <div className="flex flex-wrap gap-3 pt-4">
@@ -678,11 +902,11 @@ export default function FullScreenOnboardingPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs text-[#8BE000] font-bold">06 / 0{TOTAL_STEPS}</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none">
-                      LET'S BUILD YOUR<br />
-                      <span className="text-[#8BE000] font-normal">EDUCATOR PROFILE.</span>
+                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
+                      {ot.traderProfileTitle}<br />
+                      <span className="text-[#8BE000] font-normal">{ot.traderProfileTitle2}</span>
                     </h2>
-                    <p className="text-xs text-neutral-400">Enter your professional title and background.</p>
+                    <p className="text-xs text-neutral-400">{ot.traderProfileSub}</p>
                   </div>
 
                   <div className="space-y-4 pt-4">
@@ -691,7 +915,7 @@ export default function FullScreenOnboardingPage() {
                       type="text"
                       value={traderTitle}
                       onChange={(e) => setTraderTitle(e.target.value)}
-                      placeholder="Ex-Hedge Fund Stock Quant"
+                      placeholder={ot.traderTitlePlaceholder}
                       className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-2xl sm:text-4xl font-display font-light text-white py-3 focus:outline-none placeholder-neutral-700"
                     />
 
@@ -699,7 +923,7 @@ export default function FullScreenOnboardingPage() {
                       rows={3}
                       value={traderBio}
                       onChange={(e) => setTraderBio(e.target.value)}
-                      placeholder="Specializing in US equity order execution, algorithmic momentum strategies, and Level-2 microstructure..."
+                      placeholder={ot.traderBioPlaceholder}
                       className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-xs text-white p-4 focus:outline-none font-mono placeholder-neutral-600"
                     />
                   </div>
@@ -708,10 +932,10 @@ export default function FullScreenOnboardingPage() {
 
               <div className="flex justify-between items-center text-xs text-neutral-500 pt-6">
                 <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> Back
+                  <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
                 </button>
                 <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                  <span>Continue</span>
+                  <span>{ot.continueBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -734,9 +958,9 @@ export default function FullScreenOnboardingPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs text-[#8BE000] font-bold">07 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none">
-                      WHAT ARE YOU<br />
-                      <span className="text-[#8BE000] font-normal">LOOKING TO ACHIEVE?</span>
+                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
+                      {ot.investorGoalTitle}<br />
+                      <span className="text-[#8BE000] font-normal">{ot.investorGoalTitle2}</span>
                     </h2>
                   </div>
 
@@ -767,9 +991,9 @@ export default function FullScreenOnboardingPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs text-[#8BE000] font-bold">07 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none">
-                      HOW LONG HAVE YOU<br />
-                      <span className="text-[#8BE000] font-normal">BEEN TRADING?</span>
+                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
+                      {ot.traderExpTitle}<br />
+                      <span className="text-[#8BE000] font-normal">{ot.traderExpTitle2}</span>
                     </h2>
                   </div>
 
@@ -797,10 +1021,10 @@ export default function FullScreenOnboardingPage() {
 
               <div className="flex justify-between items-center text-xs text-neutral-500 pt-6">
                 <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> Back
+                  <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
                 </button>
                 <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                  <span>Continue</span>
+                  <span>{ot.continueBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -823,9 +1047,9 @@ export default function FullScreenOnboardingPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs text-[#8BE000] font-bold">08 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none">
-                      HOW MUCH TIME DO YOU<br />
-                      <span className="text-[#8BE000] font-normal">HAVE TO LEARN?</span>
+                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
+                      {ot.investorTimeTitle}<br />
+                      <span className="text-[#8BE000] font-normal">{ot.investorTimeTitle2}</span>
                     </h2>
                   </div>
 
@@ -855,11 +1079,11 @@ export default function FullScreenOnboardingPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs text-[#8BE000] font-bold">08 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none">
-                      WHERE CAN PEOPLE<br />
-                      <span className="text-[#8BE000] font-normal">LEARN MORE ABOUT YOU?</span>
+                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
+                      {ot.traderWebTitle}<br />
+                      <span className="text-[#8BE000] font-normal">{ot.traderWebTitle2}</span>
                     </h2>
-                    <p className="text-xs text-neutral-400">Enter your professional website or portfolio link.</p>
+                    <p className="text-xs text-neutral-400">{ot.traderWebSub}</p>
                   </div>
 
                   <div className="space-y-4 pt-4">
@@ -877,7 +1101,7 @@ export default function FullScreenOnboardingPage() {
 
               <div className="flex justify-between items-center text-xs text-neutral-500 pt-6">
                 <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> Back
+                  <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
                 </button>
                 <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
                   <span>Review Profile →</span>
@@ -900,50 +1124,34 @@ export default function FullScreenOnboardingPage() {
             >
               <div className="space-y-2">
                 <span className="text-xs text-[#8BE000] font-bold">YOU'RE ALL SET</span>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none">
-                  CONFIRM YOUR<br />
-                  <span className="text-[#8BE000] font-normal">PROFILE DETAILS.</span>
+                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
+                  {ot.reviewTitle}<br />
+                  <span className="text-[#8BE000] font-normal">{ot.reviewTitle2}</span>
                 </h2>
               </div>
 
               <div className="border border-[#262626] bg-[#161616] p-8 space-y-5 text-xs font-mono">
                 <div className="flex justify-between border-b border-[#262626] pb-3">
-                  <span className="text-neutral-400">FULL NAME</span>
+                  <span className="text-neutral-400">{ot.headerName}</span>
                   <span className="text-white font-bold text-sm">{firstName} {lastName}</span>
                 </div>
                 <div className="flex justify-between border-b border-[#262626] pb-3">
-                  <span className="text-neutral-400">EMAIL ADDRESS</span>
+                  <span className="text-neutral-400">{ot.headerEmail}</span>
                   <span className="text-white">{email}</span>
                 </div>
                 <div className="flex justify-between border-b border-[#262626] pb-3">
-                  <span className="text-neutral-400">ACCOUNT TYPE</span>
+                  <span className="text-neutral-400">{ot.headerRole}</span>
                   <span className="text-[#8BE000] font-bold">{role}</span>
-                </div>
-                <div className="flex justify-between border-b border-[#262626] pb-3 items-center">
-                  <span className="text-neutral-400">LANGUAGE PREFERENCE</span>
-                  <select
-                    value={signupLang}
-                    onChange={(e) => {
-                      const val = e.target.value as "EN" | "JA" | "ZH";
-                      setSignupLang(val);
-                      setLanguage(val);
-                    }}
-                    className="bg-[#0B0B0B] border border-[#262626] text-white text-xs px-3 py-1.5 focus:outline-none focus:border-[#8BE000] font-mono cursor-pointer"
-                  >
-                    <option value="EN">ENGLISH (EN)</option>
-                    <option value="JA">日本語 (JA)</option>
-                    <option value="ZH">中文 (ZH)</option>
-                  </select>
                 </div>
 
                 {role === "INVESTOR" && (
                   <>
                     <div className="flex justify-between border-b border-[#262626] pb-3">
-                      <span className="text-neutral-400">INTERESTS</span>
+                      <span className="text-neutral-400">{ot.headerInterests}</span>
                       <span className="text-white">{interests.join(" · ")}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">GOAL</span>
+                      <span className="text-neutral-400">{ot.headerGoal}</span>
                       <span className="text-[#8BE000]">{goal}</span>
                     </div>
                   </>
@@ -952,12 +1160,12 @@ export default function FullScreenOnboardingPage() {
                 {role === "TRADER" && (
                   <>
                     <div className="flex justify-between border-b border-[#262626] pb-3">
-                      <span className="text-neutral-400">TITLE</span>
+                      <span className="text-neutral-400">{ot.headerTitle}</span>
                       <span className="text-white">{traderTitle || "Stock Educator"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">CERTIFICATION STATUS</span>
-                      <span className="text-amber-400 font-bold">PENDING VERIFICATION</span>
+                      <span className="text-neutral-400">{ot.headerStatus}</span>
+                      <span className="text-amber-400 font-bold">{ot.pendingText}</span>
                     </div>
                   </>
                 )}
@@ -965,14 +1173,14 @@ export default function FullScreenOnboardingPage() {
 
               <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
                 <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> Edit Answers
+                  <ChevronLeft className="w-4 h-4" /> {ot.editAnswers}
                 </button>
                 <button
                   onClick={handleFinalSubmit}
                   disabled={isLoading}
                   className="btn-lime px-8 py-4 font-bold text-black text-sm flex items-center gap-2"
                 >
-                  <span>{isLoading ? "Creating Account..." : `Create ${role} Account →`}</span>
+                  <span>{isLoading ? "Creating Account..." : ot.createAccountBtn.replace("{role}", role)}</span>
                 </button>
               </div>
             </motion.div>
@@ -992,9 +1200,9 @@ export default function FullScreenOnboardingPage() {
               </div>
 
               <div className="space-y-3">
-                <h2 className="text-5xl font-display font-light text-white">YOU'RE READY. ✓</h2>
+                <h2 className="text-5xl font-display font-light text-white">{ot.successTitle}</h2>
                 <p className="text-xs text-[#8BE000] font-mono uppercase tracking-widest">
-                  INITIALIZING YOUR DATABASE SESSION...
+                  {ot.successSub}
                 </p>
               </div>
 
