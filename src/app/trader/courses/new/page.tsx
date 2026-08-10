@@ -81,8 +81,8 @@ export default function CourseBuilderPage() {
     return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const educatorShare = price * 0.8;
-  const platformShare = price * 0.2;
+  const educatorShare = price * 0.7;
+  const platformShare = price * 0.3;
 
   // Check certification status on mount
   useEffect(() => {
@@ -491,7 +491,7 @@ export default function CourseBuilderPage() {
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 bg-[#111111] border border-[#1E1E1E] p-8">
               <div className="space-y-1">
                 <h3 className="text-2xl font-display font-medium text-white">PRICING AND REVENUE SPLIT</h3>
-                <p className="text-xs text-neutral-400 font-sans">Set your course price. You receive 80% of every sale automatically.</p>
+                <p className="text-xs text-neutral-400 font-sans">Set your course price. You receive 70% of every sale automatically.</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -522,7 +522,7 @@ export default function CourseBuilderPage() {
                 <div className="border border-[#1E1E1E] bg-[#080808] p-6 space-y-6">
                   <div className="flex justify-between items-center border-b border-[#1E1E1E] pb-3">
                     <span className="text-xs text-neutral-400 uppercase font-mono">PER SALE SETTLEMENT</span>
-                    <span className="text-[10px] bg-black text-[#8BE000] font-bold px-2 py-0.5 border border-[#262626]">80/20 SPLIT</span>
+                    <span className="text-[10px] bg-black text-[#8BE000] font-bold px-2 py-0.5 border border-[#262626]">70/30 SPLIT</span>
                   </div>
 
                   <div className="space-y-4 text-xs font-mono">
@@ -531,11 +531,11 @@ export default function CourseBuilderPage() {
                       <strong className="text-white text-lg font-display">{formatPrice(price)}</strong>
                     </div>
                     <div className="flex justify-between items-center text-[#8BE000]">
-                      <span className="font-bold">Your Payout (80%):</span>
+                      <span className="font-bold">Your Payout (70%):</span>
                       <strong className="text-xl font-display font-bold">{formatPrice(educatorShare)}</strong>
                     </div>
                     <div className="flex justify-between items-center text-neutral-500">
-                      <span>Platform Fee (20%):</span>
+                      <span>Platform Fee (30%):</span>
                       <span>{formatPrice(platformShare)}</span>
                     </div>
 

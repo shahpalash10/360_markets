@@ -170,7 +170,7 @@ export default function TraderDashboardPage() {
     fetchTraderData();
   }, [user]);
 
-  const educatorShare = grossRevenue * 0.8;
+  const educatorShare = grossRevenue * 0.7;
 
   return (
     <AuthGuard allowedRoles={["TRADER"]}>
@@ -187,7 +187,7 @@ export default function TraderDashboardPage() {
                 EDUCATOR HUB.
               </h1>
               <p className="text-xs text-neutral-400 font-sans max-w-xl leading-relaxed">
-                Manage your courses, track enrollments, schedule live Pro Masterclasses, and view your 80/20 revenue settlement.
+                Manage your courses, track enrollments, schedule live Pro Masterclasses, and view your 70/30 revenue settlement.
               </p>
             </div>
 
@@ -288,7 +288,7 @@ export default function TraderDashboardPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
               <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">NET PAYOUT (80%)</span>
+                <span className="tracking-wider uppercase text-[10px]">NET PAYOUT (70%)</span>
                 <DollarSign className="w-4 h-4 text-[#8BE000]" />
               </div>
               <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-[#8BE000]">
@@ -489,7 +489,7 @@ export default function TraderDashboardPage() {
             <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">
               <h3 className="text-xl font-display font-medium text-white tracking-tight">FINANCIAL SETTLEMENT</h3>
               <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                View your automated 80/20 platform payout ledger and student subscriber growth.
+                View your automated 70/30 platform payout ledger and student subscriber growth.
               </p>
               <Link href="/trader/earnings" className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-white px-6 py-3 text-xs font-mono inline-block transition">
                 View Revenue Ledger

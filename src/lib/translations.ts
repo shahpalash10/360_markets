@@ -189,7 +189,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     statActiveInvestors: "Active Stock Investors",
     statVerifiedCourses: "Verified Stock Courses",
     statLiveWebinars: "Live Stock Streams",
-    statPlatformSplit: "Trader Revenue Share (80/20)",
+    statPlatformSplit: "Trader Revenue Share (70/30)",
 
     featuredCoursesTitle: "FEATURED STOCK COURSES",
     featuredCoursesSub: "Institutional Stock Curriculum",
@@ -274,7 +274,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     traderSales: "Course Sales",
     traderAttendees: "Live Attendees",
     traderChartTitle: "STOCK REVENUE OVER TIME",
-    traderChartSub: "Monthly earnings breakdown after 80/20 platform revenue split.",
+    traderChartSub: "Monthly earnings breakdown after 70/30 platform revenue split.",
 
     btnViewCourse: "View Course →",
     btnBuyMaterial: "Buy Model →",
@@ -323,7 +323,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     statActiveInvestors: "アクティブ株式投資家",
     statVerifiedCourses: "認証済み株式コース",
     statLiveWebinars: "ライブ株式配信",
-    statPlatformSplit: "収益配分 (80/20)",
+    statPlatformSplit: "収益配分 (70/30)",
 
     featuredCoursesTitle: "注目株式コース一覧",
     featuredCoursesSub: "機関投資家レベルのカリキュラム",
@@ -408,7 +408,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     traderSales: "コース販売数",
     traderAttendees: "ライブ参加者数",
     traderChartTitle: "株式売上推移",
-    traderChartSub: "プラットフォーム手数料（20%）控除後の月間純利益の内訳。",
+    traderChartSub: "プラットフォーム手数料（30%）控除後の月間純利益の内訳。",
 
     btnViewCourse: "コースを見る →",
     btnBuyMaterial: "モデルを購入 →",
@@ -457,7 +457,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     statActiveInvestors: "活跃股票投资者",
     statVerifiedCourses: "已上线股票课程",
     statLiveWebinars: "实时股票直播",
-    statPlatformSplit: "导师分成 (80/20)",
+    statPlatformSplit: "导师分成 (70/30)",
 
     featuredCoursesTitle: "精选股票课程",
     featuredCoursesSub: "机构级股票交易体系",
@@ -542,7 +542,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     traderSales: "课程销量",
     traderAttendees: "直播观看人数",
     traderChartTitle: "股票收益趋势",
-    traderChartSub: "扣除平台20%分成后的每月净收益明细。",
+    traderChartSub: "扣除平台30%分成后的每月净收益明细。",
 
     btnViewCourse: "查看课程 →",
     btnBuyMaterial: "购买模型 →",

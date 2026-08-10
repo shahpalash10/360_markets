@@ -118,8 +118,8 @@ export default function AdminDashboardPage() {
   const grossVolume = transactions.reduce((acc, tx) => acc + (tx.gross_amount || tx.amount || 0), 0) +
     enrollments.reduce((acc, en) => acc + (en.courses?.price || 49), 0);
 
-  const platformRevenue = grossVolume * 0.2;
-  const educatorPayouts = grossVolume * 0.8;
+  const platformRevenue = grossVolume * 0.3;
+  const educatorPayouts = grossVolume * 0.7;
 
   // Real Actions with Live Supabase Queries
   const handleCertifyUserDirect = async (targetUser: any) => {
@@ -443,7 +443,7 @@ export default function AdminDashboardPage() {
                         REVENUE SPLIT ARCHITECTURE
                       </h3>
                       <p className="text-xs text-neutral-400 font-sans">
-                        Automated 80% educator payout and 20% platform commission calculation
+                        Automated 70% educator payout and 30% platform commission calculation
                       </p>
                     </div>
                     <span className="text-[10px] bg-black px-2.5 py-1 text-[#8BE000] font-bold border border-[#222222]">
@@ -454,21 +454,21 @@ export default function AdminDashboardPage() {
                   <div className="space-y-5 pt-2">
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-neutral-400">Educator Earnings Share (80%):</span>
+                        <span className="text-neutral-400">Educator Earnings Share (70%):</span>
                         <span className="text-white font-bold">{formatPrice(educatorPayouts)}</span>
                       </div>
                       <div className="w-full bg-[#1A1A1A] h-2 overflow-hidden">
-                        <div className="bg-[#8BE000] h-full" style={{ width: "80%" }} />
+                        <div className="bg-[#8BE000] h-full" style={{ width: "70%" }} />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-neutral-400">Platform Retained Commission (20%):</span>
+                        <span className="text-neutral-400">Platform Retained Commission (30%):</span>
                         <span className="text-[#8BE000] font-bold">{formatPrice(platformRevenue)}</span>
                       </div>
                       <div className="w-full bg-[#1A1A1A] h-2 overflow-hidden">
-                        <div className="bg-white h-full" style={{ width: "20%" }} />
+                        <div className="bg-white h-full" style={{ width: "30%" }} />
                       </div>
                     </div>
                   </div>
@@ -878,10 +878,10 @@ export default function AdminDashboardPage() {
               <div className="flex justify-between items-center pb-2">
                 <div>
                   <h3 className="text-xl font-display font-medium text-white tracking-tight">
-                    TRANSACTION LEDGER & 80/20 SETTLEMENT
+                    TRANSACTION LEDGER & 70/30 SETTLEMENT
                   </h3>
                   <p className="text-xs text-neutral-400 font-sans">
-                    Live recorded transactions and automated educator 80% / platform 20% splits
+                    Live recorded transactions and automated educator 70% / platform 30% splits
                   </p>
                 </div>
               </div>
@@ -889,7 +889,7 @@ export default function AdminDashboardPage() {
               {enrollments.length === 0 && transactions.length === 0 ? (
                 <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center text-xs text-neutral-500 font-mono space-y-2">
                   <div className="text-neutral-300 font-bold">NO TRANSACTIONS RECORDED YET</div>
-                  <p>When student investors purchase courses or models, the 80/20 ledger will calculate in real-time.</p>
+                  <p>When student investors purchase courses or models, the 70/30 ledger will calculate in real-time.</p>
                 </div>
               ) : (
                 <div className="border border-[#1E1E1E] bg-[#111111] overflow-hidden">
@@ -900,15 +900,15 @@ export default function AdminDashboardPage() {
                         <th className="p-4">User</th>
                         <th className="p-4">Curriculum Item</th>
                         <th className="p-4">Gross Total</th>
-                        <th className="p-4">Educator (80%)</th>
-                        <th className="p-4">Platform Net (20%)</th>
+                        <th className="p-4">Educator (70%)</th>
+                        <th className="p-4">Platform Net (30%)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#1E1E1E]">
                       {enrollments.map((en) => {
                         const price = en.courses?.price || 49;
-                        const edShare = price * 0.8;
-                        const platShare = price * 0.2;
+                        const edShare = price * 0.7;
+                        const platShare = price * 0.3;
                         return (
                           <tr key={en.id} className="hover:bg-[#161616] transition-colors">
                             <td className="p-4 text-neutral-500 text-[11px]">

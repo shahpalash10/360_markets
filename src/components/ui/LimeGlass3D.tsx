@@ -104,7 +104,7 @@ export function LimeGlass3D() {
         className="absolute bottom-36 left-10 z-20 bg-[#8BE000] text-black px-4 py-2 font-mono font-bold text-xs uppercase flex items-center gap-2 tracking-wider"
       >
         <TrendingUp className="w-4 h-4" />
-        <span>REVENUE SHARE: 80% TRADER</span>
+        <span>REVENUE SHARE: 70% TRADER</span>
       </motion.div>
     </div>
   );

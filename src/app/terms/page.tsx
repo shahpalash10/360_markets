@@ -48,7 +48,7 @@ export default function TermsPage() {
               2.0 EDUCATOR REVENUE SPLIT & PAYMENTS
             </h2>
             <p>
-              Certified educators receive an 80/20 revenue split for all digital courses, Python scripts, and webinar cohort sales created through the platform. Payouts are reconciled monthly and issued to verified accounts. The platform reserves the right to hold payouts in the event of active refund disputes or compliance violations.
+              Certified educators receive a 70/30 revenue split for all digital courses, Python scripts, and webinar cohort sales created through the platform. Payouts are reconciled monthly and issued to verified accounts. The platform reserves the right to hold payouts in the event of active refund disputes or compliance violations.
             </p>
           </section>
 

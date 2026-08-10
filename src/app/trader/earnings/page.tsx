@@ -56,8 +56,8 @@ export default function TraderEarningsPage() {
     fetchEarnings();
   }, [user]);
 
-  const platformFee = grossRevenue * 0.2; // 20%
-  const netEarnings = grossRevenue * 0.8; // 80%
+  const platformFee = grossRevenue * 0.3; // 30%
+  const netEarnings = grossRevenue * 0.7; // 70%
 
   const handleWithdrawal = () => {
     setWithdrawn(true);
@@ -72,13 +72,13 @@ export default function TraderEarningsPage() {
           <div className="pb-8 border-b border-[#1E1E1E] space-y-2">
             <div className="flex items-center gap-2 text-[11px] text-[#8BE000] font-bold tracking-widest uppercase">
               <span className="w-1.5 h-1.5 bg-[#8BE000] rounded-full inline-block animate-pulse" />
-              <span>FINANCIAL SETTLEMENT & 80/20 REVENUE LEDGER</span>
+              <span>FINANCIAL SETTLEMENT & 70/30 REVENUE LEDGER</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-display font-light tracking-tight text-white">
               EDUCATOR REVENUE.
             </h1>
             <p className="text-xs text-neutral-400 font-sans max-w-xl leading-relaxed">
-              Automated institutional revenue split: 80% direct educator payout on all course and material sales.
+              Automated institutional revenue split: 70% direct educator payout on all course and material sales.
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export default function TraderEarningsPage() {
             </div>
 
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3">
-              <span className="text-neutral-500 uppercase text-[10px] tracking-wider">NET REVENUE (80%)</span>
+              <span className="text-neutral-500 uppercase text-[10px] tracking-wider">NET REVENUE (70%)</span>
               <div className="text-3xl font-display font-light text-[#8BE000]">{formatPrice(netEarnings)}</div>
               <span className="text-[10px] text-[#8BE000] font-mono">Educator Share</span>
             </div>
@@ -120,7 +120,7 @@ export default function TraderEarningsPage() {
               </div>
               <h3 className="text-2xl font-display font-medium text-white">SETTLEMENT DISBURSEMENT</h3>
               <p className="text-xs text-neutral-400 font-sans">
-                Request automated ACH direct deposit payout of your accumulated 80% net course sales.
+                Request automated ACH direct deposit payout of your accumulated 70% net course sales.
               </p>
             </div>
 
@@ -155,13 +155,13 @@ export default function TraderEarningsPage() {
                       <th className="p-4">Student ID</th>
                       <th className="p-4">Course Enrolled</th>
                       <th className="p-4">Gross Price</th>
-                      <th className="p-4">Your Share (80%)</th>
+                      <th className="p-4">Your Share (70%)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1E1E1E]">
                     {enrollmentsList.map((en) => {
                       const price = en.courses?.price || 49;
-                      const share = price * 0.8;
+                      const share = price * 0.7;
                       return (
                         <tr key={en.id} className="hover:bg-[#161616] transition-colors">
                           <td className="p-4 text-neutral-500 text-[11px]">
