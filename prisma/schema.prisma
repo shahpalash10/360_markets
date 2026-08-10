@@ -1,0 +1,244 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String      @id @default(uuid())
+  email            String      @unique
+  passwordHash     String
+  name             String
+  role             String      @default("INVESTOR")
+  avatarUrl        String?
+  bio              String?
+  title            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  traderProfile    TraderProfile?
+  investorProfile  InvestorProfile?
+  applications     CertificationApplication[]
+  enrollments      CourseEnrollment[]
+  materialPurchases MaterialPurchase[]
+  webinarRegistrations WebinarRegistration[]
+  certificates     Certificate[]
+  transactions     Transaction[]
+  notifications    Notification[]
+  webinarMessages  WebinarMessage[]
+}
+
+model TraderProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isCertified      Boolean  @default(false)
+  certificationId  String?  @unique
+  certifiedAt      DateTime?
+  rating           Float    @default(5.0)
+  totalSubscribers Int      @default(0)
+  totalCourses     Int      @default(0)
+  totalWebinars    Int      @default(0)
+  grossRevenue     Float    @default(0.0)
+  netRevenue       Float    @default(0.0)
+  expertise        String?
+  bankAccount      String?
+
+  courses          Course[]
+  materials        Material[]
+  webinars         Webinar[]
+}
+
+model InvestorProfile {
+  id                     String @id @default(uuid())
+  userId                 String @unique
+  user                   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalHoursLearned      Float  @default(0.0)
+  activeCoursesCount     Int    @default(0)
+  learningProgressPercent Float @default(0.0)
+  totalCertificatesCount Int    @default(0)
+}
+
+model CertificationApplication {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName         String
+  expertise        String
+  experienceYears  Int
+  bio              String
+  portfolioUrl     String?
+  documentsUrl     String?
+  status           String   @default("PENDING")
+  adminNotes       String?
+  createdAt        DateTime @default(now())
+  reviewedAt       DateTime?
+}
+
+model Course {
+  id             String   @id @default(uuid())
+  traderId       String
+  trader         TraderProfile @relation(fields: [traderId], references: [id], onDelete: Cascade)
+  title          String
+  slug           String   @unique
+  description    String
+  category       String
+  level          String   @default("Beginner")
+  language       String   @default("English")
+  price          Float
+  isSubscription Boolean  @default(false)
+  thumbnail      String
+  published      Boolean  @default(true)
+  rating         Float    @default(4.9)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  modules        CourseModule[]
+  enrollments    CourseEnrollment[]
+}
+
+model CourseModule {
+  id         String   @id @default(uuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title      String
+  orderIndex Int
+
+  lessons    CourseLesson[]
+}
+
+model CourseLesson {
+  id              String   @id @default(uuid())
+  moduleId        String
+  module          CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title           String
+  durationMinutes Int
+  videoUrl        String?
+  textContent     String?
+  pdfUrl          String?
+  orderIndex      Int
+}
+
+model CourseEnrollment {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progressPercent Float    @default(0.0)
+  isCompleted     Boolean  @default(false)
+  enrolledAt      DateTime @default(now())
+  completedAt     DateTime?
+}
+
+model Material {
+  id             String   @id @default(uuid())
+  traderId       String
+  trader         TraderProfile @relation(fields: [traderId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  category       String
+  fileType       String
+  fileSizeMb     Float
+  price          Float
+  downloadUrl    String
+  previewUrl     String?
+  downloadsCount Int      @default(0)
+  rating         Float    @default(4.8)
+  createdAt      DateTime @default(now())
+
+  purchases      MaterialPurchase[]
+}
+
+model MaterialPurchase {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materialId  String
+  material    Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  pricePaid   Float
+  purchasedAt DateTime @default(now())
+}
+
+model Webinar {
+  id              String        @id @default(uuid())
+  traderId        String
+  trader          TraderProfile @relation(fields: [traderId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  date            String
+  startTime       String
+  durationMinutes Int
+  price           Float
+  maxAttendees    Int
+  filledSeats     Int           @default(0)
+  meetingUrl      String
+  status          String        @default("UPCOMING")
+  replayUrl       String?
+  thumbnail       String
+  createdAt       DateTime      @default(now())
+
+  registrations   WebinarRegistration[]
+  messages        WebinarMessage[]
+}
+
+model WebinarRegistration {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webinarId    String
+  webinar      Webinar  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  registeredAt DateTime @default(now())
+}
+
+model WebinarMessage {
+  id         String   @id @default(uuid())
+  webinarId  String
+  webinar    Webinar  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName   String
+  userAvatar String?
+  content    String
+  isHost     Boolean  @default(false)
+  sentAt     DateTime @default(now())
+}
+
+model Certificate {
+  id              String   @id @default(uuid())
+  certificateId   String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String
+  courseTitle     String
+  traderName      String
+  issueDate       DateTime @default(now())
+  verificationUrl String
+}
+
+model Transaction {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String
+  amount       Float
+  platformFee  Float
+  traderAmount Float
+  description  String
+  status       String   @default("COMPLETED")
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
