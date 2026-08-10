@@ -255,4 +255,37 @@ CREATE POLICY "Users can enroll themselves"
     (select auth.uid()) = user_id
   );
 
+-- 13. REPAIR USER REGISTRATION LANGUAGE TRIGGER
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (
+    id, 
+    first_name, 
+    last_name, 
+    display_name, 
+    avatar_url, 
+    country, 
+    language, 
+    role, 
+    onboarding_completed, 
+    onboarding_step
+  )
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'first_name', 'New'),
+    COALESCE(NEW.raw_user_meta_data->>'last_name', 'User'),
+    COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.email),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'),
+    'United States',
+    COALESCE(NEW.raw_user_meta_data->>'language', 'EN'),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'INVESTOR'),
+    TRUE,
+    4
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
 

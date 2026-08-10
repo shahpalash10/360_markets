@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, Role, UserProfile } from "@/lib/auth-context";
+import { useLanguage } from "@/lib/language-context";
 import { supabase } from "@/lib/supabase";
 import {
   TrendingUp,
@@ -19,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function FullScreenOnboardingPage() {
   const router = useRouter();
   const { setUserProfile } = useAuth();
+  const { setLanguage } = useLanguage();
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   // Directional Animation State (+1 for Next, -1 for Back)
@@ -33,6 +35,7 @@ export default function FullScreenOnboardingPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [signupLang, setSignupLang] = useState<"EN" | "JA" | "ZH">("EN");
 
   // Investor Personalization
   const [interests, setInterests] = useState<string[]>(["Stock Trading", "Options Strategies"]);
@@ -160,6 +163,7 @@ export default function FullScreenOnboardingPage() {
             last_name: lastName,
             display_name: `${firstName} ${lastName}`,
             role,
+            language: signupLang,
           },
         },
       });
@@ -183,7 +187,7 @@ export default function FullScreenOnboardingPage() {
             ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"
             : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80",
         country: "United States",
-        language: "EN",
+        language: signupLang,
         onboardingCompleted: true,
         onboardingStep: 4,
         isCertified: role === "TRADER" ? false : undefined,
@@ -197,7 +201,7 @@ export default function FullScreenOnboardingPage() {
         last_name: lastName,
         display_name: `${firstName} ${lastName}`,
         country: "United States",
-        language: "EN",
+        language: signupLang,
         role,
         onboarding_completed: true,
         onboarding_step: 4,
@@ -914,6 +918,22 @@ export default function FullScreenOnboardingPage() {
                 <div className="flex justify-between border-b border-[#262626] pb-3">
                   <span className="text-neutral-400">ACCOUNT TYPE</span>
                   <span className="text-[#8BE000] font-bold">{role}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#262626] pb-3 items-center">
+                  <span className="text-neutral-400">LANGUAGE PREFERENCE</span>
+                  <select
+                    value={signupLang}
+                    onChange={(e) => {
+                      const val = e.target.value as "EN" | "JA" | "ZH";
+                      setSignupLang(val);
+                      setLanguage(val);
+                    }}
+                    className="bg-[#0B0B0B] border border-[#262626] text-white text-xs px-3 py-1.5 focus:outline-none focus:border-[#8BE000] font-mono cursor-pointer"
+                  >
+                    <option value="EN">ENGLISH (EN)</option>
+                    <option value="JA">日本語 (JA)</option>
+                    <option value="ZH">中文 (ZH)</option>
+                  </select>
                 </div>
 
                 {role === "INVESTOR" && (
