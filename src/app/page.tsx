@@ -152,7 +152,7 @@ export default function LandingPage() {
             <Reveal delay={0.4} className="border-l-2 border-[#D9D9D9] pl-6 space-y-1">
               <div className="text-xs text-neutral-400 font-mono uppercase tracking-widest">{t.statPlatformSplit}</div>
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
-                80<span className="text-[#8BE000] font-normal">/20</span>
+                70<span className="text-[#8BE000] font-normal">/30</span>
               </div>
               <div className="text-xs text-neutral-500 font-mono">Trader revenue focus</div>
             </Reveal>

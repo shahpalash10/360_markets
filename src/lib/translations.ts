@@ -152,7 +152,7 @@ export interface TranslationDictionary {
 export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
   EN: {
     navMarketplace: "Marketplace",
-    navProTrading: "Pro Live",
+    navProTrading: "Live",
     navCourses: "Courses",
     navMaterials: "Code & Models",
     navWebinars: "Webinars",
@@ -286,7 +286,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
 
   JA: {
     navMarketplace: "マーケット",
-    navProTrading: "PRO ライブ",
+    navProTrading: "ライブ",
     navCourses: "コース",
     navMaterials: "モデル・コード",
     navWebinars: "ウェビナー",
@@ -420,7 +420,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
 
   ZH: {
     navMarketplace: "市场",
-    navProTrading: "PRO 实盘",
+    navProTrading: "直播",
     navCourses: "课程",
     navMaterials: "代码与模型",
     navWebinars: "研讨会",

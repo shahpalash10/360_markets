@@ -112,7 +112,7 @@ export function Header() {
                       isActive ? "text-[#8BE000] font-bold" : "text-neutral-300 hover:text-white"
                     }`}
                   >
-                    {link.isPro && <Zap className="w-3.5 h-3.5 text-[#8BE000] fill-[#8BE000] shrink-0" />}
+                    {link.isPro && <span className="text-[10px] mr-0.5 animate-pulse">🔴</span>}
                     <span>{link.label}</span>
                     {isActive && (
                       <motion.div
