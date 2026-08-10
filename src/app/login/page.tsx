@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, DEMO_USERS } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
+import { Language } from "@/lib/translations";
 import { supabase } from "@/lib/supabase";
 import { Lock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -12,11 +13,57 @@ import { motion } from "framer-motion";
 export default function LoginPage() {
   const router = useRouter();
   const { setUserProfile } = useAuth();
+  const { language, setLanguage } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Localized Login Content Dictionary
+  const LOGIN_TRANSLATIONS = {
+    EN: {
+      secureSession: "SECURE SESSION AUTHENTICATION",
+      title1: "SIGN IN TO",
+      title2: "TERMINAL.",
+      subText: "Access your stock knowledge portfolio, trading models, and live sessions.",
+      labelEmail: "EMAIL ADDRESS",
+      labelPass: "PASSWORD",
+      btnText: "Sign In",
+      authenticating: "Authenticating...",
+      noAccount: "Don't have an account?",
+      createAccount: "Create account →",
+      errorDefault: "Authentication failed.",
+    },
+    JA: {
+      secureSession: "セキュアセッション認証",
+      title1: "ターミナルに",
+      title2: "サインイン。",
+      subText: "株式知識ポートフォリオ、トレードモデル、ライブ配信にアクセスします。",
+      labelEmail: "メールアドレス",
+      labelPass: "パスワード",
+      btnText: "サインイン",
+      authenticating: "認証中...",
+      noAccount: "アカウントをお持ちでないですか？",
+      createAccount: "アカウントを作成 →",
+      errorDefault: "認証に失敗しました。",
+    },
+    ZH: {
+      secureSession: "安全会话身份验证",
+      title1: "登录到您的",
+      title2: "交易终端。",
+      subText: "访问您的股票知识投资组合、交易模型和实时研讨会直播。",
+      labelEmail: "电子邮箱",
+      labelPass: "密码",
+      btnText: "登录",
+      authenticating: "正在验证身份...",
+      noAccount: "还没有账号？",
+      createAccount: "创建账号 →",
+      errorDefault: "身份验证失败。",
+    },
+  };
+
+  const ot = LOGIN_TRANSLATIONS[language] || LOGIN_TRANSLATIONS.EN;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +114,7 @@ export default function LoginPage() {
       }
     } catch (e: any) {
       setIsLoading(false);
-      setErrorMsg(e.message || "Authentication failed.");
+      setErrorMsg(e.message || ot.errorDefault);
     }
   };
 
@@ -86,6 +133,21 @@ export default function LoginPage() {
             MARKETS
           </span>
         </Link>
+
+        {/* Global Language Selector (EN, JA, ZH) */}
+        <div className="flex items-center gap-2 bg-[#121212] border border-[#222] p-1 text-[10px]">
+          {(["EN", "JA", "ZH"] as Language[]).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`px-2.5 py-1 font-bold transition-all ${
+                language === lang ? "bg-[#8BE000] text-black" : "text-neutral-400 hover:text-white"
+              }`}
+            >
+              {lang}
+            </button>
+          ))}
+        </div>
       </header>
 
       {/* Main Full-Screen Production Login Body */}
@@ -93,15 +155,15 @@ export default function LoginPage() {
         <div className="space-y-3 text-center">
           <div className="inline-flex items-center gap-2 border border-[#8BE000] bg-black px-3 py-1 text-xs text-[#8BE000] font-bold uppercase tracking-wider">
             <Lock className="w-3.5 h-3.5" />
-            <span>SECURE SESSION AUTHENTICATION</span>
+            <span>{ot.secureSession}</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-display font-light text-white tracking-tight leading-none pt-2">
-            SIGN IN TO<br />
-            <span className="text-[#8BE000] font-normal">TERMINAL.</span>
+          <h1 className="text-5xl sm:text-6xl font-display font-light text-white tracking-tight leading-none pt-2 uppercase">
+            {ot.title1}<br />
+            <span className="text-[#8BE000] font-normal">{ot.title2}</span>
           </h1>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Access your stock knowledge portfolio, trading models, and live sessions.
+            {ot.subText}
           </p>
         </div>
 
@@ -118,7 +180,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-6 text-xs">
           <div className="space-y-2">
             <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
-              EMAIL ADDRESS
+              {ot.labelEmail}
             </label>
             <input
               type="email"
@@ -133,7 +195,7 @@ export default function LoginPage() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
-                PASSWORD
+                {ot.labelPass}
               </label>
             </div>
             <input
@@ -151,15 +213,15 @@ export default function LoginPage() {
             disabled={isLoading}
             className="btn-lime w-full py-4 font-bold text-sm text-black flex items-center justify-center gap-2 group"
           >
-            <span>{isLoading ? "Authenticating..." : "Sign In"}</span>
+            <span>{isLoading ? ot.authenticating : ot.btnText}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-black" />
           </button>
         </form>
 
         <div className="text-center text-xs text-neutral-400 pt-2">
-          Don't have an account?{" "}
+          {ot.noAccount}{" "}
           <Link href="/register" className="text-[#8BE000] underline font-semibold hover:text-white">
-            Create account →
+            {ot.createAccount}
           </Link>
         </div>
       </main>
