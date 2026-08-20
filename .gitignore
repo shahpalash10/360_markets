@@ -13,6 +13,8 @@
 # Production build
 /build
 /dist
+/.open-next/
+/.wrangler/
 
 # Environment variables & secrets
 .env
