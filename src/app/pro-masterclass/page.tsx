@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { supabase } from "@/lib/supabase";
 import {
   Zap,
@@ -46,6 +46,7 @@ interface Webinar {
 }
 
 export default function ProMasterclassLandingPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { t, currency } = useLanguage();
   
@@ -112,7 +113,10 @@ export default function ProMasterclassLandingPage() {
 
   // Handle seat purchase and database enrollment
   const handleReserve = async (webinarId: string) => {
-    if (!user) return;
+    if (!user) {
+      router.push("/login?redirect=/pro-masterclass");
+      return;
+    }
     setProcessingId(webinarId);
 
     try {
@@ -160,8 +164,7 @@ export default function ProMasterclassLandingPage() {
   };
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#0B0B0B] text-white pb-24 font-mono select-none">
+    <div className="min-h-screen bg-[#0B0B0B] text-white pb-24 font-mono select-none">
         {/* Top Header Banner */}
         <div className="border-b border-[#262626] bg-[#161616] py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -355,6 +358,5 @@ export default function ProMasterclassLandingPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   );
 }

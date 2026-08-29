@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth, Role, UserProfile } from "@/lib/auth-context";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth, Role, UserProfile, DEMO_USERS } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { Language } from "@/lib/translations";
 import { supabase } from "@/lib/supabase";
@@ -11,24 +11,22 @@ import {
   TrendingUp,
   ShieldCheck,
   ArrowRight,
-  ChevronLeft,
   Sparkles,
-  Check,
+  CheckCircle2,
+  Lock,
+  User,
+  GraduationCap,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
-export default function FullScreenOnboardingPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get("redirect") || "/";
+
   const { setUserProfile } = useAuth();
   const { language, setLanguage } = useLanguage();
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
-
-  // Directional Animation State (+1 for Next, -1 for Back)
-  const [direction, setDirection] = useState<number>(1);
-
-  // Current Onboarding Step Index
-  const [step, setStep] = useState<number>(0);
 
   // Form Fields State
   const [role, setRole] = useState<Role>("INVESTOR");
@@ -37,329 +35,123 @@ export default function FullScreenOnboardingPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Investor Personalization
-  const [interests, setInterests] = useState<string[]>(["Stock Trading", "Options Strategies"]);
-  const [goal, setGoal] = useState<string>("Build new skills");
-  const [timeCommitment, setTimeCommitment] = useState<string>("30 MIN / DAY");
-
-  // Trader Personalization
-  const [traderTitle, setTraderTitle] = useState("");
-  const [traderBio, setTraderBio] = useState("");
-  const [traderExp, setTraderExp] = useState("3–5 YEARS");
-  const [traderWebsite, setTraderWebsite] = useState("");
-
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [isSuccessThreshold, setIsSuccessThreshold] = useState(false);
 
-  const TOTAL_STEPS = 9;
-
-  // Localized Multi-language Onboarding Content Dictionary
-  const ONBOARDING_TRANSLATIONS = {
+  // Multi-Language Registration Content
+  const TRANSLATIONS = {
     EN: {
-      welcomeTitle: "WELCOME",
-      welcomeTitle2: "TO 360° MARKETS.",
-      welcomeSub: "A better way to learn, share stock trading knowledge, and build your quantitative portfolio.",
-      btnStart: "Get Started",
-      signInText: "Already have an account? Sign in →",
-      roleTitle: "WHAT ARE YOU",
-      roleTitle2: "HERE TO DO?",
-      roleSub: "Choose how you'll use the platform to customize your experience.",
-      learnTitle: "LEARN",
-      learnDesc: "Discover verified stock courses, quantitative models, options pricing strategies, and live market webinars.",
-      teachTitle: "TEACH",
-      teachDesc: "Share your stock trading expertise, build masterclasses, sell Python algorithms, and host live sessions.",
-      btnInvestor: "Continue as Investor",
-      btnTrader: "Continue as Trader",
-      firstNameTitle: "WHAT SHOULD",
-      firstNameTitle2: "WE CALL YOU?",
-      firstNameSub: "Enter your first name to get started.",
-      firstNamePlaceholder: "Palash",
-      enterMsg: "Press Enter ↵ to continue",
-      lastNameTitle: "AND YOUR",
-      lastNameTitle2: "LAST NAME?",
-      lastNamePlaceholder: "Shah",
-      backBtn: "Back",
-      continueBtn: "Continue",
-      emailTitle: "WHERE SHOULD WE",
-      emailTitle2: "SEND UPDATES?",
-      emailSub: "Enter your primary email address for session authentication.",
-      emailPlaceholder: "palash@investor.io",
-      passwordTitle: "CREATE A",
-      passwordTitle2: "SECURE PASSWORD.",
-      passwordSub: "Minimum 6 characters for encrypted session storage.",
-      investorInterestsTitle: "NICE TO MEET YOU, {name}.",
-      investorInterestsTitle2: "WHAT ARE YOU INTERESTED IN?",
-      investorInterestsSub: "Select topics to personalize your marketplace feed.",
-      traderProfileTitle: "LET'S BUILD YOUR",
-      traderProfileTitle2: "EDUCATOR PROFILE.",
-      traderProfileSub: "Enter your professional title and background.",
-      traderTitlePlaceholder: "Ex-Hedge Fund Stock Quant",
-      traderBioPlaceholder: "Specializing in US equity order execution, algorithmic momentum strategies...",
-      investorGoalTitle: "WHAT ARE YOU",
-      investorGoalTitle2: "LOOKING TO ACHIEVE?",
-      traderExpTitle: "HOW LONG HAVE YOU",
-      traderExpTitle2: "BEEN TRADING?",
-      investorTimeTitle: "HOW MUCH TIME DO YOU",
-      investorTimeTitle2: "HAVE TO LEARN?",
-      traderWebTitle: "WHERE CAN PEOPLE",
-      traderWebTitle2: "LEARN MORE ABOUT YOU?",
-      traderWebSub: "Enter your professional website or portfolio link.",
-      reviewTitle: "CONFIRM YOUR",
-      reviewTitle2: "PROFILE DETAILS.",
-      headerName: "FULL NAME",
-      headerEmail: "EMAIL ADDRESS",
-      headerRole: "ACCOUNT TYPE",
-      headerInterests: "INTERESTS",
-      headerGoal: "GOAL",
-      headerTitle: "TITLE",
-      headerStatus: "CERTIFICATION STATUS",
-      pendingText: "PENDING VERIFICATION",
-      editAnswers: "Edit Answers",
-      createAccountBtn: "Create {role} Account →",
-      successTitle: "YOU'RE READY. ✓",
-      successSub: "INITIALIZING YOUR DATABASE SESSION...",
-      validateFirst: "Please enter your first name.",
-      validateLast: "Please enter your last name.",
-      validateEmail: "Please enter a valid email address.",
-      validatePass: "Password must be at least 6 characters.",
+      badge: "INSTANT ACCESS REGISTRATION",
+      title1: "JOIN",
+      title2: "360° MARKETS.",
+      subText: "Start learning from certified stock educators or host live quantitative masterclasses.",
+      roleInvestor: "Investor / Student",
+      roleInvestorDesc: "Learn quant trading, download models & join live streams",
+      roleTrader: "Educator / Quant",
+      roleTraderDesc: "Host masterclasses, sell algorithms & monetize expertise",
+      labelFirstName: "FIRST NAME",
+      labelLastName: "LAST NAME",
+      labelEmail: "EMAIL ADDRESS",
+      labelPass: "PASSWORD (MIN 6 CHARACTERS)",
+      btnCreate: "Create Free Account",
+      btnCreating: "Creating Session...",
+      hasAccount: "Already have an account?",
+      signIn: "Sign in →",
+      orDivider: "OR CONTINUE WITH EMAIL",
+      googleSSO: "Continue with Google",
+      githubSSO: "Continue with GitHub",
+      termsNotice: "By signing up, you agree to our Terms of Service & Privacy Policy.",
+      valFields: "Please fill in all required fields.",
+      valPass: "Password must be at least 6 characters.",
     },
     JA: {
-      welcomeTitle: "ウェルカム",
-      welcomeTitle2: "360° MARKETSへ。",
-      welcomeSub: "株式トレードの知識を学び、共有し、クオンツポートフォリオを構築するためのより良いプラットフォームです。",
-      btnStart: "始める",
-      signInText: "すでにアカウントをお持ちですか？ ログイン →",
-      roleTitle: "どのような目的で",
-      roleTitle2: "ご利用されますか？",
-      roleSub: "利用目的に合わせてプラットフォームの体験をパーソナライズします。",
-      learnTitle: "学ぶ",
-      learnDesc: "認証済み株式コース、クオンツモデル、オプション価格戦略、米株寄り付き実況ライブ配信を閲覧。",
-      teachTitle: "教える",
-      teachDesc: "株式トレードの専門知識を共有し、マスタークラスの作成、Pythonアルゴリズムの販売、配信の主催。",
-      btnInvestor: "受講生として進む",
-      btnTrader: "エデュケーターとして進む",
-      firstNameTitle: "何とお呼び",
-      firstNameTitle2: "しましょうか？",
-      firstNameSub: "お名前（名）を入力してください。",
-      firstNamePlaceholder: "太郎",
-      enterMsg: "Enter ↵ キーを押して進む",
-      lastNameTitle: "お名前の",
-      lastNameTitle2: "苗字（姓）は？",
-      lastNamePlaceholder: "山田",
-      backBtn: "戻る",
-      continueBtn: "次へ",
-      emailTitle: "メールアドレスを",
-      emailTitle2: "教えてください",
-      emailSub: "セッションの認証に使用するメインのアドレスを入力してください。",
-      emailPlaceholder: "taro@investor.jp",
-      passwordTitle: "パスワードを",
-      passwordTitle2: "作成してください",
-      passwordSub: "暗号化セッション保管のため、最低6文字必要です。",
-      investorInterestsTitle: "はじめまして、{name}さん。",
-      investorInterestsTitle2: "どの分野に興味がありますか？",
-      investorInterestsSub: "マーケットプレイスの表示をカスタマイズするためのトピックを選択してください。",
-      traderProfileTitle: "エデュケーター",
-      traderProfileTitle2: "プロフィールを作成しましょう。",
-      traderProfileSub: "肩書きと経歴・バックグラウンドを入力してください。",
-      traderTitlePlaceholder: "例：元ヘッジファンド株式クオンツ",
-      traderBioPlaceholder: "米国株注文執行、アルゴリズム・モメンタム戦略、板情報のミクロ構造などを専門とする...",
-      investorGoalTitle: "どのような目標を",
-      investorGoalTitle2: "お持ちですか？",
-      traderExpTitle: "トレード経験年数は",
-      traderExpTitle2: "どのくらいですか？",
-      investorTimeTitle: "1日あたりどのくらいの時間",
-      investorTimeTitle2: "学習できますか？",
-      traderWebTitle: "実績や詳細を",
-      traderWebTitle2: "発信しているサイトは？",
-      traderWebSub: "ウェブサイトやポートフォリオのリンクを入力してください。",
-      reviewTitle: "登録情報を",
-      reviewTitle2: "確認してください。",
-      headerName: "氏名",
-      headerEmail: "メールアドレス",
-      headerRole: "アカウント種別",
-      headerInterests: "興味のある分野",
-      headerGoal: "目標",
-      headerTitle: "肩書き",
-      headerStatus: "申請ステータス",
-      pendingText: "審査保留中",
-      editAnswers: "回答を編集",
-      createAccountBtn: "{role}アカウントを作成 →",
-      successTitle: "準備が整いました。✓",
-      successSub: "データベースセッションの初期化中...",
-      validateFirst: "お名前（名）を入力してください。",
-      validateLast: "お名前（姓）を入力してください。",
-      validateEmail: "有効なメールアドレスを入力してください。",
-      validatePass: "パスワードは6文字以上で設定してください。",
+      badge: "インスタントアクセス登録",
+      title1: "360° MARKETSに",
+      title2: "参加する。",
+      subText: "認証済み株式エデュケーターから学ぶか、クオンツマスタークラスを主催します。",
+      roleInvestor: "受講生 / 個人投資家",
+      roleInvestorDesc: "クオンツトレードを学び、モデルをダウンロード、ライブ配信に参加",
+      roleTrader: "エデュケーター / クオンツ",
+      roleTraderDesc: "マスタークラスの主催、アルゴリズムの販売、収益化",
+      labelFirstName: "名（FIRST NAME）",
+      labelLastName: "姓（LAST NAME）",
+      labelEmail: "メールアドレス",
+      labelPass: "パスワード（6文字以上）",
+      btnCreate: "無料アカウントを作成",
+      btnCreating: "セッション作成中...",
+      hasAccount: "すでにアカウントをお持ちですか？",
+      signIn: "ログイン →",
+      orDivider: "またはメールアドレスで登録",
+      googleSSO: "Googleで続ける",
+      githubSSO: "GitHubで続ける",
+      termsNotice: "登録することで、利用規約およびプライバシーポリシーに同意したものとみなされます。",
+      valFields: "すべての必須項目を入力してください。",
+      valPass: "パスワードは6文字以上である必要があります。",
     },
     ZH: {
-      welcomeTitle: "欢迎",
-      welcomeTitle2: "来到 360° MARKETS。",
-      welcomeSub: "一个更高效的学习、分享股票交易知识以及构建量化投资组合的新平台。",
-      btnStart: "开始使用",
-      signInText: "已有账号？ 登录 →",
-      roleTitle: "您在此平台",
-      roleTitle2: "的主要目的是？",
-      roleSub: "选择您的角色以定制专属您的个性化平台使用体验。",
-      learnTitle: "学习",
-      learnDesc: "探索经认证的股票交易课程、量化模型、期权策略和美股开盘实盘直播。",
-      teachTitle: "教学",
-      teachDesc: "分享股票交易专长、创建大师课、出售量化算法并主持在线直播。",
-      btnInvestor: "作为投资者继续",
-      btnTrader: "作为交易员继续",
-      firstNameTitle: "我们该如何",
-      firstNameTitle2: "称呼您？",
-      firstNameSub: "请输入您的名字以开始。",
-      firstNamePlaceholder: "建国",
-      enterMsg: "按 Enter ↵ 键继续",
-      lastNameTitle: "以及您的",
-      lastNameTitle2: "姓氏？",
-      lastNamePlaceholder: "李",
-      backBtn: "返回",
-      continueBtn: "继续",
-      emailTitle: "您接收通知",
-      emailTitle2: "的电子邮箱？",
-      emailSub: "请输入您的常用电子邮箱地址以进行登录会话身份验证。",
-      emailPlaceholder: "jianguo@investor.cn",
-      passwordTitle: "请设置一个",
-      passwordTitle2: "高安全性密码。",
-      passwordSub: "密码长度至少需要 6 个字符以保证账号数据加密安全。",
-      investorInterestsTitle: "很高兴认识您，{name}。",
-      investorInterestsTitle2: "您最感兴趣的是什么？",
-      investorInterestsSub: "选择兴趣话题以定制您在市场上的个性化推送内容。",
-      traderProfileTitle: "让我们开始构建您的",
-      traderProfileTitle2: "导师个人资料。",
-      traderProfileSub: "输入您的专业头衔和背景简介。",
-      traderTitlePlaceholder: "例如：前对冲基金量化交易员",
-      traderBioPlaceholder: "擅长美股订单流执行、量化动量交易系统、Level-2微观结构...",
-      investorGoalTitle: "您的目标是",
-      investorGoalTitle2: "达成什么成果？",
-      traderExpTitle: "您的交易经验",
-      traderExpTitle2: "总共有多少年？",
-      investorTimeTitle: "您每天有多少时间",
-      investorTimeTitle2: "可以用来学习？",
-      traderWebTitle: "大家可以在哪里",
-      traderWebTitle2: "了解更多您的背景？",
-      traderWebSub: "输入您的个人专业网站或投资组合链接。",
-      reviewTitle: "确认您的",
-      reviewTitle2: "注册详细资料。",
-      headerName: "姓名",
-      headerEmail: "电子邮箱",
-      headerRole: "账户类型",
-      headerInterests: "感兴趣的话题",
-      headerGoal: "学习目标",
-      headerTitle: "专业头衔",
-      headerStatus: "认证状态",
-      pendingText: "等待管理员审核",
-      editAnswers: "编辑答案",
-      createAccountBtn: "创建 {role} 账户 →",
-      successTitle: "您已准备就绪。✓",
-      successSub: "正在初始化您的数据库会话...",
-      validateFirst: "请输入您的名字。",
-      validateLast: "请输入您的姓氏。",
-      validateEmail: "请输入有效的电子邮箱地址。",
-      validatePass: "密码必须至少为 6 个字符。",
+      badge: "即时注册体验",
+      title1: "加入",
+      title2: "360° MARKETS。",
+      subText: "向经认证的股票交易导师学习，或主办实时量化交易大师班。",
+      roleInvestor: "投资者 / 学员",
+      roleInvestorDesc: "学习量化交易、下载代码模型、参加盘前实盘直播",
+      roleTrader: "导师 / 量化交易员",
+      roleTraderDesc: "主办大师班、出售量化算法、分享专业知识变现",
+      labelFirstName: "名",
+      labelLastName: "姓",
+      labelEmail: "电子邮箱",
+      labelPass: "密码（至少6位）",
+      btnCreate: "立即免费创建账号",
+      btnCreating: "正在创建会话...",
+      hasAccount: "已有账号？",
+      signIn: "直接登录 →",
+      orDivider: "或使用电子邮箱注册",
+      googleSSO: "通过 Google 账号登录",
+      githubSSO: "通过 GitHub 账号登录",
+      termsNotice: "注册即表示您同意我们的服务条款和隐私政策。",
+      valFields: "请填写所有必填字段。",
+      valPass: "密码长度必须至少为 6 个字符。",
     },
   };
 
-  const ot = ONBOARDING_TRANSLATIONS[language] || ONBOARDING_TRANSLATIONS.EN;
+  const t = TRANSLATIONS[language] || TRANSLATIONS.EN;
 
-  const INTERESTS_LIST = [
-    "Stock Trading",
-    "Options Strategies",
-    "Quantitative Finance",
-    "Equity Valuation (DCF)",
-    "High-Frequency Trading",
-    "Technical Analysis",
-    "Portfolio Management",
-  ];
-
-  const GOALS_LIST = [
-    "BUILD NEW SKILLS",
-    "ADVANCE MY CAREER",
-    "START TRADING STOCKS",
-    "LEARN OPTIONS PRICING",
-    "EXPLORE QUANTITATIVE MODELS",
-  ];
-
-  const TIME_OPTIONS = [
-    "15 MIN / DAY",
-    "30 MIN / DAY",
-    "1 HOUR / DAY",
-    "2+ HOURS / DAY",
-    "WEEKENDS",
-  ];
-
-  const EXP_OPTIONS = ["0–2 YEARS", "3–5 YEARS", "6–10 YEARS", "10+ YEARS"];
-
-  // Auto-focus input on step change
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [step]);
-
-  // Keyboard navigation (ENTER to continue, ESC to go back)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        if (step > 0 && step < 9) {
-          e.preventDefault();
-          goNext();
-        }
-      } else if (e.key === "Escape") {
-        if (step > 0 && step < 10) {
-          e.preventDefault();
-          goBack();
-        }
+  const handleOAuthLogin = async (provider: "google" | "github") => {
+    try {
+      setIsLoading(true);
+      setErrorMsg("");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}${redirectTarget}` : undefined,
+        },
+      });
+      if (error) {
+        setErrorMsg(error.message);
+        setIsLoading(false);
       }
-    };
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMsg(err.message || "OAuth login failed.");
+    }
+  };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [step, firstName, lastName, email, password, role]);
-
-  const goNext = () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setErrorMsg("");
 
-    // Step Validation
-    if (step === 2 && !firstName.trim()) {
-      setErrorMsg(ot.validateFirst);
-      return;
-    }
-    if (step === 3 && !lastName.trim()) {
-      setErrorMsg(ot.validateLast);
-      return;
-    }
-    if (step === 4 && (!email.trim() || !email.includes("@"))) {
-      setErrorMsg(ot.validateEmail);
-      return;
-    }
-    if (step === 5 && password.length < 6) {
-      setErrorMsg(ot.validatePass);
+    if (!firstName.trim() || !email.trim() || !password) {
+      setErrorMsg(t.valFields);
       return;
     }
 
-    setDirection(1);
-    setStep((prev) => Math.min(prev + 1, 9));
-  };
+    if (password.length < 6) {
+      setErrorMsg(t.valPass);
+      return;
+    }
 
-  const goBack = () => {
-    setErrorMsg("");
-    setDirection(-1);
-    setStep((prev) => Math.max(prev - 1, 0));
-  };
-
-  const toggleInterest = (item: string) => {
-    setInterests((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  };
-
-  const handleFinalSubmit = async () => {
     setIsLoading(true);
-    setErrorMsg("");
 
     try {
       // 1. Supabase Auth Sign Up
@@ -369,28 +161,36 @@ export default function FullScreenOnboardingPage() {
         password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
-            display_name: `${firstName} ${lastName}`,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            display_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
             role,
           },
         },
       });
 
+      if (error) {
+        setErrorMsg(error.message || "Registration failed. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
       if (data?.user) {
         userId = data.user.id;
       }
 
-      // 2. Build Profile Object
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim() || "User";
+
+      // 2. Set Local User Profile Session State
       const newProfile: UserProfile = {
         id: userId,
         email,
-        name: `${firstName} ${lastName}`,
-        firstName,
-        lastName,
-        displayName: `${firstName} ${lastName}`,
+        name: fullName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        displayName: fullName,
         role,
-        title: role === "TRADER" ? traderTitle || "Stock Educator" : "Stock Investor",
+        title: role === "TRADER" ? "Certified Stock Educator" : "Stock Investor",
         avatarUrl:
           role === "TRADER"
             ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"
@@ -403,85 +203,55 @@ export default function FullScreenOnboardingPage() {
         certificationStatus: role === "TRADER" ? "pending" : undefined,
       };
 
-      // 3. Save profile in Supabase profiles & role tables
-      await supabase.from("profiles").upsert({
-        id: userId,
-        first_name: firstName,
-        last_name: lastName,
-        display_name: `${firstName} ${lastName}`,
-        country: "United States",
-        language,
-        role,
-        onboarding_completed: true,
-        onboarding_step: 4,
-      });
+      setUserProfile(newProfile);
 
-      if (role === "INVESTOR") {
-        await supabase.from("investor_profiles").upsert({
-          user_id: userId,
-          learning_interests: interests,
-          learning_goals: [goal],
-        });
-      } else if (role === "TRADER") {
-        await supabase.from("trader_profiles").upsert({
-          user_id: userId,
-          professional_title: traderTitle,
-          bio: traderBio,
-          expertise: interests,
-          years_experience: parseInt(traderExp) || 3,
-          website: traderWebsite,
-          certification_status: "pending",
+      // 3. Upsert Profile in Supabase
+      try {
+        await supabase.from("profiles").upsert({
+          id: userId,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          display_name: fullName,
+          country: "United States",
+          language,
+          role,
+          onboarding_completed: true,
+          onboarding_step: 4,
         });
 
-        await supabase.from("trader_applications").insert({
-          user_id: userId,
-          full_name: `${firstName} ${lastName}`,
-          expertise: interests.join(", "),
-          experience_years: parseInt(traderExp) || 3,
-          bio: traderBio || "Stock Educator Applicant",
-          portfolio_url: traderWebsite,
-          status: "pending",
-        });
+        if (role === "INVESTOR") {
+          await supabase.from("investor_profiles").upsert({
+            user_id: userId,
+            learning_interests: ["Stock Trading", "Options Strategies"],
+            learning_goals: ["Build new quantitative trading skills"],
+          });
+        } else if (role === "TRADER") {
+          await supabase.from("trader_profiles").upsert({
+            user_id: userId,
+            professional_title: "Stock Educator & Quant",
+            bio: "Quantitative Stock Trading & Execution Specialist.",
+            expertise: ["Equities", "Options", "Algorithms"],
+            years_experience: 3,
+            certification_status: "pending",
+          });
+        }
+      } catch (dbErr) {
+        console.warn("Database profile sync notice:", dbErr);
       }
 
-      setUserProfile(newProfile);
+      // Celebrate & Redirect
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-
-      // Trigger Threshold Screen
-      setStep(10);
+      router.push(redirectTarget);
+    } catch (err: any) {
       setIsLoading(false);
-      setIsSuccessThreshold(true);
-
-      // Launch Home Page by default after onboarding completion
-      setTimeout(() => {
-        router.push("/");
-      }, 1400);
-    } catch (e: any) {
-      setIsLoading(false);
-      setErrorMsg(e.message || "An unexpected error occurred.");
+      setErrorMsg(err.message || "An unexpected error occurred during signup.");
     }
   };
 
-  // Directional Framer Motion Variants
-  const variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? 50 : -50,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (dir: number) => ({
-      x: dir > 0 ? -50 : 50,
-      opacity: 0,
-    }),
-  };
-
   return (
-    <div className="min-h-screen bg-[#0B0B0B] text-white flex flex-col justify-between p-6 sm:p-12 font-mono relative overflow-hidden select-none">
-      {/* Background Ambient Glow */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#8BE000]/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#080808] text-white flex flex-col justify-between p-6 sm:p-12 font-mono relative overflow-hidden select-none">
+      {/* Background Subtle Ambient Glow */}
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#8BE000]/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Header Shell Bar */}
       <header className="w-full flex items-center justify-between z-20">
@@ -500,725 +270,223 @@ export default function FullScreenOnboardingPage() {
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
-              className={`px-2.5 py-1 font-bold transition-all ${
-                language === lang ? "bg-[#8BE000] text-black" : "text-neutral-400 hover:text-white"
+              className={`px-2.5 py-1 transition ${
+                language === lang ? "bg-[#8BE000] text-black font-bold" : "text-neutral-400 hover:text-white"
               }`}
             >
               {lang}
             </button>
           ))}
         </div>
+      </header>
 
-        {step > 0 && step < 10 && (
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <span className="text-neutral-500 font-medium">0{step} / 0{TOTAL_STEPS}</span>
-            <div className="w-24 bg-[#262626] h-1 rounded-full overflow-hidden">
-              <motion.div
-                className="bg-[#8BE000] h-full"
-                animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-                transition={{ duration: 0.3 }}
+      {/* Main Registration Card */}
+      <main className="max-w-lg w-full mx-auto my-8 z-20 space-y-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 text-[#8BE000] text-xs font-mono tracking-wider uppercase bg-[#141414] px-3 py-1 border border-[#262626]">
+            <Sparkles className="w-3.5 h-3.5 text-[#8BE000]" />
+            <span>{t.badge}</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-display font-light text-white tracking-tight leading-none">
+            {t.title1} <span className="font-bold text-[#8BE000]">{t.title2}</span>
+          </h1>
+          <p className="text-xs text-neutral-400 font-mono">
+            {t.subText}
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="bg-red-950/60 border border-red-800 text-red-300 p-4 text-xs font-mono">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Account Role Selector Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setRole("INVESTOR")}
+            className={`p-3.5 text-left border transition flex flex-col justify-between relative ${
+              role === "INVESTOR"
+                ? "bg-[#161616] border-[#8BE000] text-white shadow-lg"
+                : "bg-[#111111] border-[#262626] text-neutral-400 hover:border-neutral-700"
+            }`}
+          >
+            {role === "INVESTOR" && (
+              <span className="absolute top-2 right-2 text-[#8BE000] text-xs">✓</span>
+            )}
+            <div className="flex items-center gap-2 mb-1.5">
+              <User className={`w-4 h-4 ${role === "INVESTOR" ? "text-[#8BE000]" : "text-neutral-500"}`} />
+              <span className="text-xs font-bold font-sans text-white">{t.roleInvestor}</span>
+            </div>
+            <span className="text-[10px] text-neutral-400 leading-snug">{t.roleInvestorDesc}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRole("TRADER")}
+            className={`p-3.5 text-left border transition flex flex-col justify-between relative ${
+              role === "TRADER"
+                ? "bg-[#161616] border-[#8BE000] text-white shadow-lg"
+                : "bg-[#111111] border-[#262626] text-neutral-400 hover:border-neutral-700"
+            }`}
+          >
+            {role === "TRADER" && (
+              <span className="absolute top-2 right-2 text-[#8BE000] text-xs">✓</span>
+            )}
+            <div className="flex items-center gap-2 mb-1.5">
+              <GraduationCap className={`w-4 h-4 ${role === "TRADER" ? "text-[#8BE000]" : "text-neutral-500"}`} />
+              <span className="text-xs font-bold font-sans text-white">{t.roleTrader}</span>
+            </div>
+            <span className="text-[10px] text-neutral-400 leading-snug">{t.roleTraderDesc}</span>
+          </button>
+        </div>
+
+        {/* Quick SSO Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleOAuthLogin("google")}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 bg-[#161616] border border-[#262626] hover:border-neutral-500 text-neutral-200 text-xs py-3 px-3 transition font-sans font-medium"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path
+                fill="#EA4335"
+                d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.1s.7 5.4 1.9 7.8l3.7-2.9z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z"
+              />
+            </svg>
+            <span>Google</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleOAuthLogin("github")}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 bg-[#161616] border border-[#262626] hover:border-neutral-500 text-neutral-200 text-xs py-3 px-3 transition font-sans font-medium"
+          >
+            <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            <span>GitHub</span>
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="relative flex items-center justify-center">
+          <div className="border-t border-[#262626] w-full" />
+          <span className="bg-[#080808] px-3 text-[10px] text-neutral-500 font-mono tracking-widest shrink-0">
+            {t.orDivider}
+          </span>
+        </div>
+
+        {/* Email & Password Registration Form */}
+        <form onSubmit={handleRegister} className="space-y-4 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                {t.labelFirstName}
+              </label>
+              <input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Alex"
+                className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3 focus:outline-none transition-colors text-sm font-mono placeholder-neutral-700"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                {t.labelLastName}
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Chen"
+                className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3 focus:outline-none transition-colors text-sm font-mono placeholder-neutral-700"
               />
             </div>
           </div>
-        )}
-      </header>
 
-      {/* Main Full-Screen Conversational Body */}
-      <main className="my-auto py-12 max-w-3xl w-full mx-auto z-20">
-        {errorMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-4 bg-red-950/90 border border-red-500 text-red-200 text-xs font-mono"
+          <div className="space-y-1.5">
+            <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+              {t.labelEmail}
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="alex@quantmarkets.io"
+              className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3.5 focus:outline-none transition-colors text-sm font-mono placeholder-neutral-700"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+              {t.labelPass}
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3.5 focus:outline-none transition-colors text-sm font-mono placeholder-neutral-700"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn-lime w-full py-4 font-bold text-sm text-black flex items-center justify-center gap-2 group mt-4 shadow-xl"
           >
-            ⚠️ {errorMsg}
-          </motion.div>
-        )}
+            <span>{isLoading ? t.btnCreating : t.btnCreate}</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-black" />
+          </button>
+        </form>
 
-        <AnimatePresence mode="wait" custom={direction}>
-          {/* SCREEN 00: WELCOME */}
-          {step === 0 && (
-            <motion.div
-              key="step0"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 text-xs font-mono text-[#8BE000] border border-[#8BE000] px-3 py-1 bg-black">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>INSTITUTIONAL KNOWLEDGE PORTAL</span>
-                </div>
-                <h1 className="text-6xl sm:text-8xl font-display font-light leading-[0.95] tracking-tighter text-white uppercase">
-                  {ot.welcomeTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.welcomeTitle2}</span>
-                </h1>
-                <p className="text-neutral-300 text-xl font-light max-w-lg leading-relaxed pt-2">
-                  {ot.welcomeSub}
-                </p>
-              </div>
+        <p className="text-[10px] text-neutral-500 text-center leading-relaxed">
+          {t.termsNotice}
+        </p>
 
-              <div className="pt-6 space-y-4 max-w-xs">
-                <button
-                  onClick={() => {
-                    setDirection(1);
-                    setStep(1);
-                  }}
-                  className="btn-lime w-full text-base py-4 font-bold flex items-center justify-between px-6 group"
-                >
-                  <span>{ot.btnStart}</span>
-                  <ArrowRight className="w-5 h-5 text-black group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <div className="text-xs text-neutral-400">
-                  {ot.signInText.split("?")[0]}?{" "}
-                  <Link href="/login" className="text-[#8BE000] underline font-semibold hover:text-white">
-                    {ot.signInText.includes("→") ? ot.signInText.split("?")[1]?.trim() || "Sign in →" : "Sign in →"}
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 01: WHAT ARE YOU HERE TO DO? */}
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-2">
-                <span className="text-xs text-[#8BE000] font-bold">01 / 0{TOTAL_STEPS}</span>
-                <h2 className="text-5xl sm:text-7xl font-display font-light tracking-tight text-white leading-none uppercase">
-                  {ot.roleTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.roleTitle2}</span>
-                </h2>
-                <p className="text-xs text-neutral-400">{ot.roleSub}</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
-                {/* LEARN CARD */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRole("INVESTOR");
-                    setDirection(1);
-                    setStep(2);
-                  }}
-                  className={`text-left p-10 border transition-all duration-200 flex flex-col justify-between h-72 space-y-4 group ${
-                    role === "INVESTOR"
-                      ? "border-[#8BE000] bg-[#161616] ring-1 ring-[#8BE000]"
-                      : "border-[#262626] bg-[#0F0F0F] hover:border-[#8BE000] hover:-translate-y-1"
-                  }`}
-                >
-                  <div className="space-y-4">
-                    <div className="w-12 h-12 bg-black border border-[#262626] text-[#8BE000] flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-4xl font-display font-bold text-white group-hover:text-[#8BE000]">{ot.learnTitle}</h3>
-                    <p className="text-xs text-neutral-400 font-light leading-relaxed">
-                      {ot.learnDesc}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-[#8BE000] font-bold pt-2">
-                    <span>{ot.btnInvestor}</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </button>
-
-                {/* TEACH CARD */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRole("TRADER");
-                    setDirection(1);
-                    setStep(2);
-                  }}
-                  className={`text-left p-10 border transition-all duration-200 flex flex-col justify-between h-72 space-y-4 group ${
-                    role === "TRADER"
-                      ? "border-[#8BE000] bg-[#161616] ring-1 ring-[#8BE000]"
-                      : "border-[#262626] bg-[#0F0F0F] hover:border-[#8BE000] hover:-translate-y-1"
-                  }`}
-                >
-                  <div className="space-y-4">
-                    <div className="w-12 h-12 bg-black border border-[#262626] text-[#8BE000] flex items-center justify-center">
-                      <ShieldCheck className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-4xl font-display font-bold text-white group-hover:text-[#8BE000]">{ot.teachTitle}</h3>
-                    <p className="text-xs text-neutral-400 font-light leading-relaxed">
-                      {ot.teachDesc}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-[#8BE000] font-bold pt-2">
-                    <span>{ot.btnTrader}</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 02: FIRST NAME */}
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-2">
-                <span className="text-xs text-[#8BE000] font-bold">02 / 0{TOTAL_STEPS}</span>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
-                  {ot.firstNameTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.firstNameTitle2}</span>
-                </h2>
-                <p className="text-xs text-neutral-400">{ot.firstNameSub}</p>
-              </div>
-
-              <div className="space-y-4 pt-4">
-                <input
-                  ref={inputRef as any}
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder={ot.firstNamePlaceholder}
-                  className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
-                />
-
-                <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
-                  <span>{ot.enterMsg}</span>
-                  <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>{ot.continueBtn}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 03: LAST NAME */}
-          {step === 3 && (
-            <motion.div
-              key="step3"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-[#8BE000]">
-                  <span>03 / 0{TOTAL_STEPS}</span>
-                  <span className="text-neutral-500">•</span>
-                  <span className="font-bold">{firstName} ✓</span>
-                </div>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
-                  {ot.lastNameTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.lastNameTitle2}</span>
-                </h2>
-              </div>
-
-              <div className="space-y-4 pt-4">
-                <input
-                  ref={inputRef as any}
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder={ot.lastNamePlaceholder}
-                  className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
-                />
-
-                <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
-                  <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                    <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
-                  </button>
-                  <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>{ot.continueBtn}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 04: EMAIL ADDRESS */}
-          {step === 4 && (
-            <motion.div
-              key="step4"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-[#8BE000]">
-                  <span>04 / 0{TOTAL_STEPS}</span>
-                  <span className="text-neutral-500">•</span>
-                  <span className="font-bold">{firstName} {lastName} ✓</span>
-                </div>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
-                  {ot.emailTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.emailTitle2}</span>
-                </h2>
-                <p className="text-xs text-neutral-400">{ot.emailSub}</p>
-              </div>
-
-              <div className="space-y-4 pt-4">
-                <input
-                  ref={inputRef as any}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={ot.emailPlaceholder}
-                  className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
-                />
-
-                <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
-                  <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                    <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
-                  </button>
-                  <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>{ot.continueBtn}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 05: PASSWORD */}
-          {step === 5 && (
-            <motion.div
-              key="step5"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-[#8BE000]">
-                  <span>05 / 0{TOTAL_STEPS}</span>
-                  <span className="text-neutral-500">•</span>
-                  <span className="font-bold">{email} ✓</span>
-                </div>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
-                  {ot.passwordTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.passwordTitle2}</span>
-                </h2>
-                <p className="text-xs text-neutral-400">{ot.passwordSub}</p>
-              </div>
-
-              <div className="space-y-4 pt-4">
-                <input
-                  ref={inputRef as any}
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-3xl sm:text-5xl font-display font-light text-white py-4 focus:outline-none transition-colors placeholder-neutral-700"
-                />
-
-                <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
-                  <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                    <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
-                  </button>
-                  <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                    <span>{ot.continueBtn}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 06: ROLE PERSONALIZATION A */}
-          {step === 6 && (
-            <motion.div
-              key="step6"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              {role === "INVESTOR" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="text-xs text-[#8BE000] font-bold">06 / 0{TOTAL_STEPS}</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
-                      {ot.investorInterestsTitle.replace("{name}", firstName.toUpperCase())}<br />
-                      <span className="text-[#8BE000] font-normal">{ot.investorInterestsTitle2}</span>
-                    </h2>
-                    <p className="text-xs text-neutral-400">{ot.investorInterestsSub}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3 pt-4">
-                    {INTERESTS_LIST.map((item) => {
-                      const isSelected = interests.includes(item);
-                      return (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() => toggleInterest(item)}
-                          className={`px-5 py-3 text-xs font-bold transition-all border flex items-center gap-2 ${
-                            isSelected
-                              ? "bg-[#8BE000] text-black border-[#8BE000]"
-                              : "bg-[#161616] text-neutral-300 border-[#262626] hover:border-[#8BE000]"
-                          }`}
-                        >
-                          <span>{item}</span>
-                          {isSelected && <Check className="w-4 h-4 text-black" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {role === "TRADER" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="text-xs text-[#8BE000] font-bold">06 / 0{TOTAL_STEPS}</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
-                      {ot.traderProfileTitle}<br />
-                      <span className="text-[#8BE000] font-normal">{ot.traderProfileTitle2}</span>
-                    </h2>
-                    <p className="text-xs text-neutral-400">{ot.traderProfileSub}</p>
-                  </div>
-
-                  <div className="space-y-4 pt-4">
-                    <input
-                      ref={inputRef as any}
-                      type="text"
-                      value={traderTitle}
-                      onChange={(e) => setTraderTitle(e.target.value)}
-                      placeholder={ot.traderTitlePlaceholder}
-                      className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-2xl sm:text-4xl font-display font-light text-white py-3 focus:outline-none placeholder-neutral-700"
-                    />
-
-                    <textarea
-                      rows={3}
-                      value={traderBio}
-                      onChange={(e) => setTraderBio(e.target.value)}
-                      placeholder={ot.traderBioPlaceholder}
-                      className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-xs text-white p-4 focus:outline-none font-mono placeholder-neutral-600"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-xs text-neutral-500 pt-6">
-                <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
-                </button>
-                <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                  <span>{ot.continueBtn}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 07: ROLE PERSONALIZATION B */}
-          {step === 7 && (
-            <motion.div
-              key="step7"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              {role === "INVESTOR" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="text-xs text-[#8BE000] font-bold">07 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
-                      {ot.investorGoalTitle}<br />
-                      <span className="text-[#8BE000] font-normal">{ot.investorGoalTitle2}</span>
-                    </h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                    {GOALS_LIST.map((g) => {
-                      const isSelected = goal === g;
-                      return (
-                        <button
-                          key={g}
-                          type="button"
-                          onClick={() => setGoal(g)}
-                          className={`p-5 text-left border text-xs font-bold transition-all flex justify-between items-center ${
-                            isSelected
-                              ? "bg-[#8BE000] text-black border-[#8BE000]"
-                              : "bg-[#161616] text-neutral-300 border-[#262626] hover:border-[#8BE000]"
-                          }`}
-                        >
-                          <span>{g}</span>
-                          {isSelected && <Check className="w-4 h-4 text-black" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {role === "TRADER" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="text-xs text-[#8BE000] font-bold">07 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
-                      {ot.traderExpTitle}<br />
-                      <span className="text-[#8BE000] font-normal">{ot.traderExpTitle2}</span>
-                    </h2>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-4">
-                    {EXP_OPTIONS.map((exp) => {
-                      const isSelected = traderExp === exp;
-                      return (
-                        <button
-                          key={exp}
-                          type="button"
-                          onClick={() => setTraderExp(exp)}
-                          className={`p-6 text-center border text-sm font-bold transition-all ${
-                            isSelected
-                              ? "bg-[#8BE000] text-black border-[#8BE000]"
-                              : "bg-[#161616] text-neutral-300 border-[#262626] hover:border-[#8BE000]"
-                          }`}
-                        >
-                          {exp}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-xs text-neutral-500 pt-6">
-                <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
-                </button>
-                <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                  <span>{ot.continueBtn}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 08: ROLE PERSONALIZATION C */}
-          {step === 8 && (
-            <motion.div
-              key="step8"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              {role === "INVESTOR" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="text-xs text-[#8BE000] font-bold">08 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
-                      {ot.investorTimeTitle}<br />
-                      <span className="text-[#8BE000] font-normal">{ot.investorTimeTitle2}</span>
-                    </h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                    {TIME_OPTIONS.map((time) => {
-                      const isSelected = timeCommitment === time;
-                      return (
-                        <button
-                          key={time}
-                          type="button"
-                          onClick={() => setTimeCommitment(time)}
-                          className={`p-5 text-center border text-xs font-bold transition-all ${
-                            isSelected
-                              ? "bg-[#8BE000] text-black border-[#8BE000]"
-                              : "bg-[#161616] text-neutral-300 border-[#262626] hover:border-[#8BE000]"
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {role === "TRADER" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="text-xs text-[#8BE000] font-bold">08 / 09</span>
-                    <h2 className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase">
-                      {ot.traderWebTitle}<br />
-                      <span className="text-[#8BE000] font-normal">{ot.traderWebTitle2}</span>
-                    </h2>
-                    <p className="text-xs text-neutral-400">{ot.traderWebSub}</p>
-                  </div>
-
-                  <div className="space-y-4 pt-4">
-                    <input
-                      ref={inputRef as any}
-                      type="url"
-                      value={traderWebsite}
-                      onChange={(e) => setTraderWebsite(e.target.value)}
-                      placeholder="https://alexmorgan.io"
-                      className="w-full bg-transparent border-b-2 border-[#333333] focus:border-[#8BE000] text-2xl sm:text-4xl font-display font-light text-white py-3 focus:outline-none placeholder-neutral-700"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-xs text-neutral-500 pt-6">
-                <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> {ot.backBtn}
-                </button>
-                <button onClick={goNext} className="btn-lime px-6 py-3 font-bold text-black flex items-center gap-1">
-                  <span>Review Profile →</span>
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 09: EDITORIAL PROFILE REVIEW */}
-          {step === 9 && (
-            <motion.div
-              key="step9"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-8"
-            >
-              <div className="space-y-2">
-                <span className="text-xs text-[#8BE000] font-bold">YOU'RE ALL SET</span>
-                <h2 className="text-5xl sm:text-7xl font-display font-light text-white tracking-tight leading-none uppercase">
-                  {ot.reviewTitle}<br />
-                  <span className="text-[#8BE000] font-normal">{ot.reviewTitle2}</span>
-                </h2>
-              </div>
-
-              <div className="border border-[#262626] bg-[#161616] p-8 space-y-5 text-xs font-mono">
-                <div className="flex justify-between border-b border-[#262626] pb-3">
-                  <span className="text-neutral-400">{ot.headerName}</span>
-                  <span className="text-white font-bold text-sm">{firstName} {lastName}</span>
-                </div>
-                <div className="flex justify-between border-b border-[#262626] pb-3">
-                  <span className="text-neutral-400">{ot.headerEmail}</span>
-                  <span className="text-white">{email}</span>
-                </div>
-                <div className="flex justify-between border-b border-[#262626] pb-3">
-                  <span className="text-neutral-400">{ot.headerRole}</span>
-                  <span className="text-[#8BE000] font-bold">{role}</span>
-                </div>
-
-                {role === "INVESTOR" && (
-                  <>
-                    <div className="flex justify-between border-b border-[#262626] pb-3">
-                      <span className="text-neutral-400">{ot.headerInterests}</span>
-                      <span className="text-white">{interests.join(" · ")}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-400">{ot.headerGoal}</span>
-                      <span className="text-[#8BE000]">{goal}</span>
-                    </div>
-                  </>
-                )}
-
-                {role === "TRADER" && (
-                  <>
-                    <div className="flex justify-between border-b border-[#262626] pb-3">
-                      <span className="text-neutral-400">{ot.headerTitle}</span>
-                      <span className="text-white">{traderTitle || "Stock Educator"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-400">{ot.headerStatus}</span>
-                      <span className="text-amber-400 font-bold">{ot.pendingText}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center text-xs text-neutral-500 pt-4">
-                <button onClick={goBack} className="text-neutral-400 hover:text-white flex items-center gap-1">
-                  <ChevronLeft className="w-4 h-4" /> {ot.editAnswers}
-                </button>
-                <button
-                  onClick={handleFinalSubmit}
-                  disabled={isLoading}
-                  className="btn-lime px-8 py-4 font-bold text-black text-sm flex items-center gap-2"
-                >
-                  <span>{isLoading ? "Creating Account..." : ot.createAccountBtn.replace("{role}", role)}</span>
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* SCREEN 10: THRESHOLD ENTRANCE INTO PRODUCT */}
-          {step === 10 && (
-            <motion.div
-              key="step10"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              className="text-center space-y-8 py-16"
-            >
-              <div className="w-20 h-20 bg-[#8BE000] text-black font-mono font-bold text-3xl flex items-center justify-center mx-auto shadow-2xl animate-bounce">
-                360°
-              </div>
-
-              <div className="space-y-3">
-                <h2 className="text-5xl font-display font-light text-white">{ot.successTitle}</h2>
-                <p className="text-xs text-[#8BE000] font-mono uppercase tracking-widest">
-                  {ot.successSub}
-                </p>
-              </div>
-
-              <div className="w-48 bg-[#262626] h-1.5 rounded-full mx-auto overflow-hidden">
-                <div className="bg-[#8BE000] h-full animate-pulse" style={{ width: "100%" }} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="text-center text-xs text-neutral-400 pt-1 border-t border-[#262626]">
+          {t.hasAccount}{" "}
+          <Link
+            href={redirectTarget !== "/" ? `/login?redirect=${encodeURIComponent(redirectTarget)}` : "/login"}
+            className="text-[#8BE000] underline font-semibold hover:text-white"
+          >
+            {t.signIn}
+          </Link>
+        </div>
       </main>
 
-      {/* Footer Navigation Bar */}
+      {/* Footer */}
       <footer className="w-full flex items-center justify-between text-xs text-neutral-500 z-20 border-t border-[#262626] pt-6">
-        <div>360° MARKETS PLATFORM • FINRA / SEC COMPLIANT SESSION</div>
-        <div>Press <kbd className="bg-[#262626] text-white px-1.5 py-0.5 rounded">ESC</kbd> to go back</div>
+        <div>360° MARKETS PLATFORM • INSTANT ONBOARDING ENGINE</div>
       </footer>
     </div>
+  );
+}
+
+export default function FullScreenOnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#080808] flex items-center justify-center text-white font-mono text-xs">Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

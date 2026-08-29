@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, DEMO_USERS } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { Language } from "@/lib/translations";
@@ -10,8 +10,11 @@ import { supabase } from "@/lib/supabase";
 import { Lock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get("redirect") || "/";
+
   const { setUserProfile } = useAuth();
   const { language, setLanguage } = useLanguage();
 
@@ -109,8 +112,8 @@ export default function LoginPage() {
         });
 
         setIsLoading(false);
-        // Default redirect on login: Launch Home Page (/)
-        router.push("/");
+        // Redirect to intended target (e.g. course checkout) or home
+        router.push(redirectTarget);
       }
     } catch (e: any) {
       setIsLoading(false);
@@ -140,8 +143,8 @@ export default function LoginPage() {
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
-              className={`px-2.5 py-1 font-bold transition-all ${
-                language === lang ? "bg-[#8BE000] text-black" : "text-neutral-400 hover:text-white"
+              className={`px-2.5 py-1 transition ${
+                language === lang ? "bg-[#8BE000] text-black font-bold" : "text-neutral-400 hover:text-white"
               }`}
             >
               {lang}
@@ -150,31 +153,25 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* Main Full-Screen Production Login Body */}
-      <main className="my-auto py-12 max-w-md w-full mx-auto z-20 space-y-8">
-        <div className="space-y-3 text-center">
-          <div className="inline-flex items-center gap-2 border border-[#8BE000] bg-black px-3 py-1 text-xs text-[#8BE000] font-bold uppercase tracking-wider">
+      {/* Main Login Card */}
+      <main className="max-w-md w-full mx-auto my-12 z-20 space-y-8">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 text-[#8BE000] text-xs font-mono tracking-wider uppercase bg-[#161616] px-3 py-1 border border-[#262626]">
             <Lock className="w-3.5 h-3.5" />
             <span>{ot.secureSession}</span>
           </div>
-
-          <h1 className="text-5xl sm:text-6xl font-display font-light text-white tracking-tight leading-none pt-2 uppercase">
-            {ot.title1}<br />
-            <span className="text-[#8BE000] font-normal">{ot.title2}</span>
+          <h1 className="text-4xl font-display font-light text-white tracking-tight leading-none">
+            {ot.title1} <span className="font-bold text-[#8BE000]">{ot.title2}</span>
           </h1>
-          <p className="text-xs text-neutral-400 leading-relaxed">
+          <p className="text-xs text-neutral-400 font-mono">
             {ot.subText}
           </p>
         </div>
 
         {errorMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-red-950/90 border border-red-500 text-red-200 text-xs font-mono"
-          >
-            ⚠️ {errorMsg}
-          </motion.div>
+          <div className="bg-red-950/50 border border-red-800 text-red-300 p-4 text-xs font-mono">
+            {errorMsg}
+          </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-6 text-xs">
@@ -220,7 +217,10 @@ export default function LoginPage() {
 
         <div className="text-center text-xs text-neutral-400 pt-2">
           {ot.noAccount}{" "}
-          <Link href="/register" className="text-[#8BE000] underline font-semibold hover:text-white">
+          <Link
+            href={redirectTarget !== "/" ? `/register?redirect=${encodeURIComponent(redirectTarget)}` : "/register"}
+            className="text-[#8BE000] underline font-semibold hover:text-white"
+          >
             {ot.createAccount}
           </Link>
         </div>
@@ -231,5 +231,13 @@ export default function LoginPage() {
         <div>360° MARKETS PLATFORM • FINRA / SEC COMPLIANT SESSION</div>
       </footer>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center text-white font-mono text-xs">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

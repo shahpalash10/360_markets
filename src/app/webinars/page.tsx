@@ -68,8 +68,7 @@ export default function WebinarsPage() {
   };
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12 border-b border-[#D9D9D9] pb-8 space-y-4">
             <span className="text-xs font-mono text-[#8BE000] bg-black px-3 py-1 uppercase tracking-wider">
@@ -154,6 +153,5 @@ export default function WebinarsPage() {
           )}
         </div>
       </div>
-    </AuthGuard>
   );
 }

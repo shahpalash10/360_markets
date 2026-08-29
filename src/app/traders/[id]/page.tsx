@@ -72,25 +72,21 @@ export default function TraderProfilePage() {
 
   if (isLoading) {
     return (
-      <AuthGuard>
-        <div className="min-h-screen bg-[#FFFFFF] text-black flex items-center justify-center font-mono">
-          <div className="animate-pulse">Loading trader profile...</div>
-        </div>
-      </AuthGuard>
+      <div className="min-h-screen bg-[#FFFFFF] text-black flex items-center justify-center font-mono">
+        <div className="animate-pulse">Loading trader profile...</div>
+      </div>
     );
   }
 
   if (!traderProfile) {
     return (
-      <AuthGuard>
-        <div className="min-h-screen bg-[#FFFFFF] text-black flex flex-col items-center justify-center font-mono space-y-4">
-          <h1 className="text-xl font-bold uppercase">TRADER NOT FOUND</h1>
-          <p className="text-xs text-neutral-500">The requested certified stock educator profile does not exist.</p>
-          <Link href="/traders" className="btn-black text-xs px-6 py-3 font-bold">
-            Back to Directory
-          </Link>
-        </div>
-      </AuthGuard>
+      <div className="min-h-screen bg-[#FFFFFF] text-black flex flex-col items-center justify-center font-mono space-y-4">
+        <h1 className="text-xl font-bold uppercase">TRADER NOT FOUND</h1>
+        <p className="text-xs text-neutral-500">The requested certified stock educator profile does not exist.</p>
+        <Link href="/traders" className="btn-black text-xs px-6 py-3 font-bold">
+          Back to Directory
+        </Link>
+      </div>
     );
   }
 
@@ -106,8 +102,7 @@ export default function TraderProfilePage() {
     "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80";
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           {/* Header Profile Banner */}
           <div className="border border-[#D9D9D9] bg-[#FAFAFA] p-8 sm:p-12 flex flex-col md:flex-row items-center md:items-start gap-8">
@@ -176,6 +171,5 @@ export default function TraderProfilePage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   );
 }

@@ -68,13 +68,6 @@ export function Header() {
     { href: "/traders", label: t.navTraders, isPro: false },
   ];
 
-  const handleNavClick = (e: React.MouseEvent, href: string) => {
-    if (!user) {
-      e.preventDefault();
-      router.push("/login");
-    }
-  };
-
   return (
     <>
       <header
@@ -106,8 +99,7 @@ export function Header() {
                 return (
                   <Link
                     key={link.href}
-                    href={user ? link.href : "/login"}
-                    onClick={(e) => handleNavClick(e, link.href)}
+                    href={link.href}
                     className={`transition-colors py-1 flex items-center gap-1.5 whitespace-nowrap font-medium relative focus:outline-none ${
                       isActive ? "text-[#8BE000] font-bold" : "text-neutral-300 hover:text-white"
                     }`}

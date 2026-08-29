@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { FileText, Download, Star, Loader } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Reveal } from "@/motion/components/Reveal";
@@ -9,11 +11,12 @@ import { SplitTextReveal } from "@/motion/components/SplitTextReveal";
 import { MagneticButton } from "@/motion/components/MagneticButton";
 import { Pressable } from "@/motion/components/Pressable";
 import { useLanguage } from "@/lib/language-context";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
 export default function MaterialsPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const { t, currency } = useLanguage();
   const [purchasedIds, setPurchasedIds] = useState<string[]>([]);
   const [previewMaterial, setPreviewMaterial] = useState<any | null>(null);
@@ -42,21 +45,14 @@ export default function MaterialsPage() {
 
         if (error) {
           console.error("Error fetching materials:", error);
-          // Fallback if trader_profiles relation doesn't exist, try profiles direct
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from("materials")
-            .select(`
-              *,
-              profiles (*)
-            `);
-          if (!fallbackError && fallbackData) {
-            setMaterials(fallbackData);
-          }
-        } else if (data) {
+          return;
+        }
+
+        if (data) {
           setMaterials(data);
         }
-      } catch (e) {
-        console.error("Fetch materials error:", e);
+      } catch (err) {
+        console.error("Fetch materials error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -65,6 +61,10 @@ export default function MaterialsPage() {
   }, []);
 
   const handleBuy = (mat: any) => {
+    if (!user) {
+      router.push("/login?redirect=/materials");
+      return;
+    }
     setPurchasedIds((prev) => [...prev, mat.id]);
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
   };
@@ -83,8 +83,7 @@ export default function MaterialsPage() {
   };
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12 border-b border-[#D9D9D9] pb-8 space-y-4">
             <span className="text-xs font-mono text-[#8BE000] bg-black px-3 py-1 uppercase tracking-wider">
@@ -252,6 +251,5 @@ class InstitutionalOptionsEngine:
           )}
         </AnimatePresence>
       </div>
-    </AuthGuard>
   );
 }

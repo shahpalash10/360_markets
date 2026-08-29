@@ -40,13 +40,6 @@ export default function LandingPage() {
     return `$${usd}`;
   };
 
-  const handleProtectedClick = (e: React.MouseEvent, targetHref: string) => {
-    if (!user) {
-      e.preventDefault();
-      router.push("/login");
-    }
-  };
-
   return (
     <div className="bg-[#FFFFFF] text-[#0B0B0B]">
       {/* 1. HERO SECTION — Split Screen Editorial Design */}
@@ -71,19 +64,13 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={0.35} className="flex flex-wrap items-center gap-4 pt-2">
-                <Link
-                  href={user ? "/courses" : "/login"}
-                  onClick={(e) => handleProtectedClick(e, "/courses")}
-                >
+                <Link href="/courses">
                   <MagneticButton className="btn-lime text-base px-8 py-4 font-bold">
                     {t.btnExploreCourses} <ArrowRight className="w-5 h-5" />
                   </MagneticButton>
                 </Link>
 
-                <Link
-                  href={user ? "/pro-masterclass" : "/login"}
-                  onClick={(e) => handleProtectedClick(e, "/pro-masterclass")}
-                >
+                <Link href="/pro-masterclass">
                   <MagneticButton className="btn-black text-base px-8 py-4 border border-[#0B0B0B] font-bold">
                     <Zap className="w-4 h-4 text-[#8BE000] fill-[#8BE000]" /> {t.btnEnterProMode}
                   </MagneticButton>
@@ -173,8 +160,7 @@ export default function LandingPage() {
               </h2>
             </div>
             <Link
-              href={user ? "/courses" : "/login"}
-              onClick={(e) => handleProtectedClick(e, "/courses")}
+              href="/courses"
               className="mt-4 md:mt-0 inline-flex items-center gap-1 text-sm font-semibold text-[#0B0B0B] hover:text-[#8BE000] transition"
             >
               Browse All Courses (4,821) →
@@ -219,10 +205,7 @@ export default function LandingPage() {
                       <span className="text-xs text-neutral-500 font-mono">/mo</span>
                     </span>
                   </div>
-                  <Link
-                    href={user ? "/courses/quantitative-stock-trading" : "/login"}
-                    onClick={(e) => handleProtectedClick(e, "/courses/quantitative-stock-trading")}
-                  >
+                  <Link href="/courses/quantitative-stock-trading">
                     <MagneticButton className="btn-black text-xs px-4 py-2">
                       {t.btnViewCourse}
                     </MagneticButton>
@@ -267,10 +250,7 @@ export default function LandingPage() {
                       {formatPrice(79)}
                     </span>
                   </div>
-                  <Link
-                    href={user ? "/courses/options-strategies-volatility" : "/login"}
-                    onClick={(e) => handleProtectedClick(e, "/courses/options-strategies-volatility")}
-                  >
+                  <Link href="/courses/options-strategies-volatility">
                     <MagneticButton className="btn-black text-xs px-4 py-2">
                       {t.btnViewCourse}
                     </MagneticButton>
@@ -315,10 +295,7 @@ export default function LandingPage() {
                       {formatPrice(59)}
                     </span>
                   </div>
-                  <Link
-                    href={user ? "/courses/equity-research-valuation" : "/login"}
-                    onClick={(e) => handleProtectedClick(e, "/courses/equity-research-valuation")}
-                  >
+                  <Link href="/courses/equity-research-valuation">
                     <MagneticButton className="btn-black text-xs px-4 py-2">
                       {t.btnViewCourse}
                     </MagneticButton>

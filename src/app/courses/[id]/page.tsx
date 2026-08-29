@@ -103,7 +103,11 @@ export default function CourseDetailPage() {
   }, [courseIdOrSlug, user]);
 
   const handleEnroll = async () => {
-    if (!user || !course) return;
+    if (!user) {
+      router.push(`/login?redirect=/courses/${encodeURIComponent(courseIdOrSlug)}`);
+      return;
+    }
+    if (!course) return;
     setIsEnrolling(true);
 
     try {
@@ -130,25 +134,21 @@ export default function CourseDetailPage() {
 
   if (isLoading) {
     return (
-      <AuthGuard>
-        <div className="min-h-screen bg-[#FFFFFF] text-black flex items-center justify-center font-mono">
-          <div className="animate-pulse">Loading course details...</div>
-        </div>
-      </AuthGuard>
+      <div className="min-h-screen bg-[#FFFFFF] text-black flex items-center justify-center font-mono">
+        <div className="animate-pulse">Loading course details...</div>
+      </div>
     );
   }
 
   if (!course) {
     return (
-      <AuthGuard>
-        <div className="min-h-screen bg-[#FFFFFF] text-black flex flex-col items-center justify-center font-mono space-y-4">
-          <h1 className="text-xl font-bold uppercase">COURSE NOT FOUND</h1>
-          <p className="text-xs text-neutral-500">The requested curriculum catalog entry does not exist.</p>
-          <Link href="/courses" className="btn-black text-xs px-6 py-3 font-bold">
-            Back to Catalog
-          </Link>
-        </div>
-      </AuthGuard>
+      <div className="min-h-screen bg-[#FFFFFF] text-black flex flex-col items-center justify-center font-mono space-y-4">
+        <h1 className="text-xl font-bold uppercase">COURSE NOT FOUND</h1>
+        <p className="text-xs text-neutral-500">The requested curriculum catalog entry does not exist.</p>
+        <Link href="/courses" className="btn-black text-xs px-6 py-3 font-bold">
+          Back to Catalog
+        </Link>
+      </div>
     );
   }
 
@@ -181,8 +181,7 @@ export default function CourseDetailPage() {
   const defaultVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <div className="mb-6 text-xs text-neutral-500 flex items-center gap-2">
@@ -389,6 +388,5 @@ export default function CourseDetailPage() {
           )}
         </AnimatePresence>
       </div>
-    </AuthGuard>
   );
 }
