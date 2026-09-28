@@ -22,6 +22,8 @@ export interface UserProfile {
   isCertified?: boolean;
   certificationStatus?: "pending" | "under_review" | "certified" | "rejected";
   certificationId?: string;
+  isUnlocked?: boolean;
+  unlockedCode?: string;
 }
 
 export const DEMO_USERS: Record<string, UserProfile> = {
@@ -80,10 +82,13 @@ interface AuthContextType {
   role: Role;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isUnlocked: boolean;
+  unlockedCode: string | null;
   setRole: (role: Role) => void;
   loginAs: (key: keyof typeof DEMO_USERS) => void;
   signOut: () => Promise<void>;
   setUserProfile: (profile: UserProfile | null) => void;
+  unlockWithCode: (code: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -91,10 +96,13 @@ const AuthContext = createContext<AuthContextType>({
   role: "INVESTOR",
   isAuthenticated: false,
   isLoading: true,
+  isUnlocked: false,
+  unlockedCode: null,
   setRole: () => {},
   loginAs: () => {},
   signOut: async () => {},
   setUserProfile: () => {},
+  unlockWithCode: async () => ({ success: false, message: "" }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -204,6 +212,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("markets_auth_user");
   };
 
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  const [unlockedCode, setUnlockedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedCode = localStorage.getItem("markets_unlocked_code");
+    if (savedCode) {
+      setIsUnlocked(true);
+      setUnlockedCode(savedCode);
+    }
+  }, []);
+
+  const unlockWithCode = async (rawCode: string): Promise<{ success: boolean; message: string }> => {
+    const code = rawCode.trim().toUpperCase();
+    if (!code) {
+      return { success: false, message: "Please enter an invitation code." };
+    }
+
+    // Standard valid promo/educator codes:
+    const VALID_CODES = ["TRADINGEASY", "ALPHA2026", "VIP888", "STUDY-EASY", "QUANT360", "MARKETS2026", "DEMO"];
+    
+    // Check custom provider-generated codes
+    let customCodes: string[] = [];
+    try {
+      const stored = localStorage.getItem("custom_invitation_codes");
+      if (stored) customCodes = JSON.parse(stored);
+    } catch (e) {}
+
+    const isValid = VALID_CODES.includes(code) || customCodes.includes(code) || code.startsWith("PROV-") || code.startsWith("VIP-");
+
+    if (isValid) {
+      setIsUnlocked(true);
+      setUnlockedCode(code);
+      localStorage.setItem("markets_unlocked_code", code);
+
+      if (user) {
+        const updated = { ...user, isUnlocked: true, unlockedCode: code };
+        setUser(updated);
+        localStorage.setItem("markets_auth_user", JSON.stringify(updated));
+      }
+
+      return { success: true, message: `Code "${code}" verified! All courses and technical signals are unlocked.` };
+    } else {
+      return { success: false, message: "Invalid or expired invitation code. Try TRADINGEASY or ALPHA2026." };
+    }
+  };
+
   const setUserProfile = (profile: UserProfile | null) => {
     setUser(profile);
     if (profile) {
@@ -220,10 +274,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: user ? user.role : "INVESTOR",
         isAuthenticated: !!user,
         isLoading,
+        isUnlocked: isUnlocked || !!user?.isUnlocked,
+        unlockedCode: unlockedCode || user?.unlockedCode || null,
         setRole,
         loginAs,
         signOut,
         setUserProfile,
+        unlockWithCode,
       }}
     >
       {children}

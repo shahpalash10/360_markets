@@ -25,7 +25,7 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get("redirect") || "/";
 
-  const { setUserProfile } = useAuth();
+  const { setUserProfile, unlockWithCode } = useAuth();
   const { language, setLanguage } = useLanguage();
 
   // Form Fields State
@@ -34,6 +34,7 @@ function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +55,7 @@ function RegisterForm() {
       labelLastName: "LAST NAME",
       labelEmail: "EMAIL ADDRESS",
       labelPass: "PASSWORD (MIN 6 CHARACTERS)",
+      labelInviteCode: "INVITATION CODE (OPTIONAL — UNLOCKS ALL COURSES & SIGNALS)",
       btnCreate: "Create Free Account",
       btnCreating: "Creating Session...",
       hasAccount: "Already have an account?",
@@ -78,6 +80,7 @@ function RegisterForm() {
       labelLastName: "姓（LAST NAME）",
       labelEmail: "メールアドレス",
       labelPass: "パスワード（6文字以上）",
+      labelInviteCode: "招待コード（任意 — すべてのコース＆シグナルを解除）",
       btnCreate: "無料アカウントを作成",
       btnCreating: "セッション作成中...",
       hasAccount: "すでにアカウントをお持ちですか？",
@@ -102,6 +105,7 @@ function RegisterForm() {
       labelLastName: "姓",
       labelEmail: "电子邮箱",
       labelPass: "密码（至少6位）",
+      labelInviteCode: "专属邀请码（选填 — 免费解锁所有研报、课程与技术信号）",
       btnCreate: "立即免费创建账号",
       btnCreating: "正在创建会话...",
       hasAccount: "已有账号？",
@@ -237,6 +241,15 @@ function RegisterForm() {
         }
       } catch (dbErr) {
         console.warn("Database profile sync notice:", dbErr);
+      }
+
+      // 4. If invitation code was entered, unlock content
+      if (inviteCode.trim()) {
+        try {
+          await unlockWithCode(inviteCode.trim());
+        } catch (uErr) {
+          console.warn("Unlock code error during signup:", uErr);
+        }
       }
 
       // Celebrate & Redirect
@@ -447,6 +460,22 @@ function RegisterForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3.5 focus:outline-none transition-colors text-sm font-mono placeholder-neutral-700"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                {t.labelInviteCode}
+              </label>
+              <span className="text-[9px] text-[#8BE000] font-mono">e.g. TRADINGEASY</span>
+            </div>
+            <input
+              type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              placeholder="TRADINGEASY"
+              className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-[#8BE000] p-3.5 focus:outline-none transition-colors text-sm font-mono placeholder-neutral-700 uppercase font-bold"
             />
           </div>
 

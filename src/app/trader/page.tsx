@@ -284,6 +284,28 @@ export default function TraderDashboardPage() {
             </div>
           )}
 
+          {/* Technical Signals Studio Banner */}
+          <div className="bg-[#141414] border border-[#262626] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-[#8BE000] animate-pulse" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                  TECHNICAL SIGNALS & NTFY.SH BROADCASTER
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400 font-sans max-w-xl">
+                Publish real-time buy/sell trading setups and entry levels with instant push notifications to your subscribers via ntfy.sh.
+              </p>
+            </div>
+            <Link
+              href="/trader/signals"
+              className="btn-lime text-xs px-5 py-2.5 font-bold text-black flex items-center gap-1.5 shrink-0"
+            >
+              <span>Open Signal Studio</span>
+              <ArrowUpRight className="w-4 h-4 text-black" />
+            </Link>
+          </div>
+
           {/* Revenue & Growth Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">

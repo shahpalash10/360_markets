@@ -9,17 +9,18 @@ import { Reveal } from "@/motion/components/Reveal";
 import { SplitTextReveal } from "@/motion/components/SplitTextReveal";
 import { MagneticButton } from "@/motion/components/MagneticButton";
 import { useLanguage } from "@/lib/language-context";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
+import { UnlockModal } from "@/components/modals/UnlockModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CourseDetailPage() {
   const { t, currency } = useLanguage();
-  const { user } = useAuth();
+  const { user, isUnlocked, unlockedCode } = useAuth();
   const params = useParams();
   const router = useRouter();
   const courseIdOrSlug = params.id as string;
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
   const [course, setCourse] = useState<any>(null);
   const [traderProfile, setTraderProfile] = useState<any>(null);
@@ -309,9 +310,16 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
-                {isEnrolled ? (
+                {(isEnrolled || isUnlocked) ? (
                   <div className="p-4 bg-black text-[#8BE000] text-xs space-y-3 font-mono">
-                    <div className="font-bold">✓ ENROLLED SUCCESSFULLY</div>
+                    <div className="font-bold flex items-center justify-between">
+                      <span>✓ {isUnlocked ? "UNLOCKED VIA INVITATION CODE" : "ENROLLED SUCCESSFULLY"}</span>
+                      {isUnlocked && unlockedCode && (
+                        <span className="text-[10px] bg-[#8BE000] text-black px-1.5 py-0.5 font-bold">
+                          {unlockedCode}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-neutral-300">You have full access to all curriculum modules and quantitative models.</p>
                     <button
                       onClick={() => router.push("/investor/learning")}
@@ -321,13 +329,21 @@ export default function CourseDetailPage() {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={handleEnroll}
-                    disabled={isEnrolling}
-                    className="btn-lime w-full py-4 text-xs font-bold text-black uppercase disabled:opacity-50"
-                  >
-                    {isEnrolling ? "Processing..." : course.is_subscription ? `Subscribe & Start — ${formatPrice(course.price)}/mo` : `Purchase Course — ${formatPrice(course.price)}`}
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleEnroll}
+                      disabled={isEnrolling}
+                      className="btn-lime w-full py-4 text-xs font-bold text-black uppercase disabled:opacity-50"
+                    >
+                      {isEnrolling ? "Processing..." : course.is_subscription ? `Subscribe & Start — ${formatPrice(course.price)}/mo` : `Purchase Course — ${formatPrice(course.price)}`}
+                    </button>
+                    <button
+                      onClick={() => setUnlockModalOpen(true)}
+                      className="w-full text-center text-xs text-neutral-600 hover:text-black pt-1 underline font-mono flex items-center justify-center gap-1"
+                    >
+                      <span>Have an educator invitation code? Unlock for free →</span>
+                    </button>
+                  </div>
                 )}
 
                 <div className="space-y-3 pt-4 border-t border-[#D9D9D9] text-xs text-neutral-600 font-mono">
@@ -387,6 +403,9 @@ export default function CourseDetailPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Invitation Code Unlock Modal */}
+        <UnlockModal isOpen={unlockModalOpen} onClose={() => setUnlockModalOpen(false)} />
       </div>
   );
 }

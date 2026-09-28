@@ -6,6 +6,8 @@ export interface TranslationDictionary {
   navMarketplace: string;
   navProTrading: string;
   navCourses: string;
+  navReports: string;
+  navSignals: string;
   navMaterials: string;
   navWebinars: string;
   navTraders: string;
@@ -13,6 +15,7 @@ export interface TranslationDictionary {
   navTraderHub: string;
   navCreate: string;
   navAdmin: string;
+  navUnlock: string;
 
   // Footer
   footerTagline: string;
@@ -154,6 +157,8 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     navMarketplace: "Marketplace",
     navProTrading: "Live",
     navCourses: "Courses",
+    navReports: "Reports",
+    navSignals: "Signals",
     navMaterials: "Code & Models",
     navWebinars: "Webinars",
     navTraders: "Traders",
@@ -161,6 +166,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     navTraderHub: "Educator Hub",
     navCreate: "Create Course",
     navAdmin: "Admin",
+    navUnlock: "Unlock with Code",
 
     footerTagline: "The institutional stock trading knowledge exchange connecting verified quants with stock investors worldwide.",
     footerStatus: "STOCK MARKET DATA FEED: OPERATIONAL",
@@ -288,6 +294,8 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     navMarketplace: "マーケット",
     navProTrading: "ライブ",
     navCourses: "コース",
+    navReports: "投研レポート",
+    navSignals: "シグナル",
     navMaterials: "モデル・コード",
     navWebinars: "ウェビナー",
     navTraders: "トレーダー",
@@ -295,6 +303,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     navTraderHub: "トレーダーハブ",
     navCreate: "コース作成",
     navAdmin: "管理者",
+    navUnlock: "招待コード解除",
 
     footerTagline: "検証されたプロクオンツと世界中の株式投資家を繋ぐ機関投資家レベルの株式トレード知識取引所。",
     footerStatus: "株式市場データフィード: 正常稼働中",
@@ -422,6 +431,8 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     navMarketplace: "市场",
     navProTrading: "直播",
     navCourses: "课程",
+    navReports: "投研快报",
+    navSignals: "交易信号",
     navMaterials: "代码与模型",
     navWebinars: "研讨会",
     navTraders: "导师",
@@ -429,6 +440,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     navTraderHub: "导师中心",
     navCreate: "创建课程",
     navAdmin: "管理后台",
+    navUnlock: "邀请码解锁",
 
     footerTagline: "连接经过验证的机构级量化交易员与全球股票投资者的去中心化知识交易所。",
     footerStatus: "股票市场数据实时行情: 正常运行中",

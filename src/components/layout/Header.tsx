@@ -9,20 +9,23 @@ import {
   Search,
   ChevronDown,
   Zap,
+  KeyRound,
 } from "lucide-react";
 import { CommandPalette } from "@/motion/components/CommandPalette";
+import { UnlockModal } from "@/components/modals/UnlockModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, role, signOut } = useAuth();
+  const { user, role, signOut, isUnlocked, unlockedCode } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
   // Keyboard shortcut listener for Mac (⌘K) and Windows (Ctrl+K)
   useEffect(() => {
@@ -62,6 +65,8 @@ export function Header() {
 
   const NAV_LINKS = [
     { href: "/courses", label: t.navCourses, isPro: false },
+    { href: "/reports", label: t.navReports || "Reports", isPro: false },
+    { href: "/signals", label: t.navSignals || "Signals", isPro: false },
     { href: "/pro-masterclass", label: t.navProTrading, isPro: true },
     { href: "/materials", label: t.navMaterials, isPro: false },
     { href: "/webinars", label: t.navWebinars, isPro: false },
@@ -138,6 +143,22 @@ export function Header() {
               </div>
               <span className="bg-[#262626] border border-[#333333] text-[10px] text-white px-1.5 py-0.5 rounded-none font-bold shrink-0 font-mono">
                 ⌘K
+              </span>
+            </button>
+
+            {/* Quick Invitation Code Unlock Button */}
+            <button
+              onClick={() => setUnlockModalOpen(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border transition shrink-0 h-9 focus:outline-none ${
+                isUnlocked
+                  ? "bg-[#8BE000]/15 border-[#8BE000] text-[#8BE000] hover:bg-[#8BE000]/25"
+                  : "bg-[#161616] border-[#262626] hover:border-[#8BE000] text-neutral-300 hover:text-white"
+              }`}
+              title={isUnlocked ? `Unlocked: ${unlockedCode}` : "Enter Invitation Code"}
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
+              <span className="hidden sm:inline font-bold">
+                {isUnlocked ? (unlockedCode ? `VIP: ${unlockedCode}` : "UNLOCKED ✓") : (t.navUnlock || "Unlock Code")}
               </span>
             </button>
 
@@ -285,6 +306,9 @@ export function Header() {
 
       {/* Command Palette Modal (⌘K on Mac) */}
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+
+      {/* Invitation Code Unlock Modal */}
+      <UnlockModal isOpen={unlockModalOpen} onClose={() => setUnlockModalOpen(false)} />
     </>
   );
 }

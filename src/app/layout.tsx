@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { LanguageProvider } from "@/lib/language-context";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { FinancialTermAIAgent } from "@/components/ai/FinancialTermAIAgent";
 import { SmoothScrollProvider } from "@/motion/components/SmoothScrollProvider";
 import { ScrollProgress } from "@/motion/components/ScrollProgress";
 import Script from "next/script";
@@ -29,6 +30,7 @@ export default function RootLayout({
               <Header />
               <main className="flex-1 bg-[#0B0B0B] text-white">{children}</main>
               <Footer />
+              <FinancialTermAIAgent />
               {/* Load Spline Web Component Viewer Script */}
               <Script
                 src="https://unpkg.com/@splinetool/viewer@1.9.0/build/spline-viewer.js"
