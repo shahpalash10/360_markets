@@ -1,0 +1,55 @@
+[
+  {
+    "id": "red-1791178056483-1dat",
+    "codeId": "inv-1791178047843-7ge0",
+    "code": "SA",
+    "userId": "18d7bb20-7896-4bc8-8391-3faa0eee361a",
+    "userEmail": "palash.shah@xiberlinc.one",
+    "scope": "SIGNALS",
+    "redeemedAt": "2026-10-05T05:27:36.483Z"
+  },
+  {
+    "id": "red-1791178018869-cxq6",
+    "codeId": "inv-002",
+    "code": "ALPHA2026",
+    "userId": "anonymous",
+    "scope": "SIGNALS",
+    "redeemedAt": "2026-10-05T05:26:58.869Z"
+  },
+  {
+    "id": "red-1791178018862-qvni",
+    "codeId": "inv-002",
+    "code": "ALPHA2026",
+    "userId": "18d7bb20-7896-4bc8-8391-3faa0eee361a",
+    "userEmail": "palash.shah@xiberlinc.one",
+    "scope": "SIGNALS",
+    "redeemedAt": "2026-10-05T05:26:58.862Z"
+  },
+  {
+    "id": "red-1791177984851-s838",
+    "codeId": "inv-002",
+    "code": "ALPHA2026",
+    "userId": "anonymous",
+    "scope": "SIGNALS",
+    "redeemedAt": "2026-10-05T05:26:24.851Z"
+  },
+  {
+    "id": "red-1790651467813-xxfp",
+    "codeId": "inv-002",
+    "code": "ALPHA2026",
+    "userId": "anonymous",
+    "scope": "SIGNALS",
+    "redeemedAt": "2026-09-29T03:11:07.813Z"
+  },
+  {
+    "id": "red-1790650286263-omj7",
+    "codeId": "inv-1790650286261-5883",
+    "code": "TESTCODE99-MOD",
+    "userId": "usr-sub-123",
+    "userEmail": "subscriber@test.com",
+    "scope": "COURSE",
+    "targetCourseId": "c-1",
+    "targetCourseTitle": "Quantitative Stock Trading & Algorithms",
+    "redeemedAt": "2026-09-29T02:51:26.263Z"
+  }
+]

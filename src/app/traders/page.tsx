@@ -51,11 +51,11 @@ export default function TradersDirectoryPage() {
               {t.tradersSub}
             </span>
             <SplitTextReveal
-              lines={["CERTIFIED STOCK TRADERS", "& EDUCATORS."]}
+              lines={[t.tradersDirectoryTitle]}
               className="text-5xl lg:text-6xl font-display font-light tracking-tight text-[#0B0B0B]"
             />
             <p className="text-xs font-mono text-neutral-500 max-w-xl">
-              Every educator has their brokerage trading records audited and verified on-chain. Explore trader performance track records, courses, and upcoming live streams.
+              {t.tradersDirectoryDesc}
             </p>
           </div>
 
@@ -67,8 +67,8 @@ export default function TradersDirectoryPage() {
             </div>
           ) : traders.length === 0 ? (
             <div className="text-center py-16 border border-[#D9D9D9] bg-[#FAFAFA] text-neutral-500 text-xs">
-              <p className="font-bold text-black uppercase mb-1">NO CERTIFIED TRADERS FOUND</p>
-              <p>Certified educators will populate here once their certification applications are approved.</p>
+              <p className="font-bold text-black uppercase mb-1">{t.tradersEmpty}</p>
+              <p>{t.tradersEmptyDesc}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

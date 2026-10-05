@@ -93,7 +93,7 @@ export function Header() {
                   MARKETS
                 </span>
                 <span className="text-[9px] text-[#8BE000] tracking-widest font-mono uppercase mt-0.5">
-                  STOCKS
+                  {t.headerStocks}
                 </span>
               </div>
             </Link>
@@ -138,7 +138,7 @@ export function Header() {
               <div className="flex items-center gap-2 min-w-0 overflow-hidden">
                 <Search className="w-3.5 h-3.5 text-[#8BE000] shrink-0 group-hover:scale-110 transition-transform" />
                 <span className="truncate whitespace-nowrap text-neutral-300 text-xs font-mono">
-                  {language === "JA" ? "検索..." : language === "ZH" ? "搜索..." : "Search..."}
+                  {t.headerSearch}
                 </span>
               </div>
               <span className="bg-[#262626] border border-[#333333] text-[10px] text-white px-1.5 py-0.5 rounded-none font-bold shrink-0 font-mono">
@@ -146,21 +146,41 @@ export function Header() {
               </span>
             </button>
 
-            {/* Quick Invitation Code Unlock Button */}
-            <button
-              onClick={() => setUnlockModalOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border transition shrink-0 h-9 focus:outline-none ${
-                isUnlocked
-                  ? "bg-[#8BE000]/15 border-[#8BE000] text-[#8BE000] hover:bg-[#8BE000]/25"
-                  : "bg-[#161616] border-[#262626] hover:border-[#8BE000] text-neutral-300 hover:text-white"
-              }`}
-              title={isUnlocked ? `Unlocked: ${unlockedCode}` : "Enter Invitation Code"}
-            >
-              <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
-              <span className="hidden sm:inline font-bold">
-                {isUnlocked ? (unlockedCode ? `VIP: ${unlockedCode}` : "UNLOCKED ✓") : (t.navUnlock || "Unlock Code")}
-              </span>
-            </button>
+            {/* Role-Aware Invitation Code Action */}
+            {role === "TRADER" ? (
+              <Link
+                href="/trader"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-[#8BE000]/40 bg-[#8BE000]/10 text-[#8BE000] hover:bg-[#8BE000]/20 transition shrink-0 h-9"
+                title="Manage & Issue Subscriber VIP Passes"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
+                <span className="hidden sm:inline font-bold">{t.headerIssueCodes}</span>
+              </Link>
+            ) : role === "ADMIN" ? (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-[#8BE000]/40 bg-[#8BE000]/10 text-[#8BE000] hover:bg-[#8BE000]/20 transition shrink-0 h-9"
+                title="Manage All Platform Invitation Codes"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
+                <span className="hidden sm:inline font-bold">{t.headerManageCodes}</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => setUnlockModalOpen(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border transition shrink-0 h-9 focus:outline-none ${
+                  isUnlocked
+                    ? "bg-[#8BE000]/15 border-[#8BE000] text-[#8BE000] hover:bg-[#8BE000]/25"
+                    : "bg-[#161616] border-[#262626] hover:border-[#8BE000] text-neutral-300 hover:text-white"
+                }`}
+                title={isUnlocked ? `Active VIP: ${unlockedCode}` : "Enter Educator Invitation Code"}
+              >
+                <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
+                <span className="hidden sm:inline font-bold">
+                  {isUnlocked ? (unlockedCode ? `VIP: ${unlockedCode}` : `${t.commonActive} ✓`) : t.headerRedeemCode}
+                </span>
+              </button>
+            )}
 
             {/* Minimal Language Selector */}
             <div className="relative shrink-0">
@@ -283,7 +303,7 @@ export function Header() {
                           }}
                           className="w-full text-left px-3 py-2 text-red-400 hover:bg-[#262626] focus:outline-none"
                         >
-                          Sign Out
+                          {t.headerSignOut}
                         </button>
                       </div>
                     </div>
@@ -293,10 +313,10 @@ export function Header() {
             ) : (
               <div className="flex items-center gap-2 font-mono text-xs shrink-0">
                 <Link href="/login" className="text-neutral-300 hover:text-white px-3 py-1.5 focus:outline-none font-semibold">
-                  Sign In
+                  {t.headerSignIn}
                 </Link>
                 <Link href="/register" className="btn-lime px-4 py-2 focus:outline-none font-bold">
-                  Get Started
+                  {t.headerGetStarted}
                 </Link>
               </div>
             )}

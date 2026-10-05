@@ -24,6 +24,17 @@ export interface UserProfile {
   certificationId?: string;
   isUnlocked?: boolean;
   unlockedCode?: string;
+  signalSubscription?: SignalSubscription | null;
+}
+
+export interface SignalSubscription {
+  active: boolean;
+  tier: "SIGNALS" | "ALL_ACCESS";
+  code: string;
+  durationDays: number;
+  isLifetime: boolean;
+  expiresAt: string | null;
+  redeemedAt: string;
 }
 
 export const DEMO_USERS: Record<string, UserProfile> = {
@@ -84,11 +95,13 @@ interface AuthContextType {
   isLoading: boolean;
   isUnlocked: boolean;
   unlockedCode: string | null;
+  signalSubscription: SignalSubscription | null;
   setRole: (role: Role) => void;
   loginAs: (key: keyof typeof DEMO_USERS) => void;
   signOut: () => Promise<void>;
   setUserProfile: (profile: UserProfile | null) => void;
   unlockWithCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  redeemSignalCode: (code: string) => Promise<{ success: boolean; message: string; subscription?: SignalSubscription }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -98,11 +111,13 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   isUnlocked: false,
   unlockedCode: null,
+  signalSubscription: null,
   setRole: () => {},
   loginAs: () => {},
   signOut: async () => {},
   setUserProfile: () => {},
   unlockWithCode: async () => ({ success: false, message: "" }),
+  redeemSignalCode: async () => ({ success: false, message: "" }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -202,6 +217,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const selected = DEMO_USERS[key];
     setUser(selected);
     localStorage.setItem("markets_auth_user", JSON.stringify(selected));
+
+    // Auto-redeem any pending invitation code when signing in
+    if (typeof window !== "undefined") {
+      const pending = localStorage.getItem("markets_pending_code");
+      if (pending) {
+        const clean = pending.trim().toUpperCase();
+        fetch("/api/redeem-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: clean,
+            userId: selected.id,
+            userEmail: selected.email,
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.ok) {
+              redeemSignalCode(clean);
+              localStorage.removeItem("markets_pending_code");
+            }
+          })
+          .catch(() => {});
+      }
+    }
   };
 
   const signOut = async () => {
@@ -229,32 +269,156 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: "Please enter an invitation code." };
     }
 
-    // Standard valid promo/educator codes:
-    const VALID_CODES = ["TRADINGEASY", "ALPHA2026", "VIP888", "STUDY-EASY", "QUANT360", "MARKETS2026", "DEMO"];
-    
-    // Check custom provider-generated codes
-    let customCodes: string[] = [];
     try {
-      const stored = localStorage.getItem("custom_invitation_codes");
-      if (stored) customCodes = JSON.parse(stored);
-    } catch (e) {}
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          userId: user?.id,
+          userEmail: user?.email,
+        }),
+      });
 
-    const isValid = VALID_CODES.includes(code) || customCodes.includes(code) || code.startsWith("PROV-") || code.startsWith("VIP-");
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        return { success: false, message: data.error || "Invalid or expired invitation code." };
+      }
 
-    if (isValid) {
       setIsUnlocked(true);
       setUnlockedCode(code);
       localStorage.setItem("markets_unlocked_code", code);
 
+      const newSub: SignalSubscription = {
+        active: true,
+        tier: data.tier || "SIGNALS",
+        code,
+        durationDays: data.durationDays || 30,
+        isLifetime: !!data.isLifetime,
+        expiresAt: data.expiresAt || null,
+        redeemedAt: new Date().toISOString(),
+      };
+      setSignalSubscription(newSub);
+      localStorage.setItem("markets_signal_subscription", JSON.stringify(newSub));
+
+      if (data.targetCourseId || data.enrolledCourseId || data.scope === "COURSE") {
+        try {
+          const unlocked = JSON.parse(localStorage.getItem("markets_unlocked_courses") || "[]");
+          const idToAdd = data.targetCourseId || data.enrolledCourseId;
+          const slugToAdd = data.targetCourseSlug;
+          if (idToAdd && !unlocked.includes(idToAdd)) unlocked.push(idToAdd);
+          if (slugToAdd && !unlocked.includes(slugToAdd)) unlocked.push(slugToAdd);
+          localStorage.setItem("markets_unlocked_courses", JSON.stringify(unlocked));
+        } catch (e) {}
+      } else if (data.scope === "ALL_ACCESS" || data.tier === "ALL_ACCESS") {
+        try {
+          const unlocked = JSON.parse(localStorage.getItem("markets_unlocked_courses") || "[]");
+          if (!unlocked.includes("ALL_ACCESS")) unlocked.push("ALL_ACCESS");
+          localStorage.setItem("markets_unlocked_courses", JSON.stringify(unlocked));
+        } catch (e) {}
+      }
+
       if (user) {
-        const updated = { ...user, isUnlocked: true, unlockedCode: code };
+        const updated = {
+          ...user,
+          isUnlocked: true,
+          unlockedCode: code,
+          signalSubscription: newSub,
+        };
+        setUser(updated);
+        localStorage.setItem("markets_auth_user", JSON.stringify(updated));
+      } else {
+        localStorage.setItem("markets_pending_code", code);
+      }
+
+      return { success: true, message: data.message || `Code "${code}" verified! Access granted.` };
+    } catch (e: any) {
+      return { success: false, message: e.message || "Failed to verify invitation code." };
+    }
+  };
+
+  const [signalSubscription, setSignalSubscription] = useState<SignalSubscription | null>(null);
+
+  useEffect(() => {
+    const savedSub = localStorage.getItem("markets_signal_subscription");
+    if (savedSub) {
+      try {
+        setSignalSubscription(JSON.parse(savedSub));
+      } catch (e) {}
+    }
+  }, []);
+
+  const redeemSignalCode = async (rawCode: string): Promise<{ success: boolean; message: string; subscription?: SignalSubscription }> => {
+    const code = rawCode.trim().toUpperCase();
+    if (!code) {
+      return { success: false, message: "Please enter an invitation code to redeem." };
+    }
+
+    try {
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          userId: user?.id,
+          userEmail: user?.email,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        return { success: false, message: data.error || "Failed to redeem code" };
+      }
+
+      const newSub: SignalSubscription = {
+        active: true,
+        tier: data.tier || "SIGNALS",
+        code: data.code,
+        durationDays: data.durationDays,
+        isLifetime: data.isLifetime,
+        expiresAt: data.expiresAt,
+        redeemedAt: new Date().toISOString(),
+      };
+
+      setSignalSubscription(newSub);
+      localStorage.setItem("markets_signal_subscription", JSON.stringify(newSub));
+
+      // Also unlock courses/signals globally
+      setIsUnlocked(true);
+      setUnlockedCode(code);
+      localStorage.setItem("markets_unlocked_code", code);
+
+      if (data.targetCourseId || data.enrolledCourseId || data.scope === "COURSE") {
+        try {
+          const unlocked = JSON.parse(localStorage.getItem("markets_unlocked_courses") || "[]");
+          const idToAdd = data.targetCourseId || data.enrolledCourseId;
+          const slugToAdd = data.targetCourseSlug;
+          if (idToAdd && !unlocked.includes(idToAdd)) unlocked.push(idToAdd);
+          if (slugToAdd && !unlocked.includes(slugToAdd)) unlocked.push(slugToAdd);
+          localStorage.setItem("markets_unlocked_courses", JSON.stringify(unlocked));
+        } catch (e) {}
+      } else if (data.scope === "ALL_ACCESS" || data.tier === "ALL_ACCESS") {
+        try {
+          const unlocked = JSON.parse(localStorage.getItem("markets_unlocked_courses") || "[]");
+          if (!unlocked.includes("ALL_ACCESS")) unlocked.push("ALL_ACCESS");
+          localStorage.setItem("markets_unlocked_courses", JSON.stringify(unlocked));
+        } catch (e) {}
+      }
+
+      if (user) {
+        const updated = {
+          ...user,
+          isUnlocked: true,
+          unlockedCode: code,
+          signalSubscription: newSub,
+        };
         setUser(updated);
         localStorage.setItem("markets_auth_user", JSON.stringify(updated));
       }
 
-      return { success: true, message: `Code "${code}" verified! All courses and technical signals are unlocked.` };
-    } else {
-      return { success: false, message: "Invalid or expired invitation code. Try TRADINGEASY or ALPHA2026." };
+      return { success: true, message: data.message, subscription: newSub };
+    } catch (err: any) {
+      return { success: false, message: err.message || "Failed to process redemption." };
     }
   };
 
@@ -276,11 +440,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isUnlocked: isUnlocked || !!user?.isUnlocked,
         unlockedCode: unlockedCode || user?.unlockedCode || null,
+        signalSubscription,
         setRole,
         loginAs,
         signOut,
         setUserProfile,
         unlockWithCode,
+        redeemSignalCode,
       }}
     >
       {children}

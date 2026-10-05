@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export interface TechnicalSignal {
   id: string;
@@ -18,8 +22,9 @@ export interface TechnicalSignal {
   createdAt: string;
 }
 
-// In-memory signals store with high-conviction seed signals
-let globalSignals: TechnicalSignal[] = [
+const SIGNALS_FILE = path.join(process.cwd(), "data", "signals.json");
+
+const SEED_SIGNALS: TechnicalSignal[] = [
   {
     id: "sig-001",
     symbol: "NVDA",
@@ -73,11 +78,123 @@ let globalSignals: TechnicalSignal[] = [
   }
 ];
 
+function loadDiskSignals(): TechnicalSignal[] {
+  try {
+    if (fs.existsSync(SIGNALS_FILE)) {
+      const data = fs.readFileSync(SIGNALS_FILE, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn("Failed to read signals disk fallback:", e);
+  }
+  return SEED_SIGNALS;
+}
+
+function saveDiskSignals(signals: TechnicalSignal[]) {
+  try {
+    const dir = path.dirname(SIGNALS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(SIGNALS_FILE, JSON.stringify(signals, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("Failed to write signals disk mirror:", e);
+  }
+}
+
 export async function GET() {
+  // 1. Primary: Cloud Database (Supabase)
+  try {
+    const { data: sbSignals, error } = await supabase
+      .from("signals")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && sbSignals && sbSignals.length > 0) {
+      const formatted: TechnicalSignal[] = sbSignals.map((s: any) => {
+        const entry = Number(s.entry_price) || 0;
+        const sl = Number(s.stop_loss) || 0;
+        const tp = Number(s.target_price) || 0;
+        const risk = Math.abs(entry - sl);
+        const reward = Math.abs(tp - entry);
+        const rr = s.risk_reward || (risk > 0 ? `1 : ${(reward / risk).toFixed(2)}` : "1 : 2.5");
+
+        return {
+          id: s.id,
+          symbol: s.symbol,
+          market: (s.market as any) || (s.symbol.includes(".HK") ? "HK" : "US"),
+          action: (s.action as any) || "BUY",
+          entryPrice: entry,
+          stopLoss: sl,
+          targetPrice: tp,
+          timeframe: (s.timeframe as any) || "SWING",
+          riskReward: rr,
+          notes: s.notes || "",
+          providerName: s.provider_name || "Certified Quant",
+          providerAvatar: s.provider_avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+          isVerified: true,
+          status: (s.status as any) || "ACTIVE",
+          createdAt: s.created_at || new Date().toISOString(),
+        };
+      });
+
+      try { saveDiskSignals(formatted); } catch (e) {}
+      return NextResponse.json({
+        ok: true,
+        count: formatted.length,
+        signals: formatted,
+      });
+    }
+  } catch (sbErr) {
+    console.warn("Supabase signals fetch notice:", sbErr);
+  }
+
+  // 2. Secondary: Prisma Database Table
+  try {
+    const dbSignals = await prisma.marketSignal.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (dbSignals && dbSignals.length > 0) {
+      const formatted: TechnicalSignal[] = dbSignals.map((s) => {
+        const risk = Math.abs(s.entryPrice - s.stopLoss);
+        const reward = Math.abs(s.targetPrice - s.entryPrice);
+        const rr = risk > 0 ? `1 : ${(reward / risk).toFixed(2)}` : "1 : 2.5";
+
+        return {
+          id: s.id,
+          symbol: s.symbol,
+          market: s.symbol.includes(".HK") ? "HK" : "US",
+          action: (s.action as any) || "BUY",
+          entryPrice: s.entryPrice,
+          stopLoss: s.stopLoss,
+          targetPrice: s.targetPrice,
+          timeframe: (s.timeframe as any) || "SWING",
+          riskReward: rr,
+          notes: s.rationale,
+          providerName: s.traderName || "Certified Quant",
+          providerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+          isVerified: true,
+          status: (s.status as any) || "ACTIVE",
+          createdAt: s.createdAt.toISOString(),
+        };
+      });
+
+      try { saveDiskSignals(formatted); } catch (e) {}
+      return NextResponse.json({
+        ok: true,
+        count: formatted.length,
+        signals: formatted,
+      });
+    }
+  } catch (err) {}
+
+  // 3. Fallback to disk mirror
+  const disk = loadDiskSignals();
   return NextResponse.json({
     ok: true,
-    count: globalSignals.length,
-    signals: globalSignals,
+    count: disk.length,
+    signals: disk,
   });
 }
 
@@ -95,6 +212,7 @@ export async function POST(req: Request) {
       notes = "",
       providerName = "Certified Quantitative Trader",
       providerAvatar,
+      traderId = "trader",
     } = body;
 
     if (!symbol || !entryPrice || !stopLoss || !targetPrice) {
@@ -112,9 +230,10 @@ export async function POST(req: Request) {
     const risk = Math.abs(numEntry - numSL);
     const reward = Math.abs(numTP - numEntry);
     const rrRatio = risk > 0 ? `1 : ${(reward / risk).toFixed(2)}` : "1 : 2.5";
+    const sigId = `sig-${Date.now()}`;
 
     const newSignal: TechnicalSignal = {
-      id: `sig-${Date.now()}`,
+      id: sigId,
       symbol: symbol.toUpperCase().trim(),
       market: market as any,
       action: action as any,
@@ -133,10 +252,55 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    // Prepend to signals list
-    globalSignals = [newSignal, ...globalSignals];
+    // 1. Primary: Insert into Supabase Cloud DB Table
+    try {
+      const { error: sbErr } = await supabase.from("signals").insert({
+        id: newSignal.id,
+        symbol: newSignal.symbol,
+        market: newSignal.market,
+        action: newSignal.action,
+        entry_price: newSignal.entryPrice,
+        stop_loss: newSignal.stopLoss,
+        target_price: newSignal.targetPrice,
+        timeframe: newSignal.timeframe,
+        risk_reward: newSignal.riskReward,
+        notes: newSignal.notes,
+        provider_name: newSignal.providerName,
+        provider_avatar: newSignal.providerAvatar,
+        status: newSignal.status,
+        created_at: newSignal.createdAt,
+      });
+      if (sbErr) console.warn("Supabase signal insert notice:", sbErr);
+    } catch (e) {}
 
-    // Dispatch real-time Push Notification to ntfy.sh
+    // 2. Secondary: Mirror to Prisma ORM Table
+    try {
+      await prisma.marketSignal.create({
+        data: {
+          id: sigId,
+          traderId: traderId || "trader",
+          traderName: providerName,
+          symbol: newSignal.symbol,
+          action: newSignal.action,
+          entryPrice: numEntry,
+          targetPrice: numTP,
+          stopLoss: numSL,
+          timeframe: timeframe,
+          confidence: 88,
+          rationale: notes.trim() || "Technical breakout signal",
+          status: "ACTIVE",
+        },
+      });
+    } catch (dbErr) {}
+
+    // 3. Mirror to disk cache
+    try {
+      const currentSignals = loadDiskSignals();
+      currentSignals.unshift(newSignal);
+      saveDiskSignals(currentSignals);
+    } catch (e) {}
+
+    // 4. Dispatch real-time Push Notification to ntfy.sh
     let ntfyStatus = "pending";
     try {
       const ntfyResponse = await fetch("https://ntfy.sh/360markets_signals", {

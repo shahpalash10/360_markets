@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function CourseDetailPage() {
   const { t, currency } = useLanguage();
-  const { user, isUnlocked, unlockedCode } = useAuth();
+  const { user, isUnlocked, unlockedCode, signalSubscription } = useAuth();
   const params = useParams();
   const router = useRouter();
   const courseIdOrSlug = params.id as string;
@@ -47,39 +47,42 @@ export default function CourseDetailPage() {
       setIsLoading(true);
 
       try {
-        // 1. Fetch course by id or slug
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(courseIdOrSlug);
-        let query = supabase.from("courses").select("*");
-        
-        if (isUuid) {
-          query = query.eq("id", courseIdOrSlug);
-        } else {
-          query = query.eq("slug", courseIdOrSlug);
-        }
+        // 1. Fetch course from /api/courses (Prisma DB) or Supabase
+        let courseData: any = null;
+        try {
+          const apiRes = await fetch("/api/courses");
+          const apiData = await apiRes.json();
+          if (apiData.success && apiData.courses) {
+            courseData = apiData.courses.find((c: any) => c.id === courseIdOrSlug || c.slug === courseIdOrSlug);
+          }
+        } catch (e) {}
 
-        const { data: courseData, error: courseErr } = await query.single();
-
-        if (courseErr) {
-          console.error("Course lookup error:", courseErr);
-          setIsLoading(false);
-          return;
+        if (!courseData) {
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(courseIdOrSlug);
+          let query = supabase.from("courses").select("*");
+          if (isUuid) {
+            query = query.eq("id", courseIdOrSlug);
+          } else {
+            query = query.eq("slug", courseIdOrSlug);
+          }
+          const { data } = await query.single();
+          if (data) courseData = data;
         }
 
         if (courseData) {
           setCourse(courseData);
-
-          // 2. Fetch instructor trader profile
-          const { data: tp } = await supabase
-            .from("trader_profiles")
-            .select("*, profiles(*)")
-            .eq("id", courseData.trader_id)
-            .single();
-
-          if (tp) {
-            setTraderProfile(tp);
+          if (courseData.trader) {
+            setTraderProfile(courseData.trader);
+          } else if (courseData.trader_id) {
+            const { data: tp } = await supabase
+              .from("trader_profiles")
+              .select("*, profiles(*)")
+              .eq("id", courseData.trader_id)
+              .single();
+            if (tp) setTraderProfile(tp);
           }
 
-          // 3. Check if user is already enrolled
+          // 3. Check if user is already enrolled via database or access voucher
           if (user) {
             const { data: enrollment } = await supabase
               .from("enrollments")
@@ -92,6 +95,26 @@ export default function CourseDetailPage() {
               setIsEnrolled(true);
             }
           }
+
+          // Check if unlocked via specific course code or all-access voucher
+          try {
+            if (typeof window !== "undefined") {
+              const unlockedCourses = JSON.parse(localStorage.getItem("markets_unlocked_courses") || "[]");
+              const isSpecificCourseUnlocked =
+                unlockedCourses.includes(courseData.id) ||
+                unlockedCourses.includes(courseData.slug) ||
+                unlockedCourses.includes(courseIdOrSlug);
+
+              const isMasterPass =
+                (isUnlocked && signalSubscription?.tier === "ALL_ACCESS") ||
+                unlockedCourses.includes("ALL_ACCESS") ||
+                (isUnlocked && (unlockedCode === "TRADINGEASY" || unlockedCode === "STUDY-EASY"));
+
+              if (isSpecificCourseUnlocked || isMasterPass) {
+                setIsEnrolled(true);
+              }
+            }
+          } catch (e) {}
         }
       } catch (err) {
         console.error("Error loading course details:", err);
@@ -179,7 +202,7 @@ export default function CourseDetailPage() {
     },
   ];
 
-  const defaultVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  const defaultVideoUrl = course?.video_url || course?.preview_video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-[#0B0B0B] py-16 font-mono">

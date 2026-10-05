@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth, DEMO_USERS } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { Language } from "@/lib/translations";
 import { supabase } from "@/lib/supabase";
@@ -15,7 +15,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get("redirect") || "/";
 
-  const { setUserProfile } = useAuth();
+  const { setUserProfile, redeemSignalCode } = useAuth();
   const { language, setLanguage } = useLanguage();
 
   const [email, setEmail] = useState("");
@@ -104,12 +104,35 @@ function LoginForm() {
           displayName: profile?.display_name || "User",
           role: userRole,
           title: userRole === "TRADER" ? "Stock Educator" : userRole === "ADMIN" ? "Head of Operations" : "Stock Investor",
-          avatarUrl: profile?.avatar_url || DEMO_USERS.investor.avatarUrl,
+          avatarUrl: profile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80",
           country: profile?.country || "United States",
           language: profile?.language || "EN",
           onboardingCompleted: profile?.onboarding_completed ?? true,
           onboardingStep: 4,
         });
+
+        // Automatically pass on and bind pending invitation code to logged in user
+        const pendingCode = searchParams.get("code") || (typeof window !== "undefined" ? localStorage.getItem("markets_pending_code") : null);
+        if (pendingCode) {
+          try {
+            const cleanCode = pendingCode.trim().toUpperCase();
+            await fetch("/api/redeem-code", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                code: cleanCode,
+                userId: data.user.id,
+                userEmail: data.user.email || email,
+              }),
+            });
+            await redeemSignalCode(cleanCode);
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("markets_pending_code");
+            }
+          } catch (pErr) {
+            console.warn("Auto-redeem on login error:", pErr);
+          }
+        }
 
         setIsLoading(false);
         // Redirect to intended target (e.g. course checkout) or home

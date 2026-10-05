@@ -150,6 +150,131 @@ export interface TranslationDictionary {
   btnReserveSeat: string;
   searchPlaceholder: string;
   cmdKPlaceholder: string;
+
+  // Header Actions & Common Badges
+  headerIssueCodes: string;
+  headerManageCodes: string;
+  headerRedeemCode: string;
+  headerSignIn: string;
+  headerGetStarted: string;
+  headerSignOut: string;
+  headerSearch: string;
+  headerStocks: string;
+
+  commonCertified: string;
+  commonCourse: string;
+  commonStockTrading: string;
+  commonOptionsTrading: string;
+  commonEquityResearch: string;
+  commonSubscription: string;
+  commonOneTime: string;
+  commonMonth: string;
+  commonBrowseAllCourses: string;
+  commonInstructor: string;
+  commonModules: string;
+  commonStatus: string;
+  commonLoading: string;
+  commonActive: string;
+  commonAuditedRecords: string;
+
+  // Stat Footnotes
+  statFootnote1: string;
+  statFootnote2: string;
+  statFootnote3: string;
+  statFootnote4: string;
+
+  // Courses Catalog
+  coursesCatalogTitle: string;
+  coursesCatalogDesc: string;
+  coursesEmptyTitle: string;
+  coursesEmptyDesc: string;
+
+  // Signals
+  signalsTitle: string;
+  signalsSub: string;
+  signalsSync: string;
+  signalsProviderStudio: string;
+  signalsNtfyBanner: string;
+  signalsNtfyDesc: string;
+  signalsNtfyBtn: string;
+  signalsInviteTitle: string;
+  signalsInviteDesc: string;
+  signalsInviteBtn: string;
+  signalsAllAssets: string;
+  signalsUSEquities: string;
+  signalsHongKong: string;
+  signalsAShare: string;
+  signalsCrypto: string;
+  signalsEntry: string;
+  signalsStopLoss: string;
+  signalsTarget: string;
+  signalsRRRatio: string;
+  signalsTimeframe: string;
+  signalsAuditedQuant: string;
+  signalsActiveOrder: string;
+  signalsNoActive: string;
+  signalsNoActiveDesc: string;
+
+  // Reports
+  reportsDeskTitle: string;
+  reportsRefresh: string;
+  reportsAITip: string;
+  reportsAllMarkets: string;
+  reportsAShare: string;
+  reportsUSMarket: string;
+  reportsWeekend: string;
+  reportsDate: string;
+  reportsInsights: string;
+  reportsReadFull: string;
+  reportsNoReports: string;
+  reportsNoReportsDesc: string;
+  reportsRetry: string;
+
+  // Redeem
+  redeemGatewayBadge: string;
+  redeemTitle: string;
+  redeemSub: string;
+  redeemInputLabel: string;
+  redeemPlaceholder: string;
+  redeemVerifyBtn: string;
+  redeemVerifying: string;
+  redeemAccessActive: string;
+  redeemStartCourse: string;
+  redeemOpenSignals: string;
+  redeemDashboard: string;
+  redeemClaimBtn: string;
+
+  // Investor
+  investorTerminalBadge: string;
+  investorWelcome: string;
+  investorSub: string;
+  investorEnrolledCourses: string;
+  investorTotalHours: string;
+  investorSignalsAccess: string;
+  investorLiveFeed: string;
+  investorActiveSubscriber: string;
+  investorExpiration: string;
+  investorIssuedVia: string;
+  investorOpenSignals: string;
+  investorRedeemVip: string;
+  investorRedeemBtn: string;
+  investorYourCourses: string;
+  investorExploreCatalog: string;
+  investorNoCourses: string;
+  investorBrowseCatalog: string;
+
+  // Traders Directory
+  tradersDirectoryTitle: string;
+  tradersDirectoryDesc: string;
+  tradersEmpty: string;
+  tradersEmptyDesc: string;
+
+  // Materials & Webinars
+  materialsHeroTitle: string;
+  materialsHeroDesc: string;
+  webinarsHeroTitle: string;
+  webinarsHeroDesc: string;
+  webinarsNoStreams: string;
 }
 
 export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
@@ -288,6 +413,122 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     btnReserveSeat: "Reserve Seat →",
     searchPlaceholder: "Search stock courses, traders, models...",
     cmdKPlaceholder: "Search stocks or command (⌘K)...",
+
+    headerIssueCodes: "Issue Codes",
+    headerManageCodes: "Manage Codes",
+    headerRedeemCode: "Redeem Code",
+    headerSignIn: "Sign In",
+    headerGetStarted: "Get Started",
+    headerSignOut: "Sign Out",
+    headerSearch: "Search...",
+    headerStocks: "STOCKS",
+
+    commonCertified: "CERTIFIED",
+    commonCourse: "COURSE",
+    commonStockTrading: "STOCK TRADING",
+    commonOptionsTrading: "OPTIONS TRADING",
+    commonEquityResearch: "EQUITY RESEARCH",
+    commonSubscription: "SUBSCRIPTION",
+    commonOneTime: "ONE-TIME",
+    commonMonth: "/mo",
+    commonBrowseAllCourses: "Browse All Courses (4,821) →",
+    commonInstructor: "Instructor:",
+    commonModules: "Modules",
+    commonStatus: "STATUS",
+    commonLoading: "Loading...",
+    commonActive: "ACTIVE",
+    commonAuditedRecords: "FINRA / AUDITED TRADING RECORDS",
+
+    statFootnote1: "+18% this month",
+    statFootnote2: "Curated stock curriculum",
+    statFootnote3: "Active streaming today",
+    statFootnote4: "Trader revenue focus",
+
+    coursesCatalogTitle: "VERIFIED STOCK COURSES CURRICULUM.",
+    coursesCatalogDesc: "Learn institutional stock trading from verified quantitative educators. Every course comes with downloadable Python backtesting scripts and Excel models.",
+    coursesEmptyTitle: "No Courses Published Yet",
+    coursesEmptyDesc: "Check back later. Our verified educators are currently preparing new institutional-grade material.",
+
+    signalsTitle: "INSTITUTIONAL TECHNICAL TRADING SIGNALS.",
+    signalsSub: "Published by certified educators with audited brokerage performance. Precision entry triggers, target prices, and risk-reward ratios with push notifications via ntfy.sh.",
+    signalsSync: "Sync Signals",
+    signalsProviderStudio: "Provider Studio",
+    signalsNtfyBanner: "REAL-TIME PUSH NOTIFICATIONS VIA NTFY.SH",
+    signalsNtfyDesc: "Subscribe to our ntfy.sh channel to receive instant push alerts on your phone (iOS/Android) or desktop whenever a new trading signal is broadcast.",
+    signalsNtfyBtn: "Subscribe on ntfy.sh",
+    signalsInviteTitle: "SUBSCRIBER INVITATION CODE",
+    signalsInviteDesc: "Enter an invitation code to unlock precision entry triggers and stop-loss targets.",
+    signalsInviteBtn: "Unlock with Code",
+    signalsAllAssets: "All Assets",
+    signalsUSEquities: "🇺🇸 US Equities",
+    signalsHongKong: "🇭🇰 Hong Kong",
+    signalsAShare: "🇨🇳 A-Share",
+    signalsCrypto: "⚡ Crypto",
+    signalsEntry: "ENTRY",
+    signalsStopLoss: "STOP LOSS",
+    signalsTarget: "TARGET",
+    signalsRRRatio: "R:R Ratio:",
+    signalsTimeframe: "TIMEFRAME",
+    signalsAuditedQuant: "Audited Quant",
+    signalsActiveOrder: "ACTIVE ORDER",
+    signalsNoActive: "No Active Signals",
+    signalsNoActiveDesc: "There are currently no active signals for this asset class.",
+
+    reportsDeskTitle: "INSTITUTIONAL RESEARCH DESK",
+    reportsRefresh: "Refresh Feed",
+    reportsAITip: "💡 Tip: Select/highlight any financial term in the report to summon the interactive AI Quant Analyst.",
+    reportsAllMarkets: "All Markets",
+    reportsAShare: "🇨🇳 A-Share (CN)",
+    reportsUSMarket: "🇺🇸 US Market (US)",
+    reportsWeekend: "☕ Weekend Specials",
+    reportsDate: "DATE:",
+    reportsInsights: "KEY SIGNALS & TAKEAWAYS:",
+    reportsReadFull: "Read Full Report",
+    reportsNoReports: "No Reports Published",
+    reportsNoReportsDesc: "There are no research reports available for the selected market or date.",
+    reportsRetry: "Retry Connection",
+
+    redeemGatewayBadge: "360° MARKETS INVITATION GATEWAY",
+    redeemTitle: "REDEEM INVITATION CODE",
+    redeemSub: "Enter an educator or platform invitation code to unlock courses, curriculum, and real-time technical trading signals.",
+    redeemInputLabel: "Enter Invitation Code *",
+    redeemPlaceholder: "e.g. TRADINGEASY, ALPHA2026, QUANT101",
+    redeemVerifyBtn: "Verify",
+    redeemVerifying: "Verifying...",
+    redeemAccessActive: "ACCESS UNLOCKED & CONNECTED",
+    redeemStartCourse: "Start Course Now",
+    redeemOpenSignals: "Open Technical Signals",
+    redeemDashboard: "Investor Dashboard",
+    redeemClaimBtn: "Claim Access & Activate Voucher",
+
+    investorTerminalBadge: "AUTHENTICATED INVESTOR TERMINAL",
+    investorWelcome: "WELCOME BACK",
+    investorSub: "Track your active stock courses, quantitative modeling progress, and technical signals subscription.",
+    investorEnrolledCourses: "ENROLLED COURSES",
+    investorTotalHours: "TOTAL HOURS LEARNED",
+    investorSignalsAccess: "TECHNICAL SIGNALS & SUBSCRIPTION ACCESS",
+    investorLiveFeed: "Live Feed",
+    investorActiveSubscriber: "ACTIVE SUBSCRIBER",
+    investorExpiration: "EXPIRATION",
+    investorIssuedVia: "ISSUED VIA",
+    investorOpenSignals: "Open Signals Feed",
+    investorRedeemVip: "REDEEM VIP ACCESS INVITATION CODE",
+    investorRedeemBtn: "Redeem Signal Subscription",
+    investorYourCourses: "YOUR ENROLLED STOCK COURSES",
+    investorExploreCatalog: "Explore Catalog",
+    investorNoCourses: "No Courses Enrolled Yet",
+    investorBrowseCatalog: "Browse Course Catalog",
+
+    tradersDirectoryTitle: "CERTIFIED STOCK TRADERS & EDUCATORS.",
+    tradersDirectoryDesc: "Every educator has their brokerage trading records audited and verified on-chain. Explore trader performance track records, courses, and upcoming live streams.",
+    tradersEmpty: "NO CERTIFIED TRADERS FOUND",
+    tradersEmptyDesc: "Certified educators will populate here once their certification applications are approved.",
+
+    materialsHeroTitle: "INSTITUTIONAL CODE & FINANCIAL MODELS.",
+    materialsHeroDesc: "Download audited Python stock trading backtest algorithms, options surface spreadsheets, and Wall Street DCF models created by verified quantitative traders.",
+    webinarsHeroTitle: "LIVE US STOCK TRADING STREAMS.",
+    webinarsHeroDesc: "Watch verified stock educators execute real trades during US market open sessions. Ask questions via live WebRTC voice Q&A and Level-2 order book breakdown.",
+    webinarsNoStreams: "NO LIVE STREAMS SCHEDULED",
   },
 
   JA: {
@@ -425,6 +666,122 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     btnReserveSeat: "席を予約 →",
     searchPlaceholder: "株式コース、トレーダー、モデルを検索...",
     cmdKPlaceholder: "株式検索またはコマンド (⌘K)...",
+
+    headerIssueCodes: "コード発行",
+    headerManageCodes: "コード管理",
+    headerRedeemCode: "コード解除",
+    headerSignIn: "サインイン",
+    headerGetStarted: "今すぐ始める",
+    headerSignOut: "サインアウト",
+    headerSearch: "検索...",
+    headerStocks: "株式",
+
+    commonCertified: "認証済み",
+    commonCourse: "コース",
+    commonStockTrading: "株式トレード",
+    commonOptionsTrading: "オプション取引",
+    commonEquityResearch: "株式リサーチ",
+    commonSubscription: "サブスクリプション",
+    commonOneTime: "買い切り",
+    commonMonth: "/月",
+    commonBrowseAllCourses: "すべてのコースを見る (4,821件) →",
+    commonInstructor: "講師:",
+    commonModules: "レッスン",
+    commonStatus: "ステータス",
+    commonLoading: "読み込み中...",
+    commonActive: "有効",
+    commonAuditedRecords: "FINRA / 監査済み取引履歴",
+
+    statFootnote1: "今月+18%",
+    statFootnote2: "厳選株式カリキュラム",
+    statFootnote3: "本日配信中",
+    statFootnote4: "トレーダー還元率重視",
+
+    coursesCatalogTitle: "認証済み株式コースカリキュラム。",
+    coursesCatalogDesc: "検証されたプロクオンツから株式投資を学ぶ。すべてのコースにダウンロード可能なPythonバックテストコードとExcelモデルが付属します。",
+    coursesEmptyTitle: "公開中のコースはありません",
+    coursesEmptyDesc: "しばらくお待ちください。認証済みトレーダーが新しい機関投資家向け教材を準備中です。",
+
+    signalsTitle: "認証クオンツトレーダー・リアルタイムシグナル。",
+    signalsSub: "監査済みエデュケーターによるエントリー・損切り・利確水準。ntfy.shを連携してスマホやPCへ即時プッシュ通知を受け取れます。",
+    signalsSync: "シグナル同期",
+    signalsProviderStudio: "配信スタジオ",
+    signalsNtfyBanner: "NTFY.SHによるリアルタイムプッシュ通知",
+    signalsNtfyDesc: "ntfy.shチャンネルを登録すると、新しいトレードシグナルが配信された際にスマホ（iOS/Android）やPCで即座に通知を受け取れます。",
+    signalsNtfyBtn: "ntfy.shで登録する",
+    signalsInviteTitle: "受講生招待コード",
+    signalsInviteDesc: "招待コードを入力すると、精確なエントリー価格と損切り・利確水準が解除されます。",
+    signalsInviteBtn: "コードで解除",
+    signalsAllAssets: "全アセット",
+    signalsUSEquities: "🇺🇸 米国株",
+    signalsHongKong: "🇭🇰 香港株",
+    signalsAShare: "🇨🇳 中国A株",
+    signalsCrypto: "⚡ 暗号資産",
+    signalsEntry: "エントリー",
+    signalsStopLoss: "損切り",
+    signalsTarget: "利確目標",
+    signalsRRRatio: "リスクリワード:",
+    signalsTimeframe: "時間軸",
+    signalsAuditedQuant: "監査済みクオンツ",
+    signalsActiveOrder: "有効オーダー",
+    signalsNoActive: "有効なシグナルはありません",
+    signalsNoActiveDesc: "このアセットクラスの有効なシグナルは現在ありません。",
+
+    reportsDeskTitle: "機関投資家リサーチデータデスク",
+    reportsRefresh: "フィード更新",
+    reportsAITip: "💡 ヒント：レポート内の専門用語を選択すると、AIクオンツアナリストが即座に解説します。",
+    reportsAllMarkets: "全市場",
+    reportsAShare: "🇨🇳 A株 (CN)",
+    reportsUSMarket: "🇺🇸 米国市場 (US)",
+    reportsWeekend: "☕ 週末特刊",
+    reportsDate: "日付:",
+    reportsInsights: "重要インサイト・注目銘柄:",
+    reportsReadFull: "レポート全文を読む",
+    reportsNoReports: "レポートはありません",
+    reportsNoReportsDesc: "選択された日付または市場のレポートは現在ありません。",
+    reportsRetry: "再接続する",
+
+    redeemGatewayBadge: "360° MARKETS 招待ゲートウェイ",
+    redeemTitle: "招待コードを引き換える",
+    redeemSub: "エデュケーターまたはプラットフォームの招待コードを入力して、コースやリアルタイムシグナルを解除します。",
+    redeemInputLabel: "招待コードを入力 *",
+    redeemPlaceholder: "例: TRADINGEASY, ALPHA2026, QUANT101",
+    redeemVerifyBtn: "確認する",
+    redeemVerifying: "確認中...",
+    redeemAccessActive: "アクセス権限が有効化されました",
+    redeemStartCourse: "コースを開始する",
+    redeemOpenSignals: "シグナルフィードを開く",
+    redeemDashboard: "受講生ダッシュボード",
+    redeemClaimBtn: "権限を取得してアクティベート",
+
+    investorTerminalBadge: "認証済み受講生ターミナル",
+    investorWelcome: "おかえりなさい",
+    investorSub: "受講中のコース、クオンツモデルの学習進捗、シグナル購読状況を管理します。",
+    investorEnrolledCourses: "受講中コース",
+    investorTotalHours: "総学習時間",
+    investorSignalsAccess: "テクニカルシグナル＆サブスクリプション権限",
+    investorLiveFeed: "リアルタイム配信",
+    investorActiveSubscriber: "有効なサブスクライバー",
+    investorExpiration: "有効期限",
+    investorIssuedVia: "発行元",
+    investorOpenSignals: "シグナルを開く",
+    investorRedeemVip: "VIP招待コードの引き換え",
+    investorRedeemBtn: "シグナルを解除する",
+    investorYourCourses: "受講中の株式コース",
+    investorExploreCatalog: "カタログを探す",
+    investorNoCourses: "受講中のコースはありません",
+    investorBrowseCatalog: "コース一覧を見る",
+
+    tradersDirectoryTitle: "公認株式トレーダー＆エデュケーター。",
+    tradersDirectoryDesc: "すべての講師は厳格な取引履歴の監査をクリアしています。トレーダーの運用実績、コース、ライブ配信をご確認ください。",
+    tradersEmpty: "公認トレーダーが見つかりません",
+    tradersEmptyDesc: "申請が承認されたエデュケーターがここに表示されます。",
+
+    materialsHeroTitle: "機関投資家向けコード＆金融モデル。",
+    materialsHeroDesc: "検証されたプロクオンツが作成したPythonバックテストコード、オプションモデル、DCF財務シートをダウンロード。",
+    webinarsHeroTitle: "米株寄り付き実盤ライブ配信。",
+    webinarsHeroDesc: "米株市場寄り付きに合わせたプロトレーダーの生配信。WebRTCによる音声Q&Aと板読み解説。",
+    webinarsNoStreams: "予定されているライブ配信はありません",
   },
 
   ZH: {
@@ -562,5 +919,121 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     btnReserveSeat: "预订席位 →",
     searchPlaceholder: "搜索股票课程、导师、模型代码...",
     cmdKPlaceholder: "搜索股票或命令 (按 ⌘K)...",
+
+    headerIssueCodes: "发放邀请码",
+    headerManageCodes: "管理邀请码",
+    headerRedeemCode: "兑换邀请码",
+    headerSignIn: "登录",
+    headerGetStarted: "立即体验",
+    headerSignOut: "退出登录",
+    headerSearch: "搜索...",
+    headerStocks: "股票",
+
+    commonCertified: "已认证",
+    commonCourse: "课程",
+    commonStockTrading: "股票交易",
+    commonOptionsTrading: "期权交易",
+    commonEquityResearch: "股票研究",
+    commonSubscription: "订阅制",
+    commonOneTime: "单次购买",
+    commonMonth: "/月",
+    commonBrowseAllCourses: "浏览全部精选课程 (4,821门) →",
+    commonInstructor: "主讲导师:",
+    commonModules: "课时模块",
+    commonStatus: "状态",
+    commonLoading: "正在加载...",
+    commonActive: "有效",
+    commonAuditedRecords: "FINRA / 实盘交割单审计",
+
+    statFootnote1: "本月增长18%",
+    statFootnote2: "专业股票实战课程",
+    statFootnote3: "今日实盘直播中",
+    statFootnote4: "导师分成比例保障",
+
+    coursesCatalogTitle: "官方认证股票交易实战体系。",
+    coursesCatalogDesc: "向经过交割单验证的量化导师学习。每门课程均配备可下载的Python策略回测脚本与Excel量化估值模型。",
+    coursesEmptyTitle: "暂无上架课程",
+    coursesEmptyDesc: "请稍后查看。我们的认证导师正在准备全新的机构级精选实战内容。",
+
+    signalsTitle: "机构级量化实盘交易信号。",
+    signalsSub: "由经过链上审计与战绩验证的导师发布。包含精确入场区间、止损价位、目标止盈及盈亏比计算。支持通过 ntfy.sh 接收手机与桌面即时推送提醒。",
+    signalsSync: "刷新信号",
+    signalsProviderStudio: "信号发布中心",
+    signalsNtfyBanner: "支持 NTFY.SH 毫秒级多端实时推送",
+    signalsNtfyDesc: "订阅我们的 ntfy.sh 公开频道，无论是在手机（iOS/Android）、桌面还是浏览器，每当导师发布新买卖信号时，都能在毫秒级内收到震动推送通知。",
+    signalsNtfyBtn: "一键订阅推送",
+    signalsInviteTitle: "专属邀请码解锁",
+    signalsInviteDesc: "输入导师或平台邀请码，免费解锁实时止损点位、精准买价与完整逻辑。",
+    signalsInviteBtn: "输入邀请码解锁",
+    signalsAllAssets: "所有标的",
+    signalsUSEquities: "🇺🇸 美股",
+    signalsHongKong: "🇭🇰 港股",
+    signalsAShare: "🇨🇳 A股",
+    signalsCrypto: "⚡ 加密资产",
+    signalsEntry: "入场区间",
+    signalsStopLoss: "止损位",
+    signalsTarget: "目标止盈",
+    signalsRRRatio: "盈亏比:",
+    signalsTimeframe: "持仓周期",
+    signalsAuditedQuant: "实盘认证量化员",
+    signalsActiveOrder: "进行中订单",
+    signalsNoActive: "暂无进行中的技术信号",
+    signalsNoActiveDesc: "当前标的资产类别暂无活跃交易信号。",
+
+    reportsDeskTitle: "机构投研数据专区",
+    reportsRefresh: "刷新行情",
+    reportsAITip: "💡 提示：在研报中划选任何金融术语（如“动量”、“地缘溢价”、“回踩确认”），即可一键呼出 AI 量化分析师获取深度解析。",
+    reportsAllMarkets: "全市场",
+    reportsAShare: "🇨🇳 A股研报 (CN)",
+    reportsUSMarket: "🇺🇸 美股盘前 (US)",
+    reportsWeekend: "☕ 周末特刊",
+    reportsDate: "日期:",
+    reportsInsights: "核心投资线索 (TOP INSIGHTS):",
+    reportsReadFull: "阅读研报全文",
+    reportsNoReports: "暂无研报发布",
+    reportsNoReportsDesc: "所选日期或市场暂无投研快报发布。",
+    reportsRetry: "重新连接",
+
+    redeemGatewayBadge: "360° MARKETS 专属邀请通道",
+    redeemTitle: "兑换专属邀请码",
+    redeemSub: "输入导师或官方平台邀请码，即刻解锁量化课程、深度投研研报与实时交易信号。",
+    redeemInputLabel: "输入邀请码 *",
+    redeemPlaceholder: "例如: TRADINGEASY, ALPHA2026, QUANT101",
+    redeemVerifyBtn: "验证代码",
+    redeemVerifying: "正在验证...",
+    redeemAccessActive: "已激活专属权限",
+    redeemStartCourse: "立即开始学习课程",
+    redeemOpenSignals: "前往实时信号大厅",
+    redeemDashboard: "学员个人主页",
+    redeemClaimBtn: "立即绑定并激活权益",
+
+    investorTerminalBadge: "已认证学员交易与学习终端",
+    investorWelcome: "欢迎回来",
+    investorSub: "实时跟踪您的已购股票课程、量化模型学习进度及技术信号订阅状态。",
+    investorEnrolledCourses: "已报名课程",
+    investorTotalHours: "累计学习时长",
+    investorSignalsAccess: "技术交易信号与VIP订阅权限",
+    investorLiveFeed: "实盘信号流",
+    investorActiveSubscriber: "VIP有效订阅中",
+    investorExpiration: "到期时间",
+    investorIssuedVia: "激活凭证",
+    investorOpenSignals: "打开实盘信号",
+    investorRedeemVip: "兑换 VIP 专属邀请凭证",
+    investorRedeemBtn: "立即兑换信号订阅",
+    investorYourCourses: "我的已选课程",
+    investorExploreCatalog: "探索课程目录",
+    investorNoCourses: "您尚未报名任何课程",
+    investorBrowseCatalog: "去课程商城逛逛",
+
+    tradersDirectoryTitle: "官方认证股票交易导师与量化专家。",
+    tradersDirectoryDesc: "每位导师的实盘交割单均通过严格审核与存证。查看导师收益曲线、在售课程与即将开始的实盘直播。",
+    tradersEmpty: "暂无认证导师",
+    tradersEmptyDesc: "认证申请通过后，导师将在此处展示。",
+
+    materialsHeroTitle: "机构级代码库与金融量化模型。",
+    materialsHeroDesc: "下载经实盘验证的Python股票回测算法、期权波动率曲面表格与华尔街机构级DCF估值模型。",
+    webinarsHeroTitle: "美股开盘实盘交易直播。",
+    webinarsHeroDesc: "观摩实盘认证导师在美股开盘时段执行实盘交易。支持实时WebRTC语音连麦答疑与Level-2深度订单簿剖析。",
+    webinarsNoStreams: "当前暂无预定的直播日程",
   },
 };

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "inv-004",
+    "code": "QUANT101",
+    "scope": "COURSE",
+    "tier": "ALL_ACCESS",
+    "targetCourseId": "c-1",
+    "targetCourseTitle": "Quantitative Stock Trading & Algorithms",
+    "targetCourseSlug": "quantitative-stock-trading",
+    "creatorRole": "TRADER",
+    "creatorId": "user-alex-demo",
+    "creatorName": "Alex Morgan",
+    "durationDays": 9999,
+    "maxUses": 100,
+    "usedCount": 22,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-04T09:03:39.249Z",
+    "notes": "Direct course voucher for Quant Stock Trading masterclass"
+  }
+]

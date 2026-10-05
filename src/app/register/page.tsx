@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth, Role, UserProfile, DEMO_USERS } from "@/lib/auth-context";
+import { useAuth, Role, UserProfile } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { Language } from "@/lib/translations";
 import { supabase } from "@/lib/supabase";
@@ -24,8 +24,9 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get("redirect") || "/";
+  const codeParam = searchParams.get("code") || "";
 
-  const { setUserProfile, unlockWithCode } = useAuth();
+  const { setUserProfile, unlockWithCode, redeemSignalCode } = useAuth();
   const { language, setLanguage } = useLanguage();
 
   // Form Fields State
@@ -34,7 +35,18 @@ function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(codeParam.toUpperCase());
+
+  React.useEffect(() => {
+    if (codeParam) {
+      setInviteCode(codeParam.toUpperCase());
+    } else {
+      const pending = localStorage.getItem("markets_pending_code");
+      if (pending) {
+        setInviteCode(pending.toUpperCase());
+      }
+    }
+  }, [codeParam]);
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
@@ -243,10 +255,26 @@ function RegisterForm() {
         console.warn("Database profile sync notice:", dbErr);
       }
 
-      // 4. If invitation code was entered, unlock content
+      // 4. If invitation code was entered, automatically redeem and bind to new account in database
       if (inviteCode.trim()) {
         try {
-          await unlockWithCode(inviteCode.trim());
+          const cleanCode = inviteCode.trim().toUpperCase();
+          const redeemRes = await fetch("/api/redeem-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code: cleanCode,
+              userId,
+              userEmail: email,
+            }),
+          });
+          const redeemData = await redeemRes.json();
+          if (redeemData.ok) {
+            await redeemSignalCode(cleanCode);
+            localStorage.removeItem("markets_pending_code");
+          } else {
+            await unlockWithCode(cleanCode);
+          }
         } catch (uErr) {
           console.warn("Unlock code error during signup:", uErr);
         }

@@ -176,13 +176,13 @@ export default function ProMasterclassLandingPage() {
             </Reveal>
 
             <SplitTextReveal
-              lines={["LIVE MASTERCLASSES &", "COHORT SECTIONS."]}
+              lines={[t.proTitle]}
               className="text-4xl sm:text-6xl font-display font-light text-white tracking-tight leading-none uppercase"
             />
 
             <Reveal delay={0.1}>
               <p className="text-sm text-neutral-400 max-w-2xl leading-relaxed">
-                Connect directly with verified educators, watch screenshares of algorithmic strategies, participate in live market opens, and view trading desks.
+                {t.proHeroSub}
               </p>
             </Reveal>
           </div>
@@ -286,7 +286,7 @@ export default function ProMasterclassLandingPage() {
                     {/* Action & Price Settlement Footer */}
                     <div className="border-t border-[#1E1E1E] pt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                       <div>
-                        <span className="text-[10px] text-neutral-500 block uppercase">SECURE PASS VALUE</span>
+                        <span className="text-[10px] text-neutral-500 block uppercase">{t.proTicketPrice}</span>
                         <span className="text-2xl font-display font-bold text-white">
                           {formatPrice(webinar.price)}
                         </span>
@@ -298,7 +298,7 @@ export default function ProMasterclassLandingPage() {
                           className="bg-[#181818] hover:bg-[#8BE000] border border-[#2E2E2E] hover:border-[#8BE000] text-white hover:text-black px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all duration-300"
                         >
                           <Video className="w-4 h-4 shrink-0" />
-                          <span>Enter Live Studio</span>
+                          <span>{t.btnEnterProLiveRoom}</span>
                         </Link>
                       ) : isFull ? (
                         <button
@@ -319,7 +319,7 @@ export default function ProMasterclassLandingPage() {
                           ) : (
                             <>
                               <Lock className="w-4 h-4 shrink-0 text-black" />
-                              <span>Reserve Seat Pass</span>
+                              <span>{t.btnReserveProSeat}</span>
                             </>
                           )}
                         </button>

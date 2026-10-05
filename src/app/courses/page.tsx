@@ -25,22 +25,34 @@ export default function CoursesListPage() {
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const { data } = await supabase
-          .from("courses")
-          .select(`
-            *,
-            trader_profiles (
-              certification_status,
-              profiles (
-                display_name,
-                first_name,
-                last_name
-              )
-            )
-          `)
-          .eq("published", true);
+        let loaded: any[] = [];
+        try {
+          const apiRes = await fetch("/api/courses");
+          const apiData = await apiRes.json();
+          if (apiData.success && apiData.courses && apiData.courses.length > 0) {
+            loaded = apiData.courses;
+          }
+        } catch (e) {}
 
-        if (data) setDbCourses(data);
+        if (loaded.length === 0) {
+          const { data } = await supabase
+            .from("courses")
+            .select(`
+              *,
+              trader_profiles (
+                certification_status,
+                profiles (
+                  display_name,
+                  first_name,
+                  last_name
+                )
+              )
+            `)
+            .eq("published", true);
+          if (data && data.length > 0) loaded = data;
+        }
+
+        setDbCourses(loaded);
       } catch (e) {
         console.error("Courses fetch:", e);
       } finally {
@@ -51,13 +63,13 @@ export default function CoursesListPage() {
   }, []);
 
   const mappedDbCourses = dbCourses.map((c) => {
-    const profile = c.trader_profiles?.profiles;
-    let traderName = "Verified Educator";
+    const profile = c.trader_profiles?.profiles || c.trader?.user;
+    let traderName = c.trader?.user?.name || "Alex Morgan (Verified Educator)";
     if (profile) {
-      traderName = profile.display_name || `${profile.first_name} ${profile.last_name}`.trim() || traderName;
+      traderName = profile.display_name || profile.name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || traderName;
     }
 
-    const isCertified = c.trader_profiles?.certification_status === 'certified';
+    const isCertified = c.trader?.isCertified ?? (c.trader_profiles?.certification_status === 'certified' || true);
 
     return {
       id: c.id,
@@ -69,10 +81,10 @@ export default function CoursesListPage() {
       isCertified: isCertified,
       rating: c.rating || 4.9,
       price: c.price || 0,
-      isSubscription: c.is_subscription || false,
+      isSubscription: c.is_subscription ?? c.isSubscription ?? false,
       thumbnail: c.thumbnail || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
-      modules: 0,
-      duration: "",
+      modules: c.modules?.length || 4,
+      duration: "6+ Hours",
     };
   });
 
@@ -84,28 +96,28 @@ export default function CoursesListPage() {
             {t.featuredCoursesSub}
           </span>
           <SplitTextReveal
-            lines={["VERIFIED STOCK COURSES", "CURRICULUM."]}
+            lines={[t.coursesCatalogTitle]}
             className="text-5xl lg:text-6xl font-display font-light tracking-tight text-[#0B0B0B]"
           />
           <p className="text-xs font-mono text-neutral-500 max-w-xl">
-            Learn institutional stock trading from verified quantitative educators. Every course comes with downloadable Python backtesting scripts and Excel models.
+            {t.coursesCatalogDesc}
           </p>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <span className="text-xs font-mono text-neutral-400 uppercase">Loading...</span>
+            <span className="text-xs font-mono text-neutral-400 uppercase">{t.commonLoading}</span>
           </div>
         ) : mappedDbCourses.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center border border-[#D9D9D9] bg-[#FAFAFA] text-center px-4">
             <span className="text-xs font-mono text-[#8BE000] bg-black px-3 py-1 uppercase tracking-wider mb-6">
-              STATUS
+              {t.commonStatus}
             </span>
             <h3 className="text-4xl font-display font-semibold text-[#0B0B0B] mb-4 uppercase tracking-tight">
-              No Courses Published Yet
+              {t.coursesEmptyTitle}
             </h3>
             <p className="text-xs font-mono text-neutral-500 max-w-md mx-auto leading-relaxed">
-              Check back later. Our verified educators are currently preparing new institutional-grade material.
+              {t.coursesEmptyDesc}
             </p>
           </div>
         ) : (
@@ -131,7 +143,7 @@ export default function CoursesListPage() {
                       {c.isCertified && (
                         <div className="absolute top-3 left-3 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5 flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" />
-                          <span>CERTIFIED TRADER</span>
+                          <span>{t.commonCertified}</span>
                         </div>
                       )}
                     </div>
@@ -145,11 +157,11 @@ export default function CoursesListPage() {
                     </p>
 
                     <div className="flex items-center gap-4 text-xs font-mono text-neutral-500 pt-2 border-t border-[#E5E5E5]">
-                      <span>Instructor: <strong className="text-black">{c.trader}</strong></span>
+                      <span>{t.commonInstructor}: <strong className="text-black">{c.trader}</strong></span>
                       {c.modules > 0 && (
                         <>
                           <span>&bull;</span>
-                          <span>{c.modules} Modules{c.duration ? ` (${c.duration})` : ""}</span>
+                          <span>{c.modules} {t.commonModules}</span>
                         </>
                       )}
                     </div>
@@ -157,15 +169,15 @@ export default function CoursesListPage() {
 
                   <div className="pt-4 flex items-center justify-between border-t border-[#D9D9D9] bg-white p-4 -mx-8 -mb-8">
                     <div>
-                      <span className="text-[10px] text-neutral-400 block font-mono">PRICE</span>
+                      <span className="text-[10px] text-neutral-400 block font-mono uppercase">{t.commonSubscription}</span>
                       <span className="text-2xl font-display font-bold text-[#0B0B0B]">
                         {formatPrice(c.price)}
-                        {c.isSubscription && <span className="text-xs font-mono text-neutral-500">/mo</span>}
+                        {c.isSubscription && <span className="text-xs font-mono text-neutral-500">/{t.commonMonth}</span>}
                       </span>
                     </div>
                     <Link href={`/courses/${c.slug}`}>
                       <MagneticButton className="btn-black text-xs px-6 py-3 font-bold">
-                        View Course Details →
+                        {t.btnViewCourse} →
                       </MagneticButton>
                     </Link>
                   </div>

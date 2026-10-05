@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="bg-[#0B0B0B] text-white min-h-screen flex flex-col font-sans selection:bg-[#8BE000] selection:text-black">
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning className="bg-[#0B0B0B] text-white min-h-screen flex flex-col font-sans selection:bg-[#8BE000] selection:text-black">
         <AuthProvider>
           <LanguageProvider>
             <SmoothScrollProvider>

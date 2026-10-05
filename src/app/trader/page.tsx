@@ -17,7 +17,18 @@ import {
   ArrowUpRight,
   RefreshCw,
   Radio,
+  KeyRound,
+  Copy,
+  Check,
+  Edit3,
+  Share2,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
 } from "lucide-react";
+import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function TraderDashboardPage() {
@@ -36,6 +47,31 @@ export default function TraderDashboardPage() {
   const [webinarsList, setWebinarsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Trader Invitation Codes State
+  const [traderCodes, setTraderCodes] = useState<any[]>([]);
+  const [traderCodeString, setTraderCodeString] = useState("");
+  const [traderCodeScope, setTraderCodeScope] = useState<"COURSE" | "TRADER_BUNDLE" | "SIGNALS">("COURSE");
+  const [traderCodeTargetCourseId, setTraderCodeTargetCourseId] = useState("");
+  const [traderCodeDuration, setTraderCodeDuration] = useState<number>(30);
+  const [traderCodeMaxUses, setTraderCodeMaxUses] = useState<number>(50);
+  const [traderCodeNotes, setTraderCodeNotes] = useState("");
+  const [isIssuingCode, setIsIssuingCode] = useState(false);
+  const [issueMsg, setIssueMsg] = useState<{ success: boolean; text: string } | null>(null);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
+
+  // Edit Trader Code State
+  const [editingTraderCode, setEditingTraderCode] = useState<any | null>(null);
+  const [editString, setEditString] = useState("");
+  const [editScope, setEditScope] = useState<"COURSE" | "TRADER_BUNDLE" | "SIGNALS">("COURSE");
+  const [editCourseId, setEditCourseId] = useState("");
+  const [editDuration, setEditDuration] = useState(30);
+  const [editMaxUses, setEditMaxUses] = useState(50);
+  const [editStatus, setEditStatus] = useState<"ACTIVE" | "REVOKED">("ACTIVE");
+  const [editNotes, setEditNotes] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editErrorMsg, setEditErrorMsg] = useState("");
 
   const formatPrice = (usd: number) => {
     if (currency === "JPY") return `¥${Math.floor(usd * 150).toLocaleString()}`;
@@ -146,17 +182,44 @@ export default function TraderDashboardPage() {
             return acc + (en.courses?.price || 0);
           }, 0);
           setGrossRevenue(realGross);
-        } else {
-          setTotalSubscribers(0);
-          setGrossRevenue(0);
         }
+
+        // Check /api/courses for Prisma database courses
+        try {
+          const apiRes = await fetch("/api/courses");
+          const apiData = await apiRes.json();
+          if (apiData.success && apiData.courses && apiData.courses.length > 0) {
+            const combined = (userCourses && userCourses.length > 0) ? userCourses : apiData.courses;
+            setTotalCourses(combined.length);
+            setCoursesList(combined);
+            if (!userCourses || userCourses.length === 0) {
+              const estimatedRev = combined.reduce((acc: number, c: any) => acc + (c.price || 0) * 15, 0);
+              setGrossRevenue(estimatedRev);
+              setTotalSubscribers(combined.length * 15);
+            }
+          }
+        } catch (e) {}
       } else {
-        setTotalCourses(0);
-        setCoursesList([]);
+        // Fallback to /api/courses when traderProfileId is not in Supabase
+        try {
+          const apiRes = await fetch("/api/courses");
+          const apiData = await apiRes.json();
+          if (apiData.success && apiData.courses && apiData.courses.length > 0) {
+            setTotalCourses(apiData.courses.length);
+            setCoursesList(apiData.courses);
+            const estimatedRev = apiData.courses.reduce((acc: number, c: any) => acc + (c.price || 0) * 15, 0);
+            setGrossRevenue(estimatedRev);
+            setTotalSubscribers(apiData.courses.length * 15);
+          } else {
+            setTotalCourses(0);
+            setCoursesList([]);
+          }
+        } catch (e) {
+          setTotalCourses(0);
+          setCoursesList([]);
+        }
         setTotalWebinars(0);
         setWebinarsList([]);
-        setTotalSubscribers(0);
-        setGrossRevenue(0);
       }
     } catch (e) {
       console.error("Trader Hub fetch error:", e);
@@ -166,9 +229,166 @@ export default function TraderDashboardPage() {
     }
   };
 
+  const fetchTraderCodes = async () => {
+    try {
+      const url = user?.id
+        ? `/api/invitation-codes?creatorId=${encodeURIComponent(user.id)}&creatorRole=TRADER`
+        : `/api/invitation-codes?creatorRole=TRADER`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.ok && data.codes) {
+        setTraderCodes(data.codes);
+      }
+    } catch (e) {
+      console.warn("Failed to load trader codes:", e);
+    }
+  };
+
+  const handleIssueTraderCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!traderCodeString.trim()) return;
+
+    setIsIssuingCode(true);
+    setIssueMsg(null);
+
+    const selectedCourse = coursesList.find((c) => c.id === traderCodeTargetCourseId) || coursesList[0];
+
+    try {
+      const res = await fetch("/api/invitation-codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: traderCodeString.trim().toUpperCase(),
+          scope: traderCodeScope,
+          tier: traderCodeScope === "SIGNALS" ? "SIGNALS" : "ALL_ACCESS",
+          targetCourseId: traderCodeScope === "COURSE" ? (traderCodeTargetCourseId || coursesList[0]?.id) : undefined,
+          targetCourseTitle: traderCodeScope === "COURSE" ? (selectedCourse?.title || coursesList[0]?.title) : undefined,
+          targetCourseSlug: traderCodeScope === "COURSE" ? (selectedCourse?.slug || coursesList[0]?.slug) : undefined,
+          durationDays: traderCodeDuration,
+          maxUses: traderCodeMaxUses,
+          notes: traderCodeNotes,
+          creatorRole: "TRADER",
+          creatorId: user?.id || "trader",
+          creatorName: user?.displayName || user?.name || "Verified Educator",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to create code");
+      }
+
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+      setIssueMsg({ success: true, text: `Code "${data.code.code}" successfully created!` });
+      setTraderCodeString("");
+      setTraderCodeNotes("");
+      await fetchTraderCodes();
+    } catch (err: any) {
+      setIssueMsg({ success: false, text: err.message || "Failed to issue code." });
+    } finally {
+      setIsIssuingCode(false);
+    }
+  };
+
+  const handleCopyCode = (id: string, code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCodeId(id);
+    setTimeout(() => setCopiedCodeId(null), 2000);
+  };
+
+  const handleCopyShareLink = (id: string, code: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+    const link = `${origin}/redeem?code=${code}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLinkId(id);
+    setTimeout(() => setCopiedLinkId(null), 2000);
+  };
+
+  const handleToggleTraderCode = async (id: string, currentStatus: string) => {
+    const nextStatus = currentStatus === "ACTIVE" ? "REVOKED" : "ACTIVE";
+    try {
+      await fetch("/api/invitation-codes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: nextStatus }),
+      });
+      await fetchTraderCodes();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteTraderCode = async (id: string) => {
+    try {
+      await fetch(`/api/invitation-codes?id=${id}`, { method: "DELETE" });
+      await fetchTraderCodes();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const openTraderEdit = (code: any) => {
+    setEditingTraderCode(code);
+    setEditString(code.code);
+    setEditScope(code.scope || "COURSE");
+    setEditCourseId(code.targetCourseId || coursesList[0]?.id || "");
+    setEditDuration(code.durationDays || 30);
+    setEditMaxUses(code.maxUses || 50);
+    setEditStatus(code.status || "ACTIVE");
+    setEditNotes(code.notes || "");
+    setEditErrorMsg("");
+  };
+
+  const handleSaveTraderEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTraderCode) return;
+    setIsSavingEdit(true);
+    setEditErrorMsg("");
+
+    const selectedCourse = coursesList.find((c) => c.id === editCourseId);
+
+    try {
+      const res = await fetch("/api/invitation-codes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingTraderCode.id,
+          code: editString.trim().toUpperCase(),
+          scope: editScope,
+          targetCourseId: editScope === "COURSE" ? editCourseId : null,
+          targetCourseTitle: editScope === "COURSE" ? (selectedCourse?.title || editingTraderCode.targetCourseTitle) : null,
+          targetCourseSlug: editScope === "COURSE" ? (selectedCourse?.slug || editingTraderCode.targetCourseSlug) : null,
+          durationDays: editDuration,
+          maxUses: editMaxUses,
+          status: editStatus,
+          notes: editNotes,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to update code");
+      }
+
+      setEditingTraderCode(null);
+      await fetchTraderCodes();
+    } catch (err: any) {
+      setEditErrorMsg(err.message || "Failed to update code.");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   useEffect(() => {
     fetchTraderData();
+    fetchTraderCodes();
   }, [user]);
+
+  useEffect(() => {
+    if (coursesList.length > 0 && !traderCodeTargetCourseId) {
+      setTraderCodeTargetCourseId(coursesList[0].id);
+    }
+  }, [coursesList, traderCodeTargetCourseId]);
 
   const educatorShare = grossRevenue * 0.7;
 
@@ -373,17 +593,10 @@ export default function TraderDashboardPage() {
                 </p>
               </div>
 
-              {isCertified ? (
-                <Link href="/trader/courses/new" className="btn-lime px-4 py-2 text-xs font-bold text-black flex items-center gap-1.5">
-                  <Plus className="w-4 h-4" />
-                  <span>Create New Course</span>
-                </Link>
-              ) : (
-                <div className="flex items-center gap-2 bg-[#111111] border border-[#1E1E1E] px-4 py-2 text-xs text-neutral-500 cursor-not-allowed">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Certification Required</span>
-                </div>
-              )}
+              <Link href="/trader/courses/new" className="btn-lime px-4 py-2 text-xs font-bold text-black flex items-center gap-1.5">
+                <Plus className="w-4 h-4" />
+                <span>Create New Course</span>
+              </Link>
             </div>
 
             {coursesList.length === 0 ? (
@@ -489,6 +702,506 @@ export default function TraderDashboardPage() {
             )}
           </div>
 
+          {/* SUBSCRIBER INVITATION CODES & ACCESS ISSUANCE */}
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-[#1E1E1E]">
+              <div>
+                <h3 className="text-xl font-display font-medium text-white tracking-tight flex items-center gap-2">
+                  <KeyRound className="w-5 h-5 text-[#8BE000]" />
+                  <span>SUBSCRIBER INVITATION CODES & VIP PASSES</span>
+                </h3>
+                <p className="text-xs text-neutral-400 font-sans">
+                  Create custom access codes to grant your subscribers instant access to your courses and live technical signals.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-400 bg-[#111] px-3 py-1.5 border border-[#1E1E1E]">
+                <span className="w-2 h-2 rounded-full bg-[#8BE000] animate-pulse" />
+                <span>{traderCodes.length} Subscriber Codes</span>
+              </div>
+            </div>
+
+            {/* Code Generator Form */}
+            <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
+                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-[#8BE000]" />
+                  <span>Issue New Subscriber Code</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rand = Math.floor(100 + Math.random() * 900);
+                    const prefix = user?.firstName?.toUpperCase() || "TRD";
+                    setTraderCodeString(`${prefix}-VIP-${rand}`);
+                  }}
+                  className="text-[11px] text-[#8BE000] hover:underline font-mono"
+                >
+                  ⚡ Randomize Code
+                </button>
+              </div>
+
+              {issueMsg && (
+                <div
+                  className={`p-3 text-xs font-mono flex items-center gap-2 border ${
+                    issueMsg.success
+                      ? "bg-[#8BE000]/10 border-[#8BE000] text-[#8BE000]"
+                      : "bg-red-950/40 border-red-800 text-red-400"
+                  }`}
+                >
+                  {issueMsg.success ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <XCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{issueMsg.text}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleIssueTraderCode} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+                {/* Code String */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
+                    Code String *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. ALEX-VIP"
+                    value={traderCodeString}
+                    onChange={(e) => setTraderCodeString(e.target.value.toUpperCase())}
+                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white uppercase tracking-wider outline-none"
+                  />
+                </div>
+
+                {/* Target Content / Scope */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
+                    What This Code Unlocks *
+                  </label>
+                  <select
+                    value={traderCodeScope}
+                    onChange={(e) => setTraderCodeScope(e.target.value as any)}
+                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
+                  >
+                    <option value="COURSE">Specific Course</option>
+                    <option value="TRADER_BUNDLE">All My Courses + Signals (Bundle)</option>
+                    <option value="SIGNALS">My Technical Signals Only</option>
+                  </select>
+                </div>
+
+                {/* Specific Course Select (if scope === COURSE) */}
+                {traderCodeScope === "COURSE" ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
+                      Target Course *
+                    </label>
+                    <select
+                      value={traderCodeTargetCourseId}
+                      onChange={(e) => setTraderCodeTargetCourseId(e.target.value)}
+                      className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
+                    >
+                      {coursesList.map((crs) => (
+                        <option key={crs.id} value={crs.id}>
+                          {crs.title}
+                        </option>
+                      ))}
+                      {coursesList.length === 0 && (
+                        <option value="c-1">Quantitative Stock Trading (Default)</option>
+                      )}
+                    </select>
+                  </div>
+                ) : (
+                  /* Validity / Duration */
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
+                      Validity Period
+                    </label>
+                    <select
+                      value={traderCodeDuration}
+                      onChange={(e) => setTraderCodeDuration(Number(e.target.value))}
+                      className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
+                    >
+                      <option value={30}>30 Days</option>
+                      <option value={60}>60 Days</option>
+                      <option value={90}>90 Days</option>
+                      <option value={180}>180 Days</option>
+                      <option value={365}>365 Days</option>
+                      <option value={9999}>Lifetime Unlimited</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Max Uses */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
+                    Max Redemptions
+                  </label>
+                  <select
+                    value={traderCodeMaxUses}
+                    onChange={(e) => setTraderCodeMaxUses(Number(e.target.value))}
+                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
+                  >
+                    <option value={5}>5 Uses (VIP Inner Circle)</option>
+                    <option value={20}>20 Uses (Cohort)</option>
+                    <option value={50}>50 Uses (Webinar Cohort)</option>
+                    <option value={100}>100 Uses (Community)</option>
+                    <option value={500}>500 Uses (Telegram Group)</option>
+                    <option value={99999}>Unlimited Uses</option>
+                  </select>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
+                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
+                    Notes / Campaign Audience (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Free access voucher for Q4 quantitative workshop attendees"
+                    value={traderCodeNotes}
+                    onChange={(e) => setTraderCodeNotes(e.target.value)}
+                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex items-end md:col-span-2 lg:col-span-1">
+                  <button
+                    type="submit"
+                    disabled={isIssuingCode || !traderCodeString.trim()}
+                    className="w-full btn-lime text-black font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 disabled:opacity-40"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>{isIssuingCode ? "Issuing..." : "Issue Code"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Issued Codes Table */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-white uppercase tracking-wider">My Issued Subscriber Codes</span>
+                <button
+                  onClick={fetchTraderCodes}
+                  className="text-neutral-400 hover:text-white flex items-center gap-1 text-[11px]"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Refresh Codes</span>
+                </button>
+              </div>
+
+              {traderCodes.length === 0 ? (
+                <div className="border border-[#1E1E1E] bg-[#111111] p-10 text-center text-xs text-neutral-500 font-mono space-y-2">
+                  <div className="text-neutral-300 font-bold">NO CODES ISSUED YET</div>
+                  <p>Issue an invitation code above and share the generated link with your subscribers.</p>
+                </div>
+              ) : (
+                <div className="border border-[#1E1E1E] bg-[#111111] overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono min-w-[700px]">
+                    <thead className="bg-[#0B0B0B] border-b border-[#1E1E1E] text-neutral-400 uppercase text-[9px] tracking-wider">
+                      <tr>
+                        <th className="p-4">Code & Share Link</th>
+                        <th className="p-4">Access Granted</th>
+                        <th className="p-4">Validity</th>
+                        <th className="p-4">Redemptions</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#1E1E1E]">
+                      {traderCodes.map((item) => (
+                        <tr key={item.id} className="hover:bg-[#161616] transition-colors">
+                          {/* Code & Link */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#8BE000] text-sm tracking-wider bg-black px-2 py-0.5 border border-[#222]">
+                                {item.code}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyCode(item.id, item.code)}
+                                className="text-neutral-500 hover:text-white transition p-1"
+                                title="Copy code"
+                              >
+                                {copiedCodeId === item.id ? (
+                                  <span className="text-[10px] text-[#8BE000] font-bold">COPIED!</span>
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyShareLink(item.id, item.code)}
+                                className="text-neutral-500 hover:text-[#8BE000] transition p-1"
+                                title="Copy Share Link (/redeem?code=...)"
+                              >
+                                {copiedLinkId === item.id ? (
+                                  <span className="text-[10px] text-[#8BE000] font-bold">LINK COPIED!</span>
+                                ) : (
+                                  <Share2 className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                            {item.notes && (
+                              <p className="text-[10px] text-neutral-500 mt-1 max-w-xs truncate">
+                                {item.notes}
+                              </p>
+                            )}
+                          </td>
+
+                          {/* Access Granted */}
+                          <td className="p-4">
+                            <div className="space-y-0.5">
+                              <span
+                                className={`text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider inline-block ${
+                                  item.scope === "COURSE"
+                                    ? "bg-blue-950/60 text-blue-300 border border-blue-800/60"
+                                    : item.scope === "TRADER_BUNDLE"
+                                    ? "bg-purple-950/60 text-purple-300 border border-purple-800/60"
+                                    : "bg-[#8BE000]/15 text-[#8BE000] border border-[#8BE000]/40"
+                                }`}
+                              >
+                                {item.scope === "COURSE" ? "COURSE PASS" : item.scope === "TRADER_BUNDLE" ? "ALL CONTENT" : "SIGNALS ONLY"}
+                              </span>
+                              {item.targetCourseTitle && (
+                                <div className="text-[11px] text-neutral-300 max-w-xs truncate font-sans">
+                                  {item.targetCourseTitle}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Validity */}
+                          <td className="p-4 text-neutral-300 text-xs">
+                            {item.durationDays >= 9999 || item.durationDays === 0 ? (
+                              <span className="text-[#8BE000] font-bold">Lifetime</span>
+                            ) : (
+                              `${item.durationDays} Days`
+                            )}
+                          </td>
+
+                          {/* Redemptions */}
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              <div className="text-[11px] text-neutral-300">
+                                <strong className="text-white">{item.usedCount || 0}</strong>
+                                <span className="text-neutral-500"> / {item.maxUses >= 99999 ? "∞" : item.maxUses}</span>
+                              </div>
+                              <div className="w-20 bg-[#222] h-1 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-[#8BE000] h-full"
+                                  style={{
+                                    width: `${Math.min(100, ((item.usedCount || 0) / (item.maxUses >= 99999 ? 100 : item.maxUses)) * 100)}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="p-4">
+                            <span
+                              className={`text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider flex items-center gap-1 w-max ${
+                                item.status === "ACTIVE"
+                                  ? "bg-green-950/60 text-green-400 border border-green-800/60"
+                                  : "bg-red-950/60 text-red-400 border border-red-800/60"
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  item.status === "ACTIVE" ? "bg-green-400" : "bg-red-400"
+                                }`}
+                              />
+                              <span>{item.status}</span>
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                            <button
+                              onClick={() => openTraderEdit(item)}
+                              className="text-[11px] font-mono px-2 py-1 text-neutral-300 hover:text-white bg-[#1A1A1A] hover:bg-[#252525] border border-[#333] transition inline-flex items-center gap-1"
+                            >
+                              <Edit3 className="w-3 h-3 text-[#8BE000]" />
+                              <span>Edit</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleToggleTraderCode(item.id, item.status)}
+                              className={`text-[11px] font-mono px-2 py-1 transition border ${
+                                item.status === "ACTIVE"
+                                  ? "text-amber-400 hover:text-amber-300 bg-amber-950/30 border-amber-900/40"
+                                  : "text-green-400 hover:text-green-300 bg-green-950/30 border-green-900/40"
+                              }`}
+                            >
+                              {item.status === "ACTIVE" ? "Revoke" : "Reactivate"}
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteTraderCode(item.id)}
+                              className="text-neutral-500 hover:text-red-400 transition p-1 inline-block"
+                              title="Delete code"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* EDIT TRADER CODE MODAL */}
+          {editingTraderCode && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-lg bg-[#111111] border border-[#2E2E2E] p-6 text-white font-mono space-y-6 shadow-2xl"
+              >
+                <div className="flex justify-between items-center border-b border-[#222] pb-3">
+                  <div className="flex items-center gap-2">
+                    <Edit3 className="w-4 h-4 text-[#8BE000]" />
+                    <h4 className="text-base font-display font-bold">
+                      MODIFY CODE: <span className="text-[#8BE000]">{editingTraderCode.code}</span>
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => setEditingTraderCode(null)}
+                    className="text-neutral-500 hover:text-white text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {editErrorMsg && (
+                  <div className="bg-red-950/40 border border-red-800 p-3 text-xs text-red-400 flex items-center gap-2">
+                    <XCircle className="w-4 h-4 shrink-0" />
+                    <span>{editErrorMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveTraderEdit} className="space-y-4 text-xs">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-neutral-400 uppercase">Code String</label>
+                      <input
+                        type="text"
+                        required
+                        value={editString}
+                        onChange={(e) => setEditString(e.target.value.toUpperCase())}
+                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white font-bold uppercase focus:border-[#8BE000] outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-neutral-400 uppercase">What it Unlocks</label>
+                      <select
+                        value={editScope}
+                        onChange={(e) => setEditScope(e.target.value as any)}
+                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                      >
+                        <option value="COURSE">Specific Course</option>
+                        <option value="TRADER_BUNDLE">All My Courses + Signals</option>
+                        <option value="SIGNALS">Signals Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {editScope === "COURSE" && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-neutral-400 uppercase">Target Course</label>
+                      <select
+                        value={editCourseId}
+                        onChange={(e) => setEditCourseId(e.target.value)}
+                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                      >
+                        {coursesList.map((crs) => (
+                          <option key={crs.id} value={crs.id}>
+                            {crs.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-neutral-400 uppercase">Duration (Days)</label>
+                      <select
+                        value={editDuration}
+                        onChange={(e) => setEditDuration(Number(e.target.value))}
+                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                      >
+                        <option value={30}>30 Days</option>
+                        <option value={60}>60 Days</option>
+                        <option value={90}>90 Days</option>
+                        <option value={180}>180 Days</option>
+                        <option value={365}>365 Days</option>
+                        <option value={9999}>Lifetime Unlimited</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-neutral-400 uppercase">Max Redemptions</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editMaxUses}
+                        onChange={(e) => setEditMaxUses(Number(e.target.value))}
+                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-neutral-400 uppercase">Status</label>
+                    <select
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value as any)}
+                      className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                    >
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="REVOKED">REVOKED</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-neutral-400 uppercase">Notes</label>
+                    <input
+                      type="text"
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                    />
+                  </div>
+
+                  <div className="pt-4 flex justify-end gap-3 border-t border-[#222]">
+                    <button
+                      type="button"
+                      onClick={() => setEditingTraderCode(null)}
+                      className="px-4 py-2 bg-[#1A1A1A] hover:bg-[#252525] border border-[#333] text-neutral-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSavingEdit}
+                      className="btn-lime text-black font-bold px-5 py-2 flex items-center gap-1.5"
+                    >
+                      <span>{isSavingEdit ? "Saving..." : "Save Changes"}</span>
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+
           {/* Action Hubs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">
@@ -496,16 +1209,9 @@ export default function TraderDashboardPage() {
               <p className="text-xs text-neutral-400 font-sans leading-relaxed">
                 Create video modules, upload Python backtesting engines, or add options financial models.
               </p>
-              {isCertified ? (
-                <Link href="/trader/courses/new" className="btn-lime px-6 py-3 text-xs font-bold inline-block text-black">
-                  Create New Course
-                </Link>
-              ) : (
-                <div className="inline-flex items-center gap-2 bg-[#0A0A0A] border border-[#1E1E1E] px-6 py-3 text-xs text-neutral-500 cursor-not-allowed">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Locked — Certification Required</span>
-                </div>
-              )}
+              <Link href="/trader/courses/new" className="btn-lime px-6 py-3 text-xs font-bold inline-block text-black">
+                Create New Course
+              </Link>
             </div>
 
             <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">

@@ -44,7 +44,7 @@ interface TechnicalSignal {
 }
 
 export default function SignalsPage() {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const { isUnlocked, unlockedCode } = useAuth();
 
   const [signals, setSignals] = useState<TechnicalSignal[]>([]);
@@ -138,13 +138,7 @@ export default function SignalsPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <span className="text-xs font-mono text-[#8BE000] bg-[#141414] border border-[#262626] px-3 py-1 uppercase tracking-wider flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 text-[#8BE000] animate-pulse" />
-              <span>
-                {language === "ZH"
-                  ? "实盘技术信号流"
-                  : language === "JA"
-                  ? "リアルタイムシグナルフィード"
-                  : "LIVE QUANTITATIVE TECHNICAL SIGNALS"}
-              </span>
+              <span>{t.signalsTitle}</span>
             </span>
 
             <div className="flex items-center gap-3">
@@ -153,36 +147,26 @@ export default function SignalsPage() {
                 className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white bg-[#141414] border border-[#262626] px-3 py-1.5 transition"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Sync Signals</span>
+                <span>{t.signalsSync}</span>
               </button>
 
               <Link
                 href="/trader/signals"
                 className="btn-lime text-xs px-3.5 py-1.5 font-bold text-black flex items-center gap-1"
               >
-                <span>Provider Studio</span>
+                <span>{t.signalsProviderStudio}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
 
           <SplitTextReveal
-            lines={
-              language === "ZH"
-                ? ["认证量化导师", "实盘入场与止盈信号."]
-                : language === "JA"
-                ? ["認証クオンツトレーダー", "リアルタイムテクニカルシグナル."]
-                : ["INSTITUTIONAL TECHNICAL", "TRADING SIGNALS."]
-            }
+            lines={[t.signalsTitle]}
             className="text-4xl lg:text-5xl font-display font-light tracking-tight text-white"
           />
 
           <p className="text-xs text-neutral-400 max-w-2xl font-sans leading-relaxed">
-            {language === "ZH"
-              ? "由经过链上审计与战绩验证的导师发布。包含精确入场区间、止损价位、目标止盈及盈亏比计算。支持通过 ntfy.sh 接收手机与桌面即时推送提醒。"
-              : language === "JA"
-              ? "監査済みエデュケーターによるエントリー・損切り・利確水準。ntfy.shを連携してスマホやPCへ即時プッシュ通知を受け取れます。"
-              : "Published by certified educators with audited brokerage performance. Precision entry triggers, target prices, and risk-reward ratios with push notifications via ntfy.sh."}
+            {t.signalsSub}
           </p>
         </div>
 
@@ -192,16 +176,14 @@ export default function SignalsPage() {
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-[#8BE000]" />
               <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                REAL-TIME PUSH NOTIFICATIONS VIA NTFY.SH
+                {t.signalsNtfyBanner}
               </span>
               <span className="bg-[#8BE000]/15 text-[#8BE000] border border-[#8BE000]/30 text-[10px] px-2 py-0.2 font-mono">
                 TOPIC: 360markets_signals
               </span>
             </div>
             <p className="text-xs text-neutral-400 font-sans max-w-2xl leading-relaxed">
-              {language === "ZH"
-                ? "订阅我们的 ntfy.sh 公开频道，无论是在手机（iOS/Android）、桌面还是浏览器，每当导师发布新买卖信号时，都能在毫秒级内收到震动推送通知。"
-                : "Subscribe to our ntfy.sh channel to receive instant push alerts on your phone (iOS/Android) or desktop whenever a new trading signal is broadcast."}
+              {t.signalsNtfyDesc}
             </p>
           </div>
 
@@ -212,7 +194,7 @@ export default function SignalsPage() {
               rel="noreferrer"
               className="btn-lime text-xs px-4 py-2.5 font-bold flex items-center gap-2 text-black shadow-lg"
             >
-              <span>{language === "ZH" ? "一键订阅推送" : "Subscribe on ntfy.sh"}</span>
+              <span>{t.signalsNtfyBtn}</span>
               <ExternalLink className="w-3.5 h-3.5 text-black" />
             </a>
           </div>
@@ -227,12 +209,10 @@ export default function SignalsPage() {
               </div>
               <div>
                 <strong className="text-xs text-white block">
-                  {language === "ZH" ? "专属信号未解锁" : "SUBSCRIBER INVITATION CODE"}
+                  {t.signalsInviteTitle}
                 </strong>
                 <span className="text-[11px] text-neutral-400 font-sans">
-                  {language === "ZH"
-                    ? "输入导师邀请码（如 TRADINGEASY 或 ALPHA2026），免费解锁实时止损点位、精准买价与完整逻辑。"
-                    : "Enter an invitation code (e.g. TRADINGEASY) to unlock precision entry triggers and stop-loss targets."}
+                  {t.signalsInviteDesc}
                 </span>
               </div>
             </div>
@@ -241,7 +221,7 @@ export default function SignalsPage() {
               onClick={() => setUnlockModalOpen(true)}
               className="btn-lime text-xs px-4 py-2 font-bold shrink-0 text-black"
             >
-              {language === "ZH" ? "输入邀请码解锁" : "Unlock with Code"}
+              {t.signalsInviteBtn}
             </button>
           </div>
         )}
@@ -250,11 +230,11 @@ export default function SignalsPage() {
         <div className="flex items-center justify-between gap-4 border-b border-[#222] pb-4">
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: "ALL", label: "All Assets" },
-              { id: "US", label: "🇺🇸 US Equities" },
-              { id: "HK", label: "🇭🇰 Hong Kong" },
-              { id: "CN", label: "🇨🇳 A-Share" },
-              { id: "CRYPTO", label: "⚡ Crypto" },
+              { id: "ALL", label: t.signalsAllAssets },
+              { id: "US", label: t.signalsUSEquities },
+              { id: "HK", label: t.signalsHongKong },
+              { id: "CN", label: t.signalsAShare },
+              { id: "CRYPTO", label: t.signalsCrypto },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -271,7 +251,7 @@ export default function SignalsPage() {
           </div>
 
           <span className="text-xs text-neutral-500 font-mono hidden sm:inline">
-            {filteredSignals.length} SIGNALS ACTIVE
+            {filteredSignals.length} {t.commonActive.toUpperCase()}
           </span>
         </div>
 
@@ -324,19 +304,19 @@ export default function SignalsPage() {
                     {/* Pricing Matrix */}
                     <div className="grid grid-cols-3 gap-2 bg-[#161616] border border-[#262626] p-3 text-center">
                       <div>
-                        <span className="text-[9px] text-neutral-500 uppercase block">ENTRY</span>
+                        <span className="text-[9px] text-neutral-500 uppercase block">{t.signalsEntry}</span>
                         <span className="text-xs font-bold text-white font-mono">
                           {isUnlocked ? `$${signal.entryPrice.toFixed(2)}` : "$•••.••"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] text-red-400 uppercase block">STOP LOSS</span>
+                        <span className="text-[9px] text-red-400 uppercase block">{t.signalsStopLoss}</span>
                         <span className="text-xs font-bold text-red-400 font-mono">
                           {isUnlocked ? `$${signal.stopLoss.toFixed(2)}` : "$•••.••"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#8BE000] uppercase block">TARGET</span>
+                        <span className="text-[9px] text-[#8BE000] uppercase block">{t.signalsTarget}</span>
                         <span className="text-xs font-bold text-[#8BE000] font-mono">
                           {isUnlocked ? `$${signal.targetPrice.toFixed(2)}` : "$•••.••"}
                         </span>
@@ -346,7 +326,7 @@ export default function SignalsPage() {
                     {/* R:R Ratio & Timeframe */}
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-[#1e1e1e]">
                       <div className="flex items-center gap-1.5 text-neutral-400">
-                        <span>R:R Ratio:</span>
+                        <span>{t.signalsRRRatio}</span>
                         <strong className="text-white font-mono">{signal.riskReward}</strong>
                       </div>
                       <span className="bg-[#1c1c1c] text-neutral-400 text-[10px] px-2 py-0.5 border border-[#333]">
@@ -376,7 +356,7 @@ export default function SignalsPage() {
                         </span>
                         <span className="text-[9px] text-[#8BE000] flex items-center gap-1">
                           <CheckCircle2 className="w-2.5 h-2.5 text-[#8BE000]" />
-                          <span>Audited Quant</span>
+                          <span>{t.signalsAuditedQuant}</span>
                         </span>
                       </div>
                     </div>
@@ -387,11 +367,11 @@ export default function SignalsPage() {
                         className="text-[11px] text-[#8BE000] hover:underline flex items-center gap-1 font-bold"
                       >
                         <Lock className="w-3 h-3" />
-                        <span>Unlock</span>
+                        <span>{t.navUnlock}</span>
                       </button>
                     ) : (
                       <span className="text-[10px] text-neutral-500 font-mono">
-                        ACTIVE ORDER
+                        {t.signalsActiveOrder}
                       </span>
                     )}
                   </div>
@@ -402,9 +382,9 @@ export default function SignalsPage() {
         ) : (
           <div className="p-16 border border-[#222] bg-[#111] text-center space-y-3">
             <Radio className="w-10 h-10 text-neutral-600 mx-auto" />
-            <h4 className="text-lg font-bold text-white uppercase">No Active Signals</h4>
+            <h4 className="text-lg font-bold text-white uppercase">{t.signalsNoActive}</h4>
             <p className="text-xs text-neutral-400 font-sans">
-              There are currently no active signals for this asset class.
+              {t.signalsNoActiveDesc}
             </p>
           </div>
         )}

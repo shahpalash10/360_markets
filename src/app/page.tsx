@@ -117,7 +117,7 @@ export default function LandingPage() {
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
                 <NumberCounter value={28492} />
               </div>
-              <div className="text-xs text-neutral-500 font-mono">+18% this month</div>
+              <div className="text-xs text-neutral-500 font-mono">{t.statFootnote1}</div>
             </Reveal>
 
             <Reveal delay={0.2} className="border-l-2 border-[#D9D9D9] pl-6 space-y-1">
@@ -125,7 +125,7 @@ export default function LandingPage() {
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
                 <NumberCounter value={4821} />
               </div>
-              <div className="text-xs text-neutral-500 font-mono">Curated stock curriculum</div>
+              <div className="text-xs text-neutral-500 font-mono">{t.statFootnote2}</div>
             </Reveal>
 
             <Reveal delay={0.3} className="border-l-2 border-[#8BE000] pl-6 space-y-1">
@@ -133,7 +133,7 @@ export default function LandingPage() {
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
                 <NumberCounter value={128} suffix=".00" />
               </div>
-              <div className="text-xs text-neutral-500 font-mono">Active streaming today</div>
+              <div className="text-xs text-neutral-500 font-mono">{t.statFootnote3}</div>
             </Reveal>
 
             <Reveal delay={0.4} className="border-l-2 border-[#D9D9D9] pl-6 space-y-1">
@@ -141,7 +141,7 @@ export default function LandingPage() {
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
                 70<span className="text-[#8BE000] font-normal">/30</span>
               </div>
-              <div className="text-xs text-neutral-500 font-mono">Trader revenue focus</div>
+              <div className="text-xs text-neutral-500 font-mono">{t.statFootnote4}</div>
             </Reveal>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function LandingPage() {
               href="/courses"
               className="mt-4 md:mt-0 inline-flex items-center gap-1 text-sm font-semibold text-[#0B0B0B] hover:text-[#8BE000] transition"
             >
-              Browse All Courses (4,821) →
+              {t.commonBrowseAllCourses}
             </Link>
           </Reveal>
 
@@ -173,8 +173,8 @@ export default function LandingPage() {
               <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">COURSE</span>
-                    <span className="text-neutral-500">STOCK TRADING</span>
+                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
+                    <span className="text-neutral-500">{t.commonStockTrading}</span>
                   </div>
 
                   <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
@@ -184,7 +184,7 @@ export default function LandingPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
-                      ✓ CERTIFIED
+                      ✓ {t.commonCertified}
                     </div>
                   </div>
 
@@ -199,10 +199,10 @@ export default function LandingPage() {
 
                 <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
                   <div>
-                    <span className="text-xs text-neutral-400 block font-mono">SUBSCRIPTION</span>
+                    <span className="text-xs text-neutral-400 block font-mono">{t.commonSubscription}</span>
                     <span className="text-2xl font-display font-bold text-[#0B0B0B]">
                       {formatPrice(49)}
-                      <span className="text-xs text-neutral-500 font-mono">/mo</span>
+                      <span className="text-xs text-neutral-500 font-mono">/{t.commonMonth}</span>
                     </span>
                   </div>
                   <Link href="/courses/quantitative-stock-trading">
@@ -219,8 +219,8 @@ export default function LandingPage() {
               <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">COURSE</span>
-                    <span className="text-neutral-500">OPTIONS TRADING</span>
+                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
+                    <span className="text-neutral-500">{t.commonOptionsTrading}</span>
                   </div>
 
                   <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
@@ -230,7 +230,7 @@ export default function LandingPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
-                      ✓ CERTIFIED
+                      ✓ {t.commonCertified}
                     </div>
                   </div>
 
@@ -245,7 +245,7 @@ export default function LandingPage() {
 
                 <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
                   <div>
-                    <span className="text-xs text-neutral-400 block font-mono">ONE-TIME</span>
+                    <span className="text-xs text-neutral-400 block font-mono">{t.commonOneTime}</span>
                     <span className="text-2xl font-display font-bold text-[#0B0B0B]">
                       {formatPrice(79)}
                     </span>
@@ -264,8 +264,8 @@ export default function LandingPage() {
               <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">COURSE</span>
-                    <span className="text-neutral-500">EQUITY RESEARCH</span>
+                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
+                    <span className="text-neutral-500">{t.commonEquityResearch}</span>
                   </div>
 
                   <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
@@ -275,7 +275,7 @@ export default function LandingPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
-                      ✓ CERTIFIED
+                      ✓ {t.commonCertified}
                     </div>
                   </div>
 
@@ -290,7 +290,7 @@ export default function LandingPage() {
 
                 <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
                   <div>
-                    <span className="text-xs text-neutral-400 block font-mono">ONE-TIME</span>
+                    <span className="text-xs text-neutral-400 block font-mono">{t.commonOneTime}</span>
                     <span className="text-2xl font-display font-bold text-[#0B0B0B]">
                       {formatPrice(59)}
                     </span>
@@ -312,7 +312,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Reveal>
             <span className="text-xs font-mono text-[#8BE000] uppercase tracking-widest bg-[#161616] px-3 py-1 border border-[#262626]">
-              FINRA / AUDITED TRADING RECORDS
+              {t.commonAuditedRecords}
             </span>
           </Reveal>
           <Reveal delay={0.1}>

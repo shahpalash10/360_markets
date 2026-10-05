@@ -57,7 +57,7 @@ interface ApiResponse {
 }
 
 export default function ReportsPage() {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const { isUnlocked } = useAuth();
 
   const [reportsData, setReportsData] = useState<ApiResponse | null>(null);
@@ -142,13 +142,7 @@ export default function ReportsPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <span className="text-xs font-mono text-[#8BE000] bg-[#141414] border border-[#262626] px-3 py-1 uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>
-                {language === "ZH"
-                  ? "实时机构投研数据源"
-                  : language === "JA"
-                  ? "機関投資家リサーチデータ"
-                  : "INSTITUTIONAL RESEARCH DESK"}
-              </span>
+              <span>{t.reportsDeskTitle}</span>
             </span>
 
             <div className="flex items-center gap-3">
@@ -157,7 +151,7 @@ export default function ReportsPage() {
                 className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white bg-[#141414] border border-[#262626] px-3 py-1.5 transition"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Refresh Feed</span>
+                <span>{t.reportsRefresh}</span>
               </button>
             </div>
           </div>
@@ -187,9 +181,7 @@ export default function ReportsPage() {
               AI TIP
             </span>
             <span className="font-sans text-[11px] text-neutral-300">
-              {language === "ZH"
-                ? "💡 提示：在研报中划选任何金融术语（如“动量”、“地缘溢价”、“回踩确认”），即可一键呼出 AI 量化分析师获取深度解析。"
-                : "💡 Tip: Select/highlight any financial term in the report to summon the interactive AI Quant Analyst."}
+              {t.reportsAITip}
             </span>
           </div>
         </div>
@@ -199,10 +191,10 @@ export default function ReportsPage() {
           {/* Market Tabs */}
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: "all", label: "All Markets" },
-              { id: "cn", label: "🇨🇳 A-Share (CN)" },
-              { id: "us", label: "🇺🇸 US Market (US)" },
-              { id: "weekend", label: "☕ Weekend Specials" },
+              { id: "all", label: t.reportsAllMarkets },
+              { id: "cn", label: t.reportsAShare },
+              { id: "us", label: t.reportsUSMarket },
+              { id: "weekend", label: t.reportsWeekend },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -223,7 +215,7 @@ export default function ReportsPage() {
             <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
               <Calendar className="w-4 h-4 text-neutral-500 shrink-0" />
               <span className="text-[10px] text-neutral-400 uppercase tracking-widest shrink-0">
-                DATE:
+                {t.reportsDate}
               </span>
               <div className="flex items-center gap-1.5">
                 {reportsData.available_dates.slice(0, 7).map((d) => (
@@ -262,7 +254,7 @@ export default function ReportsPage() {
               onClick={() => fetchReports()}
               className="btn-lime px-4 py-2 text-xs font-bold inline-block"
             >
-              Retry Connection
+              {t.reportsRetry}
             </button>
           </div>
         ) : reportsData?.reports && reportsData.reports.length > 0 ? (
@@ -299,7 +291,7 @@ export default function ReportsPage() {
                   {report.insights && report.insights.length > 0 && (
                     <div className="space-y-2 pt-2 border-t border-[#1e1e1e]">
                       <span className="text-[10px] text-neutral-400 uppercase tracking-wider block font-bold">
-                        {language === "ZH" ? "核心投资线索 (TOP INSIGHTS):" : "KEY SIGNALS & TAKEAWAYS:"}
+                        {t.reportsInsights}
                       </span>
                       <div className="space-y-1.5">
                         {report.insights.map((ins, idx) => (
@@ -328,7 +320,7 @@ export default function ReportsPage() {
                     onClick={() => handleOpenReport(report)}
                     className="btn-lime text-xs px-5 py-2.5 font-bold flex items-center gap-1.5 group-hover:scale-105 transition-transform"
                   >
-                    <span>{language === "ZH" ? "阅读研报全文" : "Read Full Report"}</span>
+                    <span>{t.reportsReadFull}</span>
                     <ChevronRight className="w-4 h-4 text-black" />
                   </button>
                 </div>
@@ -338,9 +330,9 @@ export default function ReportsPage() {
         ) : (
           <div className="p-16 border border-[#222] bg-[#111] text-center space-y-3">
             <FileText className="w-10 h-10 text-neutral-600 mx-auto" />
-            <h4 className="text-lg font-bold text-white uppercase">No Reports Published</h4>
+            <h4 className="text-lg font-bold text-white uppercase">{t.reportsNoReports}</h4>
             <p className="text-xs text-neutral-400 font-sans">
-              There are no research reports available for the selected market or date ({selectedDate}).
+              {t.reportsNoReportsDesc}
             </p>
           </div>
         )}

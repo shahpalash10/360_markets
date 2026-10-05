@@ -148,23 +148,10 @@ export function UnlockModal({
               />
             </div>
 
-            {/* Quick Demo Code Suggestions */}
-            <div className="space-y-1.5 pt-1">
+            <div className="pt-1">
               <span className="text-[10px] text-neutral-500 uppercase tracking-widest block">
-                {language === "ZH" ? "快捷填入测试码：" : "TEST INVITATION CODES:"}
+                {language === "ZH" ? "输入导师为您提供的专属兑换码" : "ENTER THE CODE PROVIDED BY YOUR EDUCATOR"}
               </span>
-              <div className="flex flex-wrap gap-2">
-                {["TRADINGEASY", "ALPHA2026", "VIP888"].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => handleQuickFill(c)}
-                    className="text-[11px] bg-[#1a1a1a] hover:bg-[#262626] border border-[#333] hover:border-[#8BE000] text-neutral-300 hover:text-white px-2.5 py-1 transition"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <button

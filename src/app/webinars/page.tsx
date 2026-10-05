@@ -75,19 +75,19 @@ export default function WebinarsPage() {
               {t.webinarsSub}
             </span>
             <SplitTextReveal
-              lines={["LIVE US STOCK", "TRADING STREAMS."]}
+              lines={[t.webinarsHeroTitle]}
               className="text-5xl lg:text-6xl font-display font-light tracking-tight text-[#0B0B0B]"
             />
             <p className="text-xs font-mono text-neutral-500 max-w-xl">
-              Watch verified stock educators execute real trades during US market open sessions. Ask questions via live WebRTC voice Q&A and Level-2 order book breakdown.
+              {t.webinarsHeroDesc}
             </p>
           </div>
 
           {loading ? (
-            <div className="text-sm font-mono text-neutral-500 py-8">LOADING STREAMS...</div>
+            <div className="text-sm font-mono text-neutral-500 py-8">{t.commonLoading.toUpperCase()}...</div>
           ) : webinars.length === 0 ? (
             <div className="text-sm font-mono text-neutral-500 bg-[#FAFAFA] border border-[#D9D9D9] p-8 text-center uppercase tracking-widest">
-              NO LIVE STREAMS SCHEDULED
+              {t.webinarsNoStreams}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

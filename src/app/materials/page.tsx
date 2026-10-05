@@ -87,14 +87,14 @@ export default function MaterialsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12 border-b border-[#D9D9D9] pb-8 space-y-4">
             <span className="text-xs font-mono text-[#8BE000] bg-black px-3 py-1 uppercase tracking-wider">
-              {t.materialsSub || "QUANT MODELS & SCRIPTS"}
+              {t.materialsSub}
             </span>
             <SplitTextReveal
-              lines={["INSTITUTIONAL CODE &", "FINANCIAL MODELS."]}
+              lines={[t.materialsHeroTitle]}
               className="text-5xl lg:text-6xl font-display font-light tracking-tight text-[#0B0B0B]"
             />
             <p className="text-xs font-mono text-neutral-500 max-w-xl">
-              Download audited Python stock trading backtest algorithms, options surface spreadsheets, and Wall Street DCF models created by verified quantitative traders.
+              {t.materialsHeroDesc}
             </p>
           </div>
 

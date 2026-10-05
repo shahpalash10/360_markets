@@ -69,6 +69,7 @@ export default function TraderSignalsStudioPage() {
           targetPrice: parseFloat(targetPrice),
           timeframe,
           notes,
+          traderId: user?.id,
           providerName: user?.displayName || user?.name || "Verified Quantitative Trader",
           providerAvatar: user?.avatarUrl,
         }),
@@ -82,15 +83,22 @@ export default function TraderSignalsStudioPage() {
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       setSuccessStatus(`Signal for ${symbol} successfully broadcasted & pushed to ntfy.sh (topic: 360markets_signals)!`);
 
-      // Store custom invite code into local system so subscribers can redeem it
+      // Register custom provider voucher directly into Database Ledger
       try {
-        let codes: string[] = [];
-        const existing = localStorage.getItem("custom_invitation_codes");
-        if (existing) codes = JSON.parse(existing);
-        if (!codes.includes(customInviteCode)) {
-          codes.push(customInviteCode);
-          localStorage.setItem("custom_invitation_codes", JSON.stringify(codes));
-        }
+        await fetch("/api/invitation-codes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: customInviteCode,
+            scope: "SIGNALS",
+            creatorRole: "TRADER",
+            creatorId: user?.id,
+            creatorName: user?.displayName || user?.name || "Verified Educator",
+            durationDays: 30,
+            maxUses: 100,
+            notes: `Signals VIP voucher generated for ${symbol}`,
+          }),
+        });
       } catch (err) {}
     } catch (err: any) {
       setErrorMsg(err.message || "An error occurred while publishing.");
