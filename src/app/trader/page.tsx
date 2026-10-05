@@ -33,7 +33,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function TraderDashboardPage() {
   const { user } = useAuth();
-  const { currency } = useLanguage();
+  const { t, currency } = useLanguage();
 
   const [certificationStatus, setCertificationStatus] = useState<
     "loading" | "none" | "pending" | "approved" | "rejected"
@@ -402,13 +402,13 @@ export default function TraderDashboardPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-[11px] text-[#8BE000] font-bold tracking-widest uppercase">
                 <span className="w-1.5 h-1.5 bg-[#8BE000] rounded-full inline-block animate-pulse" />
-                <span>EDUCATOR PORTAL</span>
+                <span>{t.traderHubPortalBadge}</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl font-display font-light tracking-tight text-white">
-                EDUCATOR HUB.
+              <h1 className="text-4xl sm:text-5xl font-display font-light tracking-tight text-white uppercase">
+                {t.traderHubTitle}
               </h1>
               <p className="text-xs text-neutral-400 font-sans max-w-xl leading-relaxed">
-                Manage your courses, track enrollments, schedule live Pro Masterclasses, and view your 70/30 revenue settlement.
+                {t.traderHubSub}
               </p>
             </div>
 
@@ -418,7 +418,7 @@ export default function TraderDashboardPage() {
               className="flex items-center gap-2 bg-[#121212] hover:bg-[#1A1A1A] border border-[#262626] px-3.5 py-2 text-xs text-neutral-300 transition focus:outline-none"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#8BE000]" : "text-neutral-400"}`} />
-              <span>{isRefreshing ? "Syncing..." : "Sync Hub"}</span>
+              <span>{isRefreshing ? t.traderHubSyncing : t.traderHubSyncBtn}</span>
             </button>
           </div>
 
@@ -434,10 +434,10 @@ export default function TraderDashboardPage() {
                 <ShieldCheck className="w-5 h-5 text-[#8BE000]" />
                 <div className="space-y-0.5">
                   <span className="text-xs text-[#8BE000] font-bold uppercase tracking-wider">
-                    CERTIFIED STOCK EDUCATOR {certId ? `\u2022 ${certId}` : ""}
+                    {t.traderHubCertApproved} {certId ? `\u2022 ${certId}` : ""}
                   </span>
                   <p className="text-xs text-neutral-400 font-sans">
-                    Your verification certificate is active. You have full publishing and live streaming privileges.
+                    {t.traderHubCertApprovedDesc}
                   </p>
                 </div>
               </div>
@@ -445,7 +445,7 @@ export default function TraderDashboardPage() {
                 href="/trader/certification"
                 className="bg-[#121212] hover:bg-[#1C1C1C] border border-[#2E2E2E] text-white px-4 py-2 font-mono text-xs shrink-0 transition"
               >
-                View Certificate
+                {t.traderHubViewCert}
               </Link>
             </div>
           ) : certificationStatus === "pending" ? (
@@ -454,10 +454,10 @@ export default function TraderDashboardPage() {
                 <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                    CERTIFICATION UNDER ADMIN REVIEW
+                    {t.traderHubCertPending}
                   </span>
                   <p className="text-xs text-neutral-300 font-sans">
-                    Your dossier has been submitted and is pending administrative approval. Course creation and webinars will be unlocked once certified.
+                    {t.traderHubCertPendingDesc}
                   </p>
                 </div>
               </div>
@@ -465,21 +465,21 @@ export default function TraderDashboardPage() {
                 href="/trader/certification"
                 className="bg-[#1A1A1A] hover:bg-[#262626] text-white px-4 py-2 font-mono text-xs shrink-0 transition"
               >
-                View Application Status
+                {t.traderHubViewAppStatus}
               </Link>
             </div>
           ) : certificationStatus === "rejected" ? (
             <div className="border border-red-600/40 bg-[#160606] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-xs text-red-400 font-bold uppercase tracking-wider">
-                  CERTIFICATION APPLICATION DECLINED
+                  {t.traderHubCertRejected}
                 </span>
                 <p className="text-xs text-neutral-300 font-sans">
-                  Please update your credentials and re-submit your dossier for review.
+                  {t.traderHubCertRejectedDesc}
                 </p>
               </div>
               <Link href="/trader/certification" className="bg-red-950 border border-red-700 text-white px-4 py-2 text-xs font-bold">
-                Re-submit Dossier
+                {t.traderHubResubmitDossier}
               </Link>
             </div>
           ) : (
@@ -489,10 +489,10 @@ export default function TraderDashboardPage() {
                 <Lock className="w-5 h-5 text-neutral-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
-                    CERTIFICATION REQUIRED TO UNLOCK ACTIONS
+                    {t.traderHubCertRequired}
                   </span>
                   <p className="text-xs text-neutral-400 font-sans">
-                    Submit your trading credentials and brokerage track record for admin verification. Course publishing and webinar live rooms are locked until certification is granted.
+                    {t.traderHubCertRequiredDesc}
                   </p>
                 </div>
               </div>
@@ -500,7 +500,7 @@ export default function TraderDashboardPage() {
                 href="/trader/certification"
                 className="btn-lime text-black px-5 py-2.5 font-bold text-xs shrink-0"
               >
-                Submit Certification Dossier
+                {t.traderHubSubmitDossier}
               </Link>
             </div>
           )}
@@ -511,18 +511,18 @@ export default function TraderDashboardPage() {
               <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-[#8BE000] animate-pulse" />
                 <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  TECHNICAL SIGNALS & NTFY.SH BROADCASTER
+                  {t.traderHubSignalsBannerTitle}
                 </span>
               </div>
               <p className="text-xs text-neutral-400 font-sans max-w-xl">
-                Publish real-time buy/sell trading setups and entry levels with instant push notifications to your subscribers via ntfy.sh.
+                {t.traderHubSignalsBannerDesc}
               </p>
             </div>
             <Link
               href="/trader/signals"
               className="btn-lime text-xs px-5 py-2.5 font-bold text-black flex items-center gap-1.5 shrink-0"
             >
-              <span>Open Signal Studio</span>
+              <span>{t.traderHubOpenSignalStudio}</span>
               <ArrowUpRight className="w-4 h-4 text-black" />
             </Link>
           </div>
@@ -531,53 +531,53 @@ export default function TraderDashboardPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
               <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">NET PAYOUT (70%)</span>
+                <span className="tracking-wider uppercase text-[10px]">{t.traderHubNetPayout}</span>
                 <DollarSign className="w-4 h-4 text-[#8BE000]" />
               </div>
               <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-[#8BE000]">
                 {formatPrice(educatorShare)}
               </div>
               <div className="text-[10px] text-neutral-500 font-mono">
-                Gross: {formatPrice(grossRevenue)}
+                {t.traderHubGross}: {formatPrice(grossRevenue)}
               </div>
             </div>
 
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
               <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">PAID ENROLLMENTS</span>
+                <span className="tracking-wider uppercase text-[10px]">{t.traderHubPaidEnrollments}</span>
                 <Users className="w-4 h-4 text-neutral-400" />
               </div>
               <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-white">
                 {totalSubscribers}
               </div>
               <div className="text-[10px] text-neutral-500 font-mono">
-                Active students enrolled
+                {t.traderHubActiveStudents}
               </div>
             </div>
 
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
               <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">MY COURSES</span>
+                <span className="tracking-wider uppercase text-[10px]">{t.traderHubMyCourses}</span>
                 <BookOpen className="w-4 h-4 text-neutral-400" />
               </div>
               <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-white">
                 {totalCourses}
               </div>
               <div className="text-[10px] text-neutral-500 font-mono">
-                Published curriculum
+                {t.traderHubPublishedCurriculum}
               </div>
             </div>
 
             <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
               <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">LIVE WEBINARS</span>
+                <span className="tracking-wider uppercase text-[10px]">{t.traderHubLiveWebinars}</span>
                 <Video className="w-4 h-4 text-neutral-400" />
               </div>
               <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-white">
                 {totalWebinars}
               </div>
               <div className="text-[10px] text-neutral-500 font-mono">
-                Scheduled sessions
+                {t.traderHubScheduledSessions}
               </div>
             </div>
           </div>
@@ -587,26 +587,26 @@ export default function TraderDashboardPage() {
             <div className="flex justify-between items-center pb-2 border-b border-[#1E1E1E]">
               <div>
                 <h3 className="text-xl font-display font-medium text-white tracking-tight">
-                  MY CURRICULUM ({coursesList.length})
+                  {t.traderHubMyCurriculum} ({coursesList.length})
                 </h3>
                 <p className="text-xs text-neutral-400 font-sans">
-                  Courses authored and published by your educator account
+                  {t.traderHubCoursesAuthored}
                 </p>
               </div>
 
               <Link href="/trader/courses/new" className="btn-lime px-4 py-2 text-xs font-bold text-black flex items-center gap-1.5">
                 <Plus className="w-4 h-4" />
-                <span>Create New Course</span>
+                <span>{t.traderHubCreateNewCourse}</span>
               </Link>
             </div>
 
             {coursesList.length === 0 ? (
               <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center text-xs text-neutral-500 font-mono space-y-2">
-                <div className="text-neutral-300 font-bold">NO COURSES CREATED YET</div>
+                <div className="text-neutral-300 font-bold">{t.traderHubNoCoursesYet}</div>
                 {isCertified ? (
-                  <p>Click "Create New Course" above to publish your first course.</p>
+                  <p>{t.traderHubCreateFirstCoursePrompt}</p>
                 ) : (
-                  <p>Complete your certification to unlock course creation.</p>
+                  <p>{t.traderHubCompleteCertPrompt}</p>
                 )}
               </div>
             ) : (
@@ -615,7 +615,7 @@ export default function TraderDashboardPage() {
                   <div key={crs.id} className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-4 hover:border-[#2E2E2E] transition-colors">
                     <div className="flex justify-between items-start">
                       <span className="text-[9px] bg-black text-[#8BE000] font-bold px-1.5 py-0.5 border border-[#222]">
-                        {crs.category || "Stock Trading"}
+                        {crs.category || t.commonStockTrading || "Stock Trading"}
                       </span>
                       <span className="text-xs text-white font-bold">{formatPrice(crs.price || 0)}</span>
                     </div>
@@ -624,9 +624,9 @@ export default function TraderDashboardPage() {
                     <p className="text-xs text-neutral-400 line-clamp-2 font-sans">{crs.description}</p>
 
                     <div className="pt-3 border-t border-[#1E1E1E] flex justify-between items-center text-xs text-neutral-500">
-                      <span>{crs.published ? "Published" : "Pending QA"}</span>
+                      <span>{crs.published ? (t.commonActive || "Published") : "Pending QA"}</span>
                       <Link href={`/courses/${crs.slug || crs.id}`} className="text-[#8BE000] hover:underline flex items-center gap-1">
-                        <span>View</span>
+                        <span>{t.btnViewCourse?.replace(" →", "") || "View"}</span>
                         <ArrowUpRight className="w-3 h-3" />
                       </Link>
                     </div>
@@ -641,33 +641,33 @@ export default function TraderDashboardPage() {
             <div className="flex justify-between items-center pb-2 border-b border-[#1E1E1E]">
               <div>
                 <h3 className="text-xl font-display font-medium text-white tracking-tight">
-                  MY LIVE WEBINARS ({webinarsList.length})
+                  {t.traderHubMyLiveWebinars} ({webinarsList.length})
                 </h3>
                 <p className="text-xs text-neutral-400 font-sans">
-                  Schedule live trading masterclasses, broadcast screen share streams, and capture paid user subscriptions.
+                  {t.traderHubWebinarsDesc}
                 </p>
               </div>
 
               {isCertified ? (
                 <Link href="/trader/webinars/new" className="btn-lime px-4 py-2 text-xs font-bold text-black flex items-center gap-1.5">
                   <Radio className="w-4 h-4 text-black" />
-                  <span>Schedule Pro Session</span>
+                  <span>{t.traderHubScheduleProSession}</span>
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 bg-[#111111] border border-[#1E1E1E] px-4 py-2 text-xs text-neutral-500 cursor-not-allowed">
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Certification Required</span>
+                  <span>{t.traderHubCertRequiredToSchedule}</span>
                 </div>
               )}
             </div>
 
             {webinarsList.length === 0 ? (
               <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center text-xs text-neutral-500 font-mono space-y-2">
-                <div className="text-neutral-300 font-bold">NO STREAMS SCHEDULED YET</div>
+                <div className="text-neutral-300 font-bold">{t.traderHubNoWebinarsYet}</div>
                 {isCertified ? (
-                  <p>Click "Schedule Pro Session" above to launch your first live trading stream.</p>
+                  <p>{t.traderHubScheduleFirstWebinarPrompt}</p>
                 ) : (
-                  <p>Complete your certification to unlock scheduling masterclasses.</p>
+                  <p>{t.traderHubCompleteCertToSchedulePrompt}</p>
                 )}
               </div>
             ) : (
@@ -694,7 +694,7 @@ export default function TraderDashboardPage() {
                       <span className="text-xs text-neutral-500">{web.duration_minutes} Mins Duration</span>
                       <Link href={`/webinars/${web.id}/pro-live`} className="bg-[#8BE000] text-black font-bold text-xs px-4 py-2 hover:bg-[#9DFF00] transition flex items-center gap-1.5">
                         <Radio className="w-3.5 h-3.5 text-black" />
-                        <span>Go Live as Host</span>
+                        <span>{t.traderHubGoLiveBtn}</span>
                       </Link>
                     </div>
                   </div>
@@ -709,16 +709,16 @@ export default function TraderDashboardPage() {
               <div>
                 <h3 className="text-xl font-display font-medium text-white tracking-tight flex items-center gap-2">
                   <KeyRound className="w-5 h-5 text-[#8BE000]" />
-                  <span>SUBSCRIBER INVITATION CODES & VIP PASSES</span>
+                  <span>{t.traderHubIssueCodesTitle}</span>
                 </h3>
                 <p className="text-xs text-neutral-400 font-sans">
-                  Create custom access codes to grant your subscribers instant access to your courses and live technical signals.
+                  {t.traderHubIssueCodesDesc}
                 </p>
               </div>
 
               <div className="flex items-center gap-2 text-xs font-mono text-neutral-400 bg-[#111] px-3 py-1.5 border border-[#1E1E1E]">
                 <span className="w-2 h-2 rounded-full bg-[#8BE000] animate-pulse" />
-                <span>{traderCodes.length} Subscriber Codes</span>
+                <span>{traderCodes.length} {t.traderHubSubscriberCodesCount}</span>
               </div>
             </div>
 
@@ -727,7 +727,7 @@ export default function TraderDashboardPage() {
               <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
                 <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                   <Plus className="w-4 h-4 text-[#8BE000]" />
-                  <span>Issue New Subscriber Code</span>
+                  <span>{t.traderHubIssueNewCode}</span>
                 </span>
                 <button
                   type="button"
@@ -738,7 +738,7 @@ export default function TraderDashboardPage() {
                   }}
                   className="text-[11px] text-[#8BE000] hover:underline font-mono"
                 >
-                  ⚡ Randomize Code
+                  {t.traderHubRandomizeCode}
                 </button>
               </div>
 
@@ -763,7 +763,7 @@ export default function TraderDashboardPage() {
                 {/* Code String */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    Code String *
+                    {t.traderHubCodeStringLabel}
                   </label>
                   <input
                     type="text"
@@ -778,16 +778,16 @@ export default function TraderDashboardPage() {
                 {/* Target Content / Scope */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    What This Code Unlocks *
+                    {t.traderHubCodeScopeLabel}
                   </label>
                   <select
                     value={traderCodeScope}
                     onChange={(e) => setTraderCodeScope(e.target.value as any)}
                     className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
                   >
-                    <option value="COURSE">Specific Course</option>
-                    <option value="TRADER_BUNDLE">All My Courses + Signals (Bundle)</option>
-                    <option value="SIGNALS">My Technical Signals Only</option>
+                    <option value="COURSE">{t.traderHubScopeCourse}</option>
+                    <option value="TRADER_BUNDLE">{t.traderHubScopeBundle}</option>
+                    <option value="SIGNALS">{t.traderHubScopeSignals}</option>
                   </select>
                 </div>
 
@@ -795,7 +795,7 @@ export default function TraderDashboardPage() {
                 {traderCodeScope === "COURSE" ? (
                   <div className="space-y-1.5">
                     <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                      Target Course *
+                      {t.traderHubTargetCourseLabel}
                     </label>
                     <select
                       value={traderCodeTargetCourseId}
@@ -816,7 +816,7 @@ export default function TraderDashboardPage() {
                   /* Validity / Duration */
                   <div className="space-y-1.5">
                     <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                      Validity Period
+                      {t.traderHubValidityLabel}
                     </label>
                     <select
                       value={traderCodeDuration}
@@ -836,7 +836,7 @@ export default function TraderDashboardPage() {
                 {/* Max Uses */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    Max Redemptions
+                    {t.traderHubMaxUsesLabel}
                   </label>
                   <select
                     value={traderCodeMaxUses}
@@ -855,7 +855,7 @@ export default function TraderDashboardPage() {
                 {/* Notes */}
                 <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
                   <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    Notes / Campaign Audience (Optional)
+                    {t.traderHubNotesLabel}
                   </label>
                   <input
                     type="text"
@@ -874,7 +874,7 @@ export default function TraderDashboardPage() {
                     className="w-full btn-lime text-black font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 disabled:opacity-40"
                   >
                     <KeyRound className="w-3.5 h-3.5" />
-                    <span>{isIssuingCode ? "Issuing..." : "Issue Code"}</span>
+                    <span>{isIssuingCode ? t.traderHubCreatingCode : t.traderHubCreateCodeBtn}</span>
                   </button>
                 </div>
               </form>
@@ -883,32 +883,32 @@ export default function TraderDashboardPage() {
             {/* Issued Codes Table */}
             <div className="space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-white uppercase tracking-wider">My Issued Subscriber Codes</span>
+                <span className="font-bold text-white uppercase tracking-wider">{t.traderHubActiveCodesTitle}</span>
                 <button
                   onClick={fetchTraderCodes}
                   className="text-neutral-400 hover:text-white flex items-center gap-1 text-[11px]"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Refresh Codes</span>
+                  <span>{t.traderHubRefreshCodes}</span>
                 </button>
               </div>
 
               {traderCodes.length === 0 ? (
                 <div className="border border-[#1E1E1E] bg-[#111111] p-10 text-center text-xs text-neutral-500 font-mono space-y-2">
-                  <div className="text-neutral-300 font-bold">NO CODES ISSUED YET</div>
-                  <p>Issue an invitation code above and share the generated link with your subscribers.</p>
+                  <div className="text-neutral-300 font-bold">{t.traderHubNoCodesYet}</div>
+                  <p>{t.traderHubNoCodesPrompt}</p>
                 </div>
               ) : (
                 <div className="border border-[#1E1E1E] bg-[#111111] overflow-x-auto">
                   <table className="w-full text-left text-xs font-mono min-w-[700px]">
                     <thead className="bg-[#0B0B0B] border-b border-[#1E1E1E] text-neutral-400 uppercase text-[9px] tracking-wider">
                       <tr>
-                        <th className="p-4">Code & Share Link</th>
-                        <th className="p-4">Access Granted</th>
-                        <th className="p-4">Validity</th>
-                        <th className="p-4">Redemptions</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Actions</th>
+                        <th className="p-4">{t.traderHubColCode}</th>
+                        <th className="p-4">{t.traderHubColAccess}</th>
+                        <th className="p-4">{t.traderHubColValidity}</th>
+                        <th className="p-4">{t.traderHubColRedemptions}</th>
+                        <th className="p-4">{t.traderHubColStatus}</th>
+                        <th className="p-4 text-right">{t.traderHubColActions}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#1E1E1E]">
@@ -964,7 +964,7 @@ export default function TraderDashboardPage() {
                                     : "bg-[#8BE000]/15 text-[#8BE000] border border-[#8BE000]/40"
                                 }`}
                               >
-                                {item.scope === "COURSE" ? "COURSE PASS" : item.scope === "TRADER_BUNDLE" ? "ALL CONTENT" : "SIGNALS ONLY"}
+                                {item.scope === "COURSE" ? t.traderHubScopeCourse : item.scope === "TRADER_BUNDLE" ? t.traderHubScopeBundle : t.traderHubScopeSignals}
                               </span>
                               {item.targetCourseTitle && (
                                 <div className="text-[11px] text-neutral-300 max-w-xs truncate font-sans">
@@ -1026,7 +1026,7 @@ export default function TraderDashboardPage() {
                               className="text-[11px] font-mono px-2 py-1 text-neutral-300 hover:text-white bg-[#1A1A1A] hover:bg-[#252525] border border-[#333] transition inline-flex items-center gap-1"
                             >
                               <Edit3 className="w-3 h-3 text-[#8BE000]" />
-                              <span>Edit</span>
+                              <span>{t.traderHubEditBtn}</span>
                             </button>
 
                             <button
@@ -1037,7 +1037,7 @@ export default function TraderDashboardPage() {
                                   : "text-green-400 hover:text-green-300 bg-green-950/30 border-green-900/40"
                               }`}
                             >
-                              {item.status === "ACTIVE" ? "Revoke" : "Reactivate"}
+                              {item.status === "ACTIVE" ? t.traderHubRevokeBtn : t.traderHubReactivateBtn}
                             </button>
 
                             <button
@@ -1206,22 +1206,22 @@ export default function TraderDashboardPage() {
           {/* Action Hubs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">
-              <h3 className="text-xl font-display font-medium text-white tracking-tight">PUBLISH NEW CURRICULUM</h3>
+              <h3 className="text-xl font-display font-medium text-white tracking-tight uppercase">{t.traderHubActionPublishTitle}</h3>
               <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                Create video modules, upload Python backtesting engines, or add options financial models.
+                {t.traderHubActionPublishDesc}
               </p>
               <Link href="/trader/courses/new" className="btn-lime px-6 py-3 text-xs font-bold inline-block text-black">
-                Create New Course
+                {t.traderHubCreateNewCourse}
               </Link>
             </div>
 
             <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">
-              <h3 className="text-xl font-display font-medium text-white tracking-tight">FINANCIAL SETTLEMENT</h3>
+              <h3 className="text-xl font-display font-medium text-white tracking-tight uppercase">{t.traderHubActionSettlementTitle}</h3>
               <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                View your automated 70/30 platform payout ledger and student subscriber growth.
+                {t.traderHubActionSettlementDesc}
               </p>
               <Link href="/trader/earnings" className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-white px-6 py-3 text-xs font-mono inline-block transition">
-                View Revenue Ledger
+                {t.traderHubViewRevenueLedger}
               </Link>
             </div>
           </div>

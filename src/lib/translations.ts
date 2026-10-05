@@ -275,6 +275,84 @@ export interface TranslationDictionary {
   webinarsHeroTitle: string;
   webinarsHeroDesc: string;
   webinarsNoStreams: string;
+
+  // Trader / Educator Hub
+  traderHubPortalBadge: string;
+  traderHubTitle: string;
+  traderHubSub: string;
+  traderHubSyncBtn: string;
+  traderHubSyncing: string;
+  traderHubCertApproved: string;
+  traderHubCertApprovedDesc: string;
+  traderHubViewCert: string;
+  traderHubCertPending: string;
+  traderHubCertPendingDesc: string;
+  traderHubViewAppStatus: string;
+  traderHubCertRejected: string;
+  traderHubCertRejectedDesc: string;
+  traderHubResubmitDossier: string;
+  traderHubCertRequired: string;
+  traderHubCertRequiredDesc: string;
+  traderHubSubmitDossier: string;
+  traderHubSignalsBannerTitle: string;
+  traderHubSignalsBannerDesc: string;
+  traderHubOpenSignalStudio: string;
+  traderHubNetPayout: string;
+  traderHubGross: string;
+  traderHubPaidEnrollments: string;
+  traderHubActiveStudents: string;
+  traderHubMyCourses: string;
+  traderHubPublishedCurriculum: string;
+  traderHubLiveWebinars: string;
+  traderHubScheduledSessions: string;
+  traderHubMyCurriculum: string;
+  traderHubCoursesAuthored: string;
+  traderHubCreateNewCourse: string;
+  traderHubNoCoursesYet: string;
+  traderHubCreateFirstCoursePrompt: string;
+  traderHubCompleteCertPrompt: string;
+  traderHubMyLiveWebinars: string;
+  traderHubWebinarsDesc: string;
+  traderHubScheduleProSession: string;
+  traderHubCertRequiredToSchedule: string;
+  traderHubNoWebinarsYet: string;
+  traderHubScheduleFirstWebinarPrompt: string;
+  traderHubCompleteCertToSchedulePrompt: string;
+  traderHubIssueCodesTitle: string;
+  traderHubIssueCodesDesc: string;
+  traderHubSubscriberCodesCount: string;
+  traderHubIssueNewCode: string;
+  traderHubRandomizeCode: string;
+  traderHubCodeStringLabel: string;
+  traderHubCodeScopeLabel: string;
+  traderHubTargetCourseLabel: string;
+  traderHubValidityLabel: string;
+  traderHubMaxUsesLabel: string;
+  traderHubNotesLabel: string;
+  traderHubCreateCodeBtn: string;
+  traderHubCreatingCode: string;
+  traderHubActiveCodesTitle: string;
+  traderHubGoLiveBtn: string;
+  traderHubActionPublishTitle: string;
+  traderHubActionPublishDesc: string;
+  traderHubActionSettlementTitle: string;
+  traderHubActionSettlementDesc: string;
+  traderHubViewRevenueLedger: string;
+  traderHubRefreshCodes: string;
+  traderHubNoCodesYet: string;
+  traderHubNoCodesPrompt: string;
+  traderHubColCode: string;
+  traderHubColAccess: string;
+  traderHubColValidity: string;
+  traderHubColRedemptions: string;
+  traderHubColStatus: string;
+  traderHubColActions: string;
+  traderHubScopeCourse: string;
+  traderHubScopeBundle: string;
+  traderHubScopeSignals: string;
+  traderHubEditBtn: string;
+  traderHubRevokeBtn: string;
+  traderHubReactivateBtn: string;
 }
 
 export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
@@ -529,6 +607,84 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     webinarsHeroTitle: "LIVE US STOCK TRADING STREAMS.",
     webinarsHeroDesc: "Watch verified stock educators execute real trades during US market open sessions. Ask questions via live WebRTC voice Q&A and Level-2 order book breakdown.",
     webinarsNoStreams: "NO LIVE STREAMS SCHEDULED",
+
+    // Trader / Educator Hub
+    traderHubPortalBadge: "EDUCATOR PORTAL",
+    traderHubTitle: "EDUCATOR HUB.",
+    traderHubSub: "Manage your courses, track enrollments, schedule live Pro Masterclasses, and view your 70/30 revenue settlement.",
+    traderHubSyncBtn: "Sync Hub",
+    traderHubSyncing: "Syncing...",
+    traderHubCertApproved: "CERTIFIED STOCK EDUCATOR",
+    traderHubCertApprovedDesc: "Your verification certificate is active. You have full publishing and live streaming privileges.",
+    traderHubViewCert: "View Certificate",
+    traderHubCertPending: "CERTIFICATION UNDER ADMIN REVIEW",
+    traderHubCertPendingDesc: "Your dossier has been submitted and is pending administrative approval. Course creation and webinars will be unlocked once certified.",
+    traderHubViewAppStatus: "View Application Status",
+    traderHubCertRejected: "CERTIFICATION APPLICATION DECLINED",
+    traderHubCertRejectedDesc: "Please update your credentials and re-submit your dossier for review.",
+    traderHubResubmitDossier: "Re-submit Dossier",
+    traderHubCertRequired: "CERTIFICATION REQUIRED TO UNLOCK ACTIONS",
+    traderHubCertRequiredDesc: "Submit your trading credentials and brokerage track record for admin verification. Course publishing and webinar live rooms are locked until certification is granted.",
+    traderHubSubmitDossier: "Submit Certification Dossier",
+    traderHubSignalsBannerTitle: "TECHNICAL SIGNALS & NTFY.SH BROADCASTER",
+    traderHubSignalsBannerDesc: "Publish real-time buy/sell trading setups and entry levels with instant push notifications to your subscribers via ntfy.sh.",
+    traderHubOpenSignalStudio: "Open Signal Studio",
+    traderHubNetPayout: "NET PAYOUT (70%)",
+    traderHubGross: "Gross",
+    traderHubPaidEnrollments: "PAID ENROLLMENTS",
+    traderHubActiveStudents: "Active students enrolled",
+    traderHubMyCourses: "MY COURSES",
+    traderHubPublishedCurriculum: "Published curriculum",
+    traderHubLiveWebinars: "LIVE WEBINARS",
+    traderHubScheduledSessions: "Scheduled sessions",
+    traderHubMyCurriculum: "MY CURRICULUM",
+    traderHubCoursesAuthored: "Courses authored and published by your educator account",
+    traderHubCreateNewCourse: "Create New Course",
+    traderHubNoCoursesYet: "NO COURSES CREATED YET",
+    traderHubCreateFirstCoursePrompt: "Click \"Create New Course\" above to publish your first course.",
+    traderHubCompleteCertPrompt: "Complete your certification to unlock course creation.",
+    traderHubMyLiveWebinars: "MY LIVE WEBINARS",
+    traderHubWebinarsDesc: "Schedule live trading masterclasses, broadcast screen share streams, and capture paid user subscriptions.",
+    traderHubScheduleProSession: "Schedule Pro Session",
+    traderHubCertRequiredToSchedule: "Certification Required",
+    traderHubNoWebinarsYet: "NO STREAMS SCHEDULED YET",
+    traderHubScheduleFirstWebinarPrompt: "Click \"Schedule Pro Session\" above to launch your first live trading stream.",
+    traderHubCompleteCertToSchedulePrompt: "Complete your certification to unlock scheduling masterclasses.",
+    traderHubIssueCodesTitle: "SUBSCRIBER INVITATION CODES & VIP PASSES",
+    traderHubIssueCodesDesc: "Create custom access codes to grant your subscribers instant access to your courses and live technical signals.",
+    traderHubSubscriberCodesCount: "Subscriber Codes",
+    traderHubIssueNewCode: "Issue New Subscriber Code",
+    traderHubRandomizeCode: "⚡ Randomize Code",
+    traderHubCodeStringLabel: "Code String *",
+    traderHubCodeScopeLabel: "What This Code Unlocks *",
+    traderHubTargetCourseLabel: "Target Course *",
+    traderHubValidityLabel: "Validity (Days) *",
+    traderHubMaxUsesLabel: "Max Redemptions *",
+    traderHubNotesLabel: "Internal Notes",
+    traderHubCreateCodeBtn: "Generate Subscriber Code",
+    traderHubCreatingCode: "Issuing...",
+    traderHubActiveCodesTitle: "ACTIVE SUBSCRIBER CODES",
+    traderHubGoLiveBtn: "Go Live as Host",
+    traderHubActionPublishTitle: "PUBLISH NEW CURRICULUM",
+    traderHubActionPublishDesc: "Create video modules, upload Python backtesting engines, or add options financial models.",
+    traderHubActionSettlementTitle: "FINANCIAL SETTLEMENT",
+    traderHubActionSettlementDesc: "View your automated 70/30 platform payout ledger and student subscriber growth.",
+    traderHubViewRevenueLedger: "View Revenue Ledger",
+    traderHubRefreshCodes: "Refresh Codes",
+    traderHubNoCodesYet: "NO CODES ISSUED YET",
+    traderHubNoCodesPrompt: "Issue an invitation code above and share the generated link with your subscribers.",
+    traderHubColCode: "Code & Share Link",
+    traderHubColAccess: "Access Granted",
+    traderHubColValidity: "Validity",
+    traderHubColRedemptions: "Redemptions",
+    traderHubColStatus: "Status",
+    traderHubColActions: "Actions",
+    traderHubScopeCourse: "COURSE PASS",
+    traderHubScopeBundle: "ALL CONTENT",
+    traderHubScopeSignals: "SIGNALS ONLY",
+    traderHubEditBtn: "Edit",
+    traderHubRevokeBtn: "Revoke",
+    traderHubReactivateBtn: "Reactivate",
   },
 
   JA: {
@@ -782,6 +938,84 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     webinarsHeroTitle: "米株寄り付き実盤ライブ配信。",
     webinarsHeroDesc: "米株市場寄り付きに合わせたプロトレーダーの生配信。WebRTCによる音声Q&Aと板読み解説。",
     webinarsNoStreams: "予定されているライブ配信はありません",
+
+    // Trader / Educator Hub
+    traderHubPortalBadge: "トレーダー／エデュケーター管理ポータル",
+    traderHubTitle: "エデュケーター＆トレーダースタジオ",
+    traderHubSub: "コース管理、70/30プラットフォーム収益分配、受講生VIP招待コード発行、プロ実盤ライブ配信の管理。",
+    traderHubSyncBtn: "データ同期",
+    traderHubSyncing: "同期中...",
+    traderHubCertApproved: "公認プロトレーダー / エデュケーター",
+    traderHubCertApprovedDesc: "運用実績の監査が完了しました。コース公開、ライブ配信、シグナル発信、および70%の収益配分が有効です。",
+    traderHubViewCert: "認定ステータスを確認",
+    traderHubCertPending: "審査中 (管理者承認待ち)",
+    traderHubCertPendingDesc: "提出された実績書類は現在管理者による審査中です。承認完了後にコース作成および配信機能が解放されます。",
+    traderHubViewAppStatus: "申請状況を確認",
+    traderHubCertRejected: "認定申請が却下されました",
+    traderHubCertRejectedDesc: "登録情報または実績書類を更新し、再度審査申請を提出してください。",
+    traderHubResubmitDossier: "書類を再提出する",
+    traderHubCertRequired: "機能解放には実績審査が必要です",
+    traderHubCertRequiredDesc: "取引履歴とブローカー実績を提出して認証を受けてください。承認されるまでコース公開およびライブ配信機能はロックされます。",
+    traderHubSubmitDossier: "審査書類を提出",
+    traderHubSignalsBannerTitle: "テクニカルシグナル ＆ NTFY.SH リアルタイム配信",
+    traderHubSignalsBannerDesc: "売買セットアップとエントリー目標を公開し、ntfy.sh経由で購読者へミリ秒単位のプッシュ通知を配信します。",
+    traderHubOpenSignalStudio: "シグナルスタジオを開く",
+    traderHubNetPayout: "純受取収益 (70%)",
+    traderHubGross: "総売上",
+    traderHubPaidEnrollments: "有料受講者数",
+    traderHubActiveStudents: "現在のアクティブ受講者",
+    traderHubMyCourses: "マイコース",
+    traderHubPublishedCurriculum: "公開カリキュラム数",
+    traderHubLiveWebinars: "ライブウェビナー",
+    traderHubScheduledSessions: "予定セッション数",
+    traderHubMyCurriculum: "公開カリキュラム一覧",
+    traderHubCoursesAuthored: "あなたのアカウントで作成・公開されたコース一覧",
+    traderHubCreateNewCourse: "新規コース作成",
+    traderHubNoCoursesYet: "作成済みのコースがありません",
+    traderHubCreateFirstCoursePrompt: "上の「新規コース作成」ボタンをクリックして、最初のコースを公開しましょう。",
+    traderHubCompleteCertPrompt: "コース作成機能を解放するには、実績審査を完了してください。",
+    traderHubMyLiveWebinars: "マイライブ配信",
+    traderHubWebinarsDesc: "実盤マスタークラスの開催、画面共有ライブの配信、有料購読の獲得。",
+    traderHubScheduleProSession: "プロ配信をスケジュール",
+    traderHubCertRequiredToSchedule: "配信には認定が必要です",
+    traderHubNoWebinarsYet: "予定されている配信はありません",
+    traderHubScheduleFirstWebinarPrompt: "上の「プロ配信をスケジュール」ボタンをクリックして、実盤ライブを開始しましょう。",
+    traderHubCompleteCertToSchedulePrompt: "ライブ配信をスケジュールするには、実績審査を完了してください。",
+    traderHubIssueCodesTitle: "受講生招待コード ＆ VIPパス発行",
+    traderHubIssueCodesDesc: "専用アクセスコードを発行し、受講生にコースやリアルタイムシグナルへの即時アクセス権を付与できます。",
+    traderHubSubscriberCodesCount: "発行済みコード",
+    traderHubIssueNewCode: "新規招待コードを発行",
+    traderHubRandomizeCode: "⚡ コードを自動生成",
+    traderHubCodeStringLabel: "招待コード文字列 *",
+    traderHubCodeScopeLabel: "解放コンテンツ種別 *",
+    traderHubTargetCourseLabel: "対象コース *",
+    traderHubValidityLabel: "有効期間 (日数) *",
+    traderHubMaxUsesLabel: "最大利用回数 *",
+    traderHubNotesLabel: "メモ・キャンペーン対象 (任意)",
+    traderHubCreateCodeBtn: "招待コードを生成",
+    traderHubCreatingCode: "発行中...",
+    traderHubActiveCodesTitle: "発行済み招待コード一覧",
+    traderHubGoLiveBtn: "ホストとして配信開始",
+    traderHubActionPublishTitle: "新しいカリキュラムを公開",
+    traderHubActionPublishDesc: "ビデオ講義モジュールを作成、Pythonバックテストエンジンやオプション数理モデルを追加。",
+    traderHubActionSettlementTitle: "収益精算と分配台帳",
+    traderHubActionSettlementDesc: "プラットフォーム70/30の自動支払台帳と受講生数の増加推移を確認。",
+    traderHubViewRevenueLedger: "収益台帳を確認",
+    traderHubRefreshCodes: "コード一覧を更新",
+    traderHubNoCodesYet: "発行された招待コードはありません",
+    traderHubNoCodesPrompt: "上で招待コードを発行し、生成されたリンクを受講生に共有してください。",
+    traderHubColCode: "コードと共有リンク",
+    traderHubColAccess: "付与されるアクセス権",
+    traderHubColValidity: "有効期限",
+    traderHubColRedemptions: "使用回数",
+    traderHubColStatus: "ステータス",
+    traderHubColActions: "操作",
+    traderHubScopeCourse: "指定コース",
+    traderHubScopeBundle: "全コース ＋ シグナル (バンドル)",
+    traderHubScopeSignals: "テクニカルシグナルのみ",
+    traderHubEditBtn: "編集",
+    traderHubRevokeBtn: "無効化",
+    traderHubReactivateBtn: "再有効化",
   },
 
   ZH: {
@@ -1035,5 +1269,83 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     webinarsHeroTitle: "美股开盘实盘交易直播。",
     webinarsHeroDesc: "观摩实盘认证导师在美股开盘时段执行实盘交易。支持实时WebRTC语音连麦答疑与Level-2深度订单簿剖析。",
     webinarsNoStreams: "当前暂无预定的直播日程",
+
+    // Trader / Educator Hub
+    traderHubPortalBadge: "导师 / 交易员管理控制台",
+    traderHubTitle: "导师与交易员工作台",
+    traderHubSub: "管理您的课程、追踪 70/30 平台分成收益、发放学员 VIP 邀请码，并开启专业实盘大师课。",
+    traderHubSyncBtn: "同步数据",
+    traderHubSyncing: "同步中...",
+    traderHubCertApproved: "已认证官方专业交易员 / 导师",
+    traderHubCertApprovedDesc: "您的实盘交割单与交易战绩已通过审核。您已获得发布课程、开播实盘直播、推送交易信号及享受70%收益分成的完整权限。",
+    traderHubViewCert: "查看认证证书",
+    traderHubCertPending: "实盘资质审核中",
+    traderHubCertPendingDesc: "您的资质材料已提交，平台管理员正在审核中。审核通过后将立即解锁课程发布与直播开播功能。",
+    traderHubViewAppStatus: "查看申请进度",
+    traderHubCertRejected: "资质审核未通过",
+    traderHubCertRejectedDesc: "请更新您的交易资历与券商交割单，重新提交审核档案。",
+    traderHubResubmitDossier: "重新提交审核材料",
+    traderHubCertRequired: "需完成资质审核以解锁发布功能",
+    traderHubCertRequiredDesc: "提交您的交易从业资质与券商实盘记录供管理员审核。在获得认证前，课程发布与直播间功能暂处于锁定状态。",
+    traderHubSubmitDossier: "提交实盘认证材料",
+    traderHubSignalsBannerTitle: "技术交易信号 ＆ NTFY.SH 毫秒级多端推送",
+    traderHubSignalsBannerDesc: "发布实时买入/卖出交易策略与点位，并通过 ntfy.sh 向您的订阅学员毫秒级推送通知。",
+    traderHubOpenSignalStudio: "进入信号发布中心",
+    traderHubNetPayout: "净分成收入 (70%)",
+    traderHubGross: "总营业额",
+    traderHubPaidEnrollments: "付费学员数",
+    traderHubActiveStudents: "当前活跃在读学员",
+    traderHubMyCourses: "我的课程",
+    traderHubPublishedCurriculum: "已发布实战体系",
+    traderHubLiveWebinars: "实盘直播",
+    traderHubScheduledSessions: "已预约直播场次",
+    traderHubMyCurriculum: "我的课程大纲",
+    traderHubCoursesAuthored: "由您的导师账户独立编写并发布的实战课程",
+    traderHubCreateNewCourse: "创建新课程",
+    traderHubNoCoursesYet: "暂无已创建的课程",
+    traderHubCreateFirstCoursePrompt: "点击上方“创建新课程”按钮，发布您的第一门机构级交易课程。",
+    traderHubCompleteCertPrompt: "请完成实盘资质认证以解锁课程创建功能。",
+    traderHubMyLiveWebinars: "我的实盘直播",
+    traderHubWebinarsDesc: "安排实盘交易大师课，共享开盘屏幕分析订单簿，吸纳付费订阅学员。",
+    traderHubScheduleProSession: "安排 PRO 实盘直播",
+    traderHubCertRequiredToSchedule: "需要认证以开播",
+    traderHubNoWebinarsYet: "暂无已安排的直播",
+    traderHubScheduleFirstWebinarPrompt: "点击上方“安排 PRO 实盘直播”启动您的第一场开盘实盘分析。",
+    traderHubCompleteCertToSchedulePrompt: "请完成实盘资质认证以解锁预约直播功能。",
+    traderHubIssueCodesTitle: "学员专属邀请码与 VIP 通行证",
+    traderHubIssueCodesDesc: "创建专属邀请码，让您的学员立即获得您的课程访问权或实时技术信号订阅。",
+    traderHubSubscriberCodesCount: "已发放邀请码",
+    traderHubIssueNewCode: "发放新学员邀请码",
+    traderHubRandomizeCode: "⚡ 随机生成代码",
+    traderHubCodeStringLabel: "邀请码字符串 *",
+    traderHubCodeScopeLabel: "解锁权益类型 *",
+    traderHubTargetCourseLabel: "绑定指定课程 *",
+    traderHubValidityLabel: "有效期 (天数) *",
+    traderHubMaxUsesLabel: "最大兑换次数 *",
+    traderHubNotesLabel: "内部备注 / 推广受众 (可选)",
+    traderHubCreateCodeBtn: "生成专属邀请码",
+    traderHubCreatingCode: "生成中...",
+    traderHubActiveCodesTitle: "已生效学员邀请码",
+    traderHubGoLiveBtn: "以主播身份开播",
+    traderHubActionPublishTitle: "发布新交易体系",
+    traderHubActionPublishDesc: "录制视频教学章节，上传 Python 量化回测策略引擎或期权衍生品金融模型。",
+    traderHubActionSettlementTitle: "财务结算与分成台账",
+    traderHubActionSettlementDesc: "查看平台 70/30 自动化收益结算台账与学员增长走势。",
+    traderHubViewRevenueLedger: "查看分成明细账",
+    traderHubRefreshCodes: "刷新邀请码列表",
+    traderHubNoCodesYet: "暂无已发放的邀请码",
+    traderHubNoCodesPrompt: "在上方创建专属邀请码，并将生成的兑换链接发送给您的学员。",
+    traderHubColCode: "邀请码及专属链接",
+    traderHubColAccess: "解锁权限",
+    traderHubColValidity: "有效期",
+    traderHubColRedemptions: "兑换次数",
+    traderHubColStatus: "状态",
+    traderHubColActions: "操作",
+    traderHubScopeCourse: "指定单门课程",
+    traderHubScopeBundle: "所有课程 + 信号 (全包)",
+    traderHubScopeSignals: "仅技术信号",
+    traderHubEditBtn: "编辑",
+    traderHubRevokeBtn: "废止",
+    traderHubReactivateBtn: "重新启用",
   },
 };
