@@ -147,79 +147,80 @@ export default function TraderDashboardPage() {
         setCertificationStatus("none");
       }
 
-      // 4. Fetch courses & webinars — trader_id in courses/webinars references trader_profiles.id, not profiles.id
+      // 4. Fetch courses & webinars strictly for this educator
       const traderProfileId = tpData?.id;
+      let userCourses: any[] = [];
+      let cCount = 0;
+
       if (traderProfileId) {
-        // Courses
-        const { data: userCourses, count: cCount } = await supabase
+        const { data: coursesByProfile, count: cCountProfile } = await supabase
           .from("courses")
           .select("*", { count: "exact" })
           .eq("trader_id", traderProfileId);
+        if (coursesByProfile && coursesByProfile.length > 0) {
+          userCourses = coursesByProfile;
+          cCount = cCountProfile || coursesByProfile.length;
+        }
+      }
 
-        setTotalCourses(cCount || 0);
-        setCoursesList(userCourses || []);
+      // Also check if trader_id in courses table was stored directly as user.id (profiles.id)
+      if (userCourses.length === 0 && user?.id) {
+        const { data: coursesByUserId, count: cCountUser } = await supabase
+          .from("courses")
+          .select("*", { count: "exact" })
+          .eq("trader_id", user.id);
+        if (coursesByUserId && coursesByUserId.length > 0) {
+          userCourses = coursesByUserId;
+          cCount = cCountUser || coursesByUserId.length;
+        }
+      }
 
-        // Webinars
-        const { data: userWebinars, count: wCount } = await supabase
+      setTotalCourses(cCount);
+      setCoursesList(userCourses);
+
+      // Webinars
+      let userWebinars: any[] = [];
+      let wCount = 0;
+      if (traderProfileId) {
+        const { data: webinarsByProfile, count: wCountProfile } = await supabase
           .from("webinars")
           .select("*", { count: "exact" })
           .eq("trader_id", traderProfileId);
-
-        setTotalWebinars(wCount || 0);
-        setWebinarsList(userWebinars || []);
-
-        // 6. Calculate enrollments & revenue
-        if (userCourses && userCourses.length > 0) {
-          const courseIds = userCourses.map((c) => c.id);
-          const { data: enrollmentsData, count: eCount } = await supabase
-            .from("enrollments")
-            .select("*, courses(*)", { count: "exact" })
-            .in("course_id", courseIds);
-
-          setTotalSubscribers(eCount || 0);
-
-          const realGross = (enrollmentsData || []).reduce((acc, en) => {
-            return acc + (en.courses?.price || 0);
-          }, 0);
-          setGrossRevenue(realGross);
+        if (webinarsByProfile) {
+          userWebinars = webinarsByProfile;
+          wCount = wCountProfile || webinarsByProfile.length;
         }
+      }
+      if (userWebinars.length === 0 && user?.id) {
+        const { data: webinarsByUserId, count: wCountUser } = await supabase
+          .from("webinars")
+          .select("*", { count: "exact" })
+          .eq("trader_id", user.id);
+        if (webinarsByUserId) {
+          userWebinars = webinarsByUserId;
+          wCount = wCountUser || webinarsByUserId.length;
+        }
+      }
+      setTotalWebinars(wCount);
+      setWebinarsList(userWebinars);
 
-        // Check /api/courses for Prisma database courses
-        try {
-          const apiRes = await fetch("/api/courses");
-          const apiData = await apiRes.json();
-          if (apiData.success && apiData.courses && apiData.courses.length > 0) {
-            const combined = (userCourses && userCourses.length > 0) ? userCourses : apiData.courses;
-            setTotalCourses(combined.length);
-            setCoursesList(combined);
-            if (!userCourses || userCourses.length === 0) {
-              const estimatedRev = combined.reduce((acc: number, c: any) => acc + (c.price || 0) * 15, 0);
-              setGrossRevenue(estimatedRev);
-              setTotalSubscribers(combined.length * 15);
-            }
-          }
-        } catch (e) {}
+      // 5. Calculate real enrollments & real revenue strictly for this educator's courses
+      if (userCourses && userCourses.length > 0) {
+        const courseIds = userCourses.map((c) => c.id);
+        const { data: enrollmentsData, count: eCount } = await supabase
+          .from("enrollments")
+          .select("*, courses(*)", { count: "exact" })
+          .in("course_id", courseIds);
+
+        setTotalSubscribers(eCount || 0);
+
+        const realGross = (enrollmentsData || []).reduce((acc, en) => {
+          return acc + (en.courses?.price || 0);
+        }, 0);
+        setGrossRevenue(realGross);
       } else {
-        // Fallback to /api/courses when traderProfileId is not in Supabase
-        try {
-          const apiRes = await fetch("/api/courses");
-          const apiData = await apiRes.json();
-          if (apiData.success && apiData.courses && apiData.courses.length > 0) {
-            setTotalCourses(apiData.courses.length);
-            setCoursesList(apiData.courses);
-            const estimatedRev = apiData.courses.reduce((acc: number, c: any) => acc + (c.price || 0) * 15, 0);
-            setGrossRevenue(estimatedRev);
-            setTotalSubscribers(apiData.courses.length * 15);
-          } else {
-            setTotalCourses(0);
-            setCoursesList([]);
-          }
-        } catch (e) {
-          setTotalCourses(0);
-          setCoursesList([]);
-        }
-        setTotalWebinars(0);
-        setWebinarsList([]);
+        setTotalSubscribers(0);
+        setGrossRevenue(0);
       }
     } catch (e) {
       console.error("Trader Hub fetch error:", e);

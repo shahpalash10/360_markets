@@ -191,7 +191,7 @@ export default function CourseBuilderPage() {
         throw new Error(data.error || "Failed to create course via API");
       }
 
-      // 2. Also sync to Supabase courses table in background if available
+      // 2. Also ensure trader_id is synced to Supabase courses table
       try {
         supabase.from("courses").insert({
           title,
@@ -204,6 +204,7 @@ export default function CourseBuilderPage() {
           thumbnail: thumbnailUrl || null,
           published: true,
           rating: 5.0,
+          trader_id: traderProfileId || user.id,
         }).then(() => {}, () => {});
       } catch (e) {}
 

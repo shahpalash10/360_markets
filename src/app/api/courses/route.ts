@@ -2,15 +2,20 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const traderId = searchParams.get("traderId");
+
   // 1. Primary: Cloud Database (Supabase)
   try {
-    const { data: sbCourses, error } = await supabase
-      .from("courses")
-      .select("*")
-      .order("created_at", { ascending: false });
+    let query = supabase.from("courses").select("*").order("created_at", { ascending: false });
+    if (traderId) {
+      query = query.eq("trader_id", traderId);
+    }
 
-    if (!error && sbCourses && sbCourses.length > 0) {
+    const { data: sbCourses, error } = await query;
+
+    if (!error && sbCourses) {
       return NextResponse.json({ success: true, courses: sbCourses });
     }
   } catch (sbErr) {
@@ -19,7 +24,16 @@ export async function GET() {
 
   // 2. Secondary: Prisma SQLite table
   try {
+    const whereClause: any = {};
+    if (traderId) {
+      whereClause.OR = [
+        { traderId },
+        { trader: { userId: traderId } },
+      ];
+    }
+
     const courses = await prisma.course.findMany({
+      where: whereClause,
       include: {
         trader: {
           include: {
@@ -73,8 +87,22 @@ export async function POST(req: Request) {
 
     // 1. Primary: Insert into Supabase Cloud DB
     try {
+      let sbTraderProfileId: string | null = null;
+      if (traderId) {
+        const { data: tpById } = await supabase.from("trader_profiles").select("id").eq("id", traderId).single();
+        if (tpById?.id) {
+          sbTraderProfileId = tpById.id;
+        } else {
+          const { data: tpByUserId } = await supabase.from("trader_profiles").select("id").eq("user_id", traderId).single();
+          if (tpByUserId?.id) {
+            sbTraderProfileId = tpByUserId.id;
+          }
+        }
+      }
+
       const { error: sbInsertErr } = await supabase.from("courses").insert({
         id: courseId,
+        trader_id: sbTraderProfileId,
         title,
         slug,
         description,

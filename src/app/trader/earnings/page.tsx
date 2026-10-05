@@ -27,10 +27,20 @@ export default function TraderEarningsPage() {
     async function fetchEarnings() {
       if (!user) return;
       try {
+        let traderProfileId = user.id;
+        try {
+          const { data: tp } = await supabase
+            .from("trader_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+          if (tp?.id) traderProfileId = tp.id;
+        } catch (tpErr) {}
+
         const { data: userCourses } = await supabase
           .from("courses")
           .select("id")
-          .eq("trader_id", user.id);
+          .or(`trader_id.eq.${user.id},trader_id.eq.${traderProfileId}`);
 
         if (userCourses && userCourses.length > 0) {
           const courseIds = userCourses.map((c) => c.id);
@@ -45,6 +55,9 @@ export default function TraderEarningsPage() {
             const totalGross = enrData.reduce((acc, e) => acc + (e.courses?.price || 0), 0);
             setGrossRevenue(totalGross);
           }
+        } else {
+          setEnrollmentsList([]);
+          setGrossRevenue(0);
         }
       } catch (e) {
         console.error(e);
