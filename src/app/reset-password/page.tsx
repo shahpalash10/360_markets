@@ -14,10 +14,13 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Eye,
   EyeOff,
   RefreshCw,
-  Sparkles,
+  ShieldAlert,
+  Binary,
+  HelpCircle,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,12 +31,16 @@ function ResetPasswordForm() {
   const { language, setLanguage } = useLanguage();
 
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [isLinkExpired, setIsLinkExpired] = useState(false);
+  const [expiredErrorDesc, setExpiredErrorDesc] = useState("");
   const [email, setEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
@@ -42,99 +49,177 @@ function ResetPasswordForm() {
   const T = {
     EN: {
       badge: "SECURITY CREDENTIALS RECOVERY",
+      expiredBadge: "LINK EXPIRED • EMAIL SCANNER DETECTED",
       requestTitle1: "RESET YOUR",
       requestTitle2: "PASSWORD.",
       requestSub: "Enter your verified account email to receive an encrypted authorization link.",
       recoveryTitle1: "SET NEW",
       recoveryTitle2: "PASSWORD.",
       recoverySub: "Create a strong new password for your 360° Markets account.",
+      expiredTitle1: "LINK EXPIRED OR",
+      expiredTitle2: "PRE-SCANNED.",
+      expiredSub: "Email security scanners (Apple Mail, Outlook, Gmail filters) automatically pre-open incoming links to inspect them, which consumes single-use reset links before you click.",
       labelEmail: "REGISTERED EMAIL ADDRESS",
       labelNewPass: "NEW PASSWORD",
       labelConfirmPass: "CONFIRM NEW PASSWORD",
+      labelOtpCode: "6-DIGIT CODE / RECOVERY TOKEN",
+      placeholderOtp: "Enter 6-digit code from email",
       btnSendLink: "Send Reset Link",
+      btnResendLink: "Send Fresh Reset Link",
       btnUpdatePass: "Update Password",
+      btnVerifyOtp: "Verify Code & Set Password",
       btnSending: "Sending Link...",
       btnUpdating: "Updating Credentials...",
+      btnVerifying: "Verifying Code...",
       backToLogin: "Return to Sign In",
+      backToRequest: "Start Over",
       successHeader: "CHECK YOUR INBOX",
       successNotice: "A secure password recovery link has been dispatched to your email address.",
-      successSub: "Click the link in the email to return here and configure your new password.",
+      successSub: "Click the link in the email, or enter the 6-digit confirmation code below:",
       resendPrompt: "Didn't receive the email? Check your spam folder or try again.",
       completedTitle: "PASSWORD UPDATED",
       completedDesc: "Your credentials have been securely refreshed. Redirecting you to sign in...",
       goToLoginBtn: "Sign In Now →",
       passMismatch: "Passwords do not match.",
       passTooShort: "Password must be at least 6 characters.",
+      optionOtpTitle: "OPTION 1: VERIFY WITH 6-DIGIT CODE (SCANNER-PROOF)",
+      optionOtpDesc: "Did your email include a 6-digit verification code or token? Enter it below to unlock password reset directly:",
+      optionResendTitle: "OPTION 2: REQUEST FRESH LINK",
+      optionResendDesc: "Dispatch a brand new single-use reset link to your email inbox:",
+      scannerTipTitle: "Why did this link expire?",
+      scannerTipText: "Email security tools visit incoming links immediately upon receipt. If this repeats, copy the URL address from the email directly into your browser, or enter the 6-digit verification code above.",
+      orDivider: "OR",
     },
     JA: {
       badge: "セキュリティ認証情報の回復",
+      expiredBadge: "リンク期限切れ • メールスキャナー検出",
       requestTitle1: "パスワードを",
       requestTitle2: "再設定する。",
       requestSub: "登録されたメールアドレスを入力して、安全な再設定リンクを受信します。",
       recoveryTitle1: "新しいパスワードを",
       recoveryTitle2: "設定する。",
       recoverySub: "360° Markets アカウント用の新しい強力なパスワードを作成してください。",
+      expiredTitle1: "リンク期限切れ、または",
+      expiredTitle2: "事前スキャンされました。",
+      expiredSub: "多くのメールアプリ（Apple Mail、Outlook、迷惑メール対策フィルターなど）は、セキュリティ確認のためにリンクをバックグラウンドで自動訪問するため、1回限りの再設定リンクが使用済みになる場合があります。",
       labelEmail: "登録メールアドレス",
       labelNewPass: "新しいパスワード",
       labelConfirmPass: "新しいパスワード（確認）",
+      labelOtpCode: "6桁の認証コード / トークン",
+      placeholderOtp: "メール内の6桁コードを入力",
       btnSendLink: "再設定リンクを送信",
+      btnResendLink: "新しいリンクを再送信",
       btnUpdatePass: "パスワードを更新",
+      btnVerifyOtp: "コードを検証してパスワードを設定",
       btnSending: "送信中...",
       btnUpdating: "更新中...",
+      btnVerifying: "検証中...",
       backToLogin: "サインインに戻る",
+      backToRequest: "最初からやり直す",
       successHeader: "受信トレイをご確認ください",
       successNotice: "パスワード再設定用の安全なリンクをご指定のメールアドレスに送信しました。",
-      successSub: "メール内のリンクをクリックして、新しいパスワードを設定してください。",
+      successSub: "メール内のリンクをクリックするか、メールに記載された6桁の認証コードを以下に入力してください：",
       resendPrompt: "メールが届かない場合は、迷惑メールフォルダを確認するか再度お試しください。",
       completedTitle: "パスワードを更新しました",
       completedDesc: "認証情報が正常に更新されました。サインイン画面へリダイレクトしています...",
       goToLoginBtn: "今すぐサインイン →",
       passMismatch: "パスワードが一致しません。",
       passTooShort: "パスワードは6文字以上で入力してください。",
+      optionOtpTitle: "方法 1: 認証コードで即時認証（スキャナー回避）",
+      optionOtpDesc: "メールに6桁の確認コードが届いている場合は、以下に入力して直接パスワード再設定を解除できます：",
+      optionResendTitle: "方法 2: 新しいリンクを再送信",
+      optionResendDesc: "新しいパスワード再設定リンクをご指定のメールアドレスに送信します：",
+      scannerTipTitle: "なぜこれが発生するのですか？",
+      scannerTipText: "メールアプリの自動保護機能が受信直後にリンクを訪問するためです。繰り返される場合は、メール内のリンクURLをコピーしてブラウザに直接貼り付けるか、上記の6桁認証コードを入力してください。",
+      orDivider: "または",
     },
     ZH: {
       badge: "安全凭证密码找回",
+      expiredBadge: "链接失效 • 检测到邮件预检扫描",
       requestTitle1: "重置您的",
       requestTitle2: "登录密码。",
       requestSub: "输入您绑定的电子邮箱，我们将向您发送加密的安全授权链接。",
       recoveryTitle1: "设置新",
       recoveryTitle2: "登录密码。",
       recoverySub: "为您的 360° Markets 账户设定全新的安全密码。",
+      expiredTitle1: "安全链接已失效或",
+      expiredTitle2: "已被提前预检。",
+      expiredSub: "许多邮件客户端（如 Apple Mail、Outlook、企业防钓鱼网关）会在邮件送达时自动在后台预先访问链接以进行安全检查，这会导致单次重置链接在您点击前已被消耗。",
       labelEmail: "注册电子邮箱",
       labelNewPass: "新密码",
       labelConfirmPass: "确认新密码",
+      labelOtpCode: "6 位验证码 / 恢复令牌",
+      placeholderOtp: "输入邮件中的 6 位验证码",
       btnSendLink: "发送重置链接",
+      btnResendLink: "重新发送重置链接",
       btnUpdatePass: "更新密码",
+      btnVerifyOtp: "验证代码并设置密码",
       btnSending: "正在发送...",
       btnUpdating: "正在更新...",
+      btnVerifying: "正在验证...",
       backToLogin: "返回登录界面",
+      backToRequest: "重新开始",
       successHeader: "请查收邮件",
       successNotice: "安全密码重置链接已发送至您的注册邮箱。",
-      successSub: "请点击邮件中的链接返回此页面以完成新密码的设置。",
+      successSub: "点击邮件中的链接，或直接在下方输入邮件中的 6 位验证码：",
       resendPrompt: "未收到邮件？请检查垃圾邮件箱或稍后重试。",
       completedTitle: "密码更新成功",
       completedDesc: "您的账户密码已安全更新。正在为您跳转至登录界面...",
       goToLoginBtn: "立即登录 →",
       passMismatch: "两次输入的密码不一致。",
       passTooShort: "密码长度至少需要6个字符。",
+      optionOtpTitle: "方案 1: 使用 6 位验证码（免疫邮件预检）",
+      optionOtpDesc: "如果您的重置邮件中附带有 6 位确认代码，请在下方输入以直接解锁新密码设置：",
+      optionResendTitle: "方案 2: 请求新的重置链接",
+      optionResendDesc: "向您的注册邮箱重新分发一封全新的一次性安全授权链接：",
+      scannerTipTitle: "为什么会出现此提示？",
+      scannerTipText: "部分邮箱客户端会在后台自动探测邮件中的超链接。如果反复失效，建议长按/右键复制邮件中的完整链接地址直接粘贴到此浏览器窗口，或直接使用上方的 6 位验证码。",
+      orDivider: "或者",
     },
   };
 
   const ot = T[language] || T.EN;
 
-  // Detect recovery mode from hash or URL params or auth event
+  // Restore saved email if user previously requested a link in this session
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const hash = window.location.hash;
-      if (hash.includes("type=recovery") || hash.includes("access_token=")) {
-        setIsRecoveryMode(true);
+      const savedEmail = localStorage.getItem("markets_reset_email");
+      if (savedEmail && !email) {
+        setEmail(savedEmail);
       }
     }
+  }, []);
 
-    const type = searchParams.get("type");
-    const code = searchParams.get("code");
-    if (type === "recovery" || code) {
-      setIsRecoveryMode(true);
+  // Detect recovery mode or expired token error from hash, query params, or auth events
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash || "";
+      const cleanHash = hash.startsWith("#") ? hash.substring(1) : hash;
+      const hashParams = new URLSearchParams(cleanHash);
+
+      const errorCode = hashParams.get("error_code") || searchParams.get("error_code");
+      const errorParam = hashParams.get("error") || searchParams.get("error");
+      const errorDesc =
+        hashParams.get("error_description") || searchParams.get("error_description");
+
+      // Check for expired OTP / link error (e.g. from email crawler prefetch)
+      if (
+        errorCode === "otp_expired" ||
+        errorParam === "access_denied" ||
+        errorDesc?.toLowerCase().includes("expired") ||
+        errorDesc?.toLowerCase().includes("invalid")
+      ) {
+        setIsLinkExpired(true);
+        setExpiredErrorDesc(errorDesc || "Email link is invalid or has expired.");
+      } else if (
+        hash.includes("type=recovery") ||
+        hash.includes("access_token=") ||
+        searchParams.get("type") === "recovery" ||
+        searchParams.get("code")
+      ) {
+        setIsRecoveryMode(true);
+        setIsLinkExpired(false);
+      }
     }
 
     // Listen for Supabase Auth state recovery event
@@ -143,6 +228,7 @@ function ResetPasswordForm() {
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecoveryMode(true);
+        setIsLinkExpired(false);
       }
     });
 
@@ -152,8 +238,8 @@ function ResetPasswordForm() {
   }, [searchParams]);
 
   // Request password reset email
-  const handleSendResetLink = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendResetLink = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!email.trim()) return;
 
     setIsLoading(true);
@@ -161,10 +247,14 @@ function ResetPasswordForm() {
     setSuccessMsg("");
 
     try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("markets_reset_email", email.trim());
+      }
+
       const origin =
         typeof window !== "undefined"
           ? window.location.origin
-          : "http://localhost:3000";
+          : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
       const redirectUrl = `${origin}/reset-password`;
 
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -175,11 +265,45 @@ function ResetPasswordForm() {
         setErrorMsg(error.message || "Failed to send reset link.");
       } else {
         setSuccessMsg(email.trim());
+        setIsLinkExpired(false);
       }
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to dispatch reset email.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Verify 6-digit OTP code or token directly (bypasses email client crawler prefetch)
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !otpCode.trim()) return;
+
+    setIsVerifyingOtp(true);
+    setErrorMsg("");
+
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("markets_reset_email", email.trim());
+      }
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otpCode.trim(),
+        type: "recovery",
+      });
+
+      if (error) {
+        setErrorMsg(error.message || "Invalid or expired security code. Please check and try again.");
+      } else if (data.session || data.user) {
+        setIsRecoveryMode(true);
+        setIsLinkExpired(false);
+        setErrorMsg("");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to verify security code.");
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -265,24 +389,48 @@ function ResetPasswordForm() {
       <main className="max-w-md w-full mx-auto my-12 z-20 space-y-8">
         {/* Header Badge */}
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 text-[#8BE000] text-xs font-mono tracking-wider uppercase bg-[#161616] px-3 py-1 border border-[#262626]">
-            {isRecoveryMode ? (
+          <div
+            className={`inline-flex items-center gap-2 text-xs font-mono tracking-wider uppercase px-3 py-1 border ${
+              isLinkExpired
+                ? "text-amber-400 bg-amber-950/30 border-amber-800/60"
+                : "text-[#8BE000] bg-[#161616] border-[#262626]"
+            }`}
+          >
+            {isLinkExpired ? (
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+            ) : isRecoveryMode ? (
               <KeyRound className="w-3.5 h-3.5" />
             ) : (
               <Lock className="w-3.5 h-3.5" />
             )}
-            <span>{ot.badge}</span>
+            <span>{isLinkExpired ? ot.expiredBadge : ot.badge}</span>
           </div>
 
           <h1 className="text-4xl font-display font-light text-white tracking-tight leading-none">
-            {isRecoveryMode ? ot.recoveryTitle1 : ot.requestTitle1}{" "}
-            <span className="font-bold text-[#8BE000]">
-              {isRecoveryMode ? ot.recoveryTitle2 : ot.requestTitle2}
+            {isLinkExpired
+              ? ot.expiredTitle1
+              : isRecoveryMode
+              ? ot.recoveryTitle1
+              : ot.requestTitle1}{" "}
+            <span
+              className={`font-bold ${
+                isLinkExpired ? "text-amber-400" : "text-[#8BE000]"
+              }`}
+            >
+              {isLinkExpired
+                ? ot.expiredTitle2
+                : isRecoveryMode
+                ? ot.recoveryTitle2
+                : ot.requestTitle2}
             </span>
           </h1>
 
-          <p className="text-xs text-neutral-400 font-mono">
-            {isRecoveryMode ? ot.recoverySub : ot.requestSub}
+          <p className="text-xs text-neutral-400 font-mono leading-relaxed">
+            {isLinkExpired
+              ? ot.expiredSub
+              : isRecoveryMode
+              ? ot.recoverySub
+              : ot.requestSub}
           </p>
         </div>
 
@@ -290,12 +438,12 @@ function ResetPasswordForm() {
         {errorMsg && (
           <div className="bg-red-950/50 border border-red-800 text-red-300 p-4 text-xs font-mono flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
+            <span className="leading-relaxed">{errorMsg}</span>
           </div>
         )}
 
         <AnimatePresence mode="wait">
-          {/* STEP 3: Password Updated Success State */}
+          {/* STEP 4: Password Updated Success State */}
           {isCompleted ? (
             <motion.div
               key="completed"
@@ -320,7 +468,7 @@ function ResetPasswordForm() {
               </Link>
             </motion.div>
           ) : isRecoveryMode ? (
-            /* STEP 2: Enter New Password Form */
+            /* STEP 3: Enter New Password Form */
             <motion.form
               key="recovery-form"
               initial={{ opacity: 0, y: 10 }}
@@ -412,32 +560,221 @@ function ResetPasswordForm() {
                 </Link>
               </div>
             </motion.form>
+          ) : isLinkExpired ? (
+            /* STEP 2: Dedicated Expired / Pre-Scanned Link Resolution Panel */
+            <motion.div
+              key="link-expired-panel"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6 text-xs"
+            >
+              {/* Option 1: Enter 6-digit Code / Token directly */}
+              <div className="bg-[#121212] border border-[#2E2E2E] p-6 space-y-4">
+                <div className="flex items-center gap-2 text-white font-bold tracking-tight text-xs uppercase">
+                  <Binary className="w-4 h-4 text-[#8BE000]" />
+                  <span>{ot.optionOtpTitle}</span>
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  {ot.optionOtpDesc}
+                </p>
+
+                <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
+                  <div className="space-y-1.5">
+                    <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                      {ot.labelEmail}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="palash@investor.io"
+                        className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3 pl-10 focus:outline-none transition-colors text-xs font-mono placeholder-neutral-700"
+                      />
+                      <Mail className="w-3.5 h-3.5 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                      {ot.labelOtpCode}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value)}
+                        placeholder={ot.placeholderOtp}
+                        className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3 pl-10 focus:outline-none transition-colors text-xs font-mono tracking-widest placeholder-neutral-700"
+                      />
+                      <KeyRound className="w-3.5 h-3.5 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isVerifyingOtp || !email.trim() || !otpCode.trim()}
+                    className="btn-lime w-full py-3.5 font-bold text-xs text-black flex items-center justify-center gap-2 group disabled:opacity-40"
+                  >
+                    {isVerifyingOtp ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                        <span>{ot.btnVerifying}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{ot.btnVerifyOtp}</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-black" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              <div className="flex items-center gap-3 text-neutral-600 text-[10px] uppercase font-bold tracking-widest justify-center">
+                <div className="h-px bg-[#262626] flex-1" />
+                <span>{ot.orDivider}</span>
+                <div className="h-px bg-[#262626] flex-1" />
+              </div>
+
+              {/* Option 2: Request Fresh Link */}
+              <div className="bg-[#121212] border border-[#2E2E2E] p-6 space-y-4">
+                <div className="flex items-center gap-2 text-white font-bold tracking-tight text-xs uppercase">
+                  <Mail className="w-4 h-4 text-amber-400" />
+                  <span>{ot.optionResendTitle}</span>
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  {ot.optionResendDesc}
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                    {ot.labelEmail}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="palash@investor.io"
+                      className="w-full bg-[#161616] border border-[#262626] focus:border-[#8BE000] text-white p-3 pl-10 focus:outline-none transition-colors text-xs font-mono placeholder-neutral-700"
+                    />
+                    <Mail className="w-3.5 h-3.5 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSendResetLink()}
+                  disabled={isLoading || !email.trim()}
+                  className="btn-black w-full py-3.5 font-bold text-xs text-white border border-[#333] hover:border-[#8BE000] flex items-center justify-center gap-2 group disabled:opacity-40"
+                >
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      <span>{ot.btnSending}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{ot.btnResendLink}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-white" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Security Tip Box */}
+              <div className="bg-[#161616] border border-[#262626] p-4 text-[11px] text-neutral-400 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-neutral-300 font-semibold">
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{ot.scannerTipTitle}</span>
+                </div>
+                <p className="leading-relaxed text-neutral-500">{ot.scannerTipText}</p>
+              </div>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLinkExpired(false);
+                    setErrorMsg("");
+                  }}
+                  className="text-xs text-neutral-400 hover:text-white inline-flex items-center gap-1.5"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>{ot.backToRequest}</span>
+                </button>
+              </div>
+            </motion.div>
           ) : successMsg ? (
-            /* STEP 1.B: Reset Email Dispatched Confirmation */
+            /* STEP 1.B: Reset Email Dispatched Confirmation & OTP Input */
             <motion.div
               key="email-sent"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#121212] border border-[#2E2E2E] p-6 space-y-4 font-mono text-center"
+              className="bg-[#121212] border border-[#2E2E2E] p-6 space-y-5 font-mono"
             >
-              <div className="w-12 h-12 bg-[#8BE000]/10 border border-[#8BE000] rounded-full mx-auto flex items-center justify-center text-[#8BE000]">
-                <Mail className="w-6 h-6" />
+              <div className="text-center space-y-3">
+                <div className="w-12 h-12 bg-[#8BE000]/10 border border-[#8BE000] rounded-full mx-auto flex items-center justify-center text-[#8BE000]">
+                  <Mail className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white tracking-tight">
+                  {ot.successHeader}
+                </h3>
+                <p className="text-xs text-[#8BE000] font-semibold break-all">
+                  {successMsg}
+                </p>
+                <p className="text-xs text-neutral-300 leading-relaxed">
+                  {ot.successNotice}
+                </p>
+                <p className="text-[11px] text-neutral-500">
+                  {ot.successSub}
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                {ot.successHeader}
-              </h3>
-              <p className="text-xs text-[#8BE000] font-semibold break-all">
-                {successMsg}
-              </p>
-              <p className="text-xs text-neutral-300 leading-relaxed">
-                {ot.successNotice}
-              </p>
-              <p className="text-[11px] text-neutral-500">
-                {ot.successSub}
-              </p>
 
-              <div className="pt-4 border-t border-[#222] flex flex-col gap-2">
+              {/* Direct OTP Code Input */}
+              <form
+                onSubmit={handleVerifyOtp}
+                className="bg-[#161616] border border-[#262626] p-4 space-y-3"
+              >
+                <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px] block">
+                  {ot.labelOtpCode}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder={ot.placeholderOtp}
+                    className="w-full bg-[#111] border border-[#262626] focus:border-[#8BE000] text-white p-3 pl-10 focus:outline-none transition-colors text-xs font-mono tracking-widest placeholder-neutral-700"
+                  />
+                  <KeyRound className="w-3.5 h-3.5 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                </div>
                 <button
+                  type="submit"
+                  disabled={isVerifyingOtp || !otpCode.trim()}
+                  className="btn-lime w-full py-3 font-bold text-xs text-black flex items-center justify-center gap-2 group disabled:opacity-40"
+                >
+                  {isVerifyingOtp ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-black" />
+                      <span>{ot.btnVerifying}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{ot.btnVerifyOtp}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-black" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="pt-2 border-t border-[#222] flex flex-col gap-2 text-center">
+                <button
+                  type="button"
                   onClick={() => setSuccessMsg("")}
                   className="text-xs text-neutral-400 hover:text-white underline"
                 >

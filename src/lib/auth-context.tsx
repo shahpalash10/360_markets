@@ -191,10 +191,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Catch recovery hashes or auth error hashes that Supabase redirected to the root site
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      const combined = `${search} ${hash}`;
+      if (
+        combined.includes("type=recovery") ||
+        combined.includes("error_code=otp_expired") ||
+        combined.includes("error=access_denied") ||
+        combined.includes("error_description=") ||
+        (combined.includes("access_token=") && combined.includes("type=recovery"))
+      ) {
+        if (!window.location.pathname.startsWith("/reset-password")) {
+          window.location.href = `/reset-password${search}${hash}`;
+          return;
+        }
+      }
+    }
+
     checkSupabaseSession();
 
     // Listen to Supabase Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/reset-password")) {
+          window.location.href = `/reset-password${window.location.hash || ""}`;
+        }
+      }
       if (event === "SIGNED_OUT") {
         setUser(null);
         localStorage.removeItem("markets_auth_user");
