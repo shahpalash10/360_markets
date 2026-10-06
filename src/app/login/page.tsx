@@ -36,6 +36,8 @@ function LoginForm() {
       authenticating: "Authenticating...",
       noAccount: "Don't have an account?",
       createAccount: "Create account →",
+      forgotPassword: "Forgot password?",
+      resetSuccessNotice: "Password successfully updated! You can now sign in with your new password.",
       errorDefault: "Authentication failed.",
     },
     JA: {
@@ -49,6 +51,8 @@ function LoginForm() {
       authenticating: "認証中...",
       noAccount: "アカウントをお持ちでないですか？",
       createAccount: "アカウントを作成 →",
+      forgotPassword: "パスワードをお忘れですか？",
+      resetSuccessNotice: "パスワードが正常に更新されました！新しいパスワードでサインインしてください。",
       errorDefault: "認証に失敗しました。",
     },
     ZH: {
@@ -62,6 +66,8 @@ function LoginForm() {
       authenticating: "正在验证身份...",
       noAccount: "还没有账号？",
       createAccount: "创建账号 →",
+      forgotPassword: "忘记密码？",
+      resetSuccessNotice: "密码重置成功！请使用您的新密码登录。",
       errorDefault: "身份验证失败。",
     },
   };
@@ -191,6 +197,13 @@ function LoginForm() {
           </p>
         </div>
 
+        {searchParams.get("reset") === "success" && (
+          <div className="bg-[#8BE000]/15 border border-[#8BE000] text-[#8BE000] p-4 text-xs font-mono flex items-center gap-2">
+            <span className="font-bold">✓</span>
+            <span>{ot.resetSuccessNotice}</span>
+          </div>
+        )}
+
         {errorMsg && (
           <div className="bg-red-950/50 border border-red-800 text-red-300 p-4 text-xs font-mono">
             {errorMsg}
@@ -217,6 +230,12 @@ function LoginForm() {
               <label className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
                 {ot.labelPass}
               </label>
+              <Link
+                href="/reset-password"
+                className="text-[11px] text-[#8BE000] hover:underline font-mono"
+              >
+                {ot.forgotPassword}
+              </Link>
             </div>
             <input
               type="password"

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -11,6 +11,7 @@ import { MagneticButton } from "@/motion/components/MagneticButton";
 import { NumberCounter } from "@/motion/components/NumberCounter";
 import { Pressable } from "@/motion/components/Pressable";
 import { useLanguage } from "@/lib/language-context";
+import { supabase } from "@/lib/supabase";
 import {
   ShieldCheck,
   ArrowRight,
@@ -27,6 +28,52 @@ export default function LandingPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { t, language, currency } = useLanguage();
+  const [courses, setCourses] = useState<any[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+
+  useEffect(() => {
+    async function fetchRealCourses() {
+      try {
+        let loaded: any[] = [];
+        try {
+          const apiRes = await fetch("/api/courses");
+          const apiData = await apiRes.json();
+          if (apiData.success && apiData.courses && apiData.courses.length > 0) {
+            loaded = apiData.courses.filter((c: any) => c.published !== false);
+          }
+        } catch (e) {}
+
+        if (loaded.length === 0) {
+          const { data } = await supabase
+            .from("courses")
+            .select(`
+              *,
+              trader_profiles (
+                is_certified,
+                certification_status,
+                profiles (
+                  display_name,
+                  first_name,
+                  last_name
+                )
+              )
+            `)
+            .eq("published", true)
+            .order("created_at", { ascending: false });
+
+          if (data && data.length > 0) loaded = data;
+        }
+
+        setCourses(loaded);
+      } catch (err) {
+        console.error("Featured courses error:", err);
+      } finally {
+        setIsLoadingCourses(false);
+      }
+    }
+
+    fetchRealCourses();
+  }, []);
 
   const getCurrencySymbol = () => {
     if (currency === "JPY") return "¥";
@@ -167,143 +214,94 @@ export default function LandingPage() {
             </Link>
           </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Stock Course 1 */}
-            <Reveal delay={0.1}>
-              <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
-                    <span className="text-neutral-500">{t.commonStockTrading}</span>
-                  </div>
-
-                  <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
-                    <img
-                      src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"
-                      alt="Stock Trading Course"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
-                      ✓ {t.commonCertified}
-                    </div>
-                  </div>
-
-                  <h3 className="text-2xl font-display font-semibold text-[#0B0B0B] group-hover:text-[#8BE000] transition">
-                    {t.course1Title}
-                  </h3>
-
-                  <p className="text-xs text-neutral-600 line-clamp-2">
-                    {t.course1Sub}
-                  </p>
+          {isLoadingCourses ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1].map((n) => (
+                <div key={n} className="border border-[#D9D9D9] bg-[#FAFAFA] p-6 space-y-4 animate-pulse">
+                  <div className="h-4 bg-neutral-200 w-1/3" />
+                  <div className="h-48 bg-neutral-200 w-full" />
+                  <div className="h-6 bg-neutral-200 w-2/3" />
+                  <div className="h-12 bg-neutral-200 w-full" />
                 </div>
+              ))}
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="border border-[#D9D9D9] bg-[#FAFAFA] p-12 text-center text-xs font-mono text-neutral-500 space-y-2">
+              <div className="text-neutral-900 font-bold uppercase">{t.coursesEmptyTitle}</div>
+              <p>{t.coursesEmptyDesc}</p>
+            </div>
+          ) : (
+            <div className={`grid grid-cols-1 ${courses.length === 1 ? "max-w-xl mx-auto" : courses.length === 2 ? "md:grid-cols-2 max-w-4xl mx-auto" : "md:grid-cols-3"} gap-8`}>
+              {courses.map((crs, idx) => {
+                const profile = crs.trader_profiles?.profiles || crs.trader?.user;
+                const traderName = profile
+                  ? (profile.display_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim())
+                  : (crs.trader?.user?.name || "Verified Educator");
+                const isCertified = crs.trader?.isCertified ?? (crs.trader_profiles?.is_certified || crs.trader_profiles?.certification_status === "certified" || true);
+                const thumbnail = crs.thumbnail || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80";
 
-                <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
-                  <div>
-                    <span className="text-xs text-neutral-400 block font-mono">{t.commonSubscription}</span>
-                    <span className="text-2xl font-display font-bold text-[#0B0B0B]">
-                      {formatPrice(49)}
-                      <span className="text-xs text-neutral-500 font-mono">/{t.commonMonth}</span>
-                    </span>
-                  </div>
-                  <Link href="/courses/quantitative-stock-trading">
-                    <MagneticButton className="btn-black text-xs px-4 py-2">
-                      {t.btnViewCourse}
-                    </MagneticButton>
-                  </Link>
-                </div>
-              </Pressable>
-            </Reveal>
+                return (
+                  <Reveal key={crs.id} delay={0.1 * (idx + 1)}>
+                    <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
+                      <div className="p-6 space-y-4">
+                        <div className="flex items-center justify-between text-xs font-mono">
+                          <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
+                          <span className="text-neutral-500">{crs.category || t.commonStockTrading}</span>
+                        </div>
 
-            {/* Stock Course 2 */}
-            <Reveal delay={0.2}>
-              <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
-                    <span className="text-neutral-500">{t.commonOptionsTrading}</span>
-                  </div>
+                        <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
+                          <img
+                            src={thumbnail}
+                            alt={crs.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          {isCertified && (
+                            <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
+                              ✓ {t.commonCertified}
+                            </div>
+                          )}
+                        </div>
 
-                  <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
-                    <img
-                      src="https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=800&q=80"
-                      alt="Options Course"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
-                      ✓ {t.commonCertified}
-                    </div>
-                  </div>
+                        <div className="space-y-1">
+                          <h3 className="text-2xl font-display font-semibold text-[#0B0B0B] group-hover:text-[#8BE000] transition">
+                            {crs.title}
+                          </h3>
+                          {traderName && (
+                            <p className="text-[11px] text-neutral-500 font-mono">
+                              {t.commonInstructor} {traderName}
+                            </p>
+                          )}
+                        </div>
 
-                  <h3 className="text-2xl font-display font-semibold text-[#0B0B0B] group-hover:text-[#8BE000] transition">
-                    {t.course2Title}
-                  </h3>
+                        <p className="text-xs text-neutral-600 line-clamp-2">
+                          {crs.description}
+                        </p>
+                      </div>
 
-                  <p className="text-xs text-neutral-600 line-clamp-2">
-                    {t.course2Sub}
-                  </p>
-                </div>
-
-                <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
-                  <div>
-                    <span className="text-xs text-neutral-400 block font-mono">{t.commonOneTime}</span>
-                    <span className="text-2xl font-display font-bold text-[#0B0B0B]">
-                      {formatPrice(79)}
-                    </span>
-                  </div>
-                  <Link href="/courses/options-strategies-volatility">
-                    <MagneticButton className="btn-black text-xs px-4 py-2">
-                      {t.btnViewCourse}
-                    </MagneticButton>
-                  </Link>
-                </div>
-              </Pressable>
-            </Reveal>
-
-            {/* Stock Course 3 */}
-            <Reveal delay={0.3}>
-              <Pressable className="border border-[#D9D9D9] bg-[#FAFAFA] hover:border-[#8BE000] transition-all duration-300 group flex flex-col justify-between h-full">
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="bg-[#0B0B0B] text-white px-2.5 py-0.5 font-medium">{t.commonCourse}</span>
-                    <span className="text-neutral-500">{t.commonEquityResearch}</span>
-                  </div>
-
-                  <div className="relative h-48 w-full overflow-hidden border border-[#D9D9D9]">
-                    <img
-                      src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80"
-                      alt="Equity Research Course"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-2 left-2 bg-[#8BE000] text-black text-[10px] font-mono font-bold px-2 py-0.5">
-                      ✓ {t.commonCertified}
-                    </div>
-                  </div>
-
-                  <h3 className="text-2xl font-display font-semibold text-[#0B0B0B] group-hover:text-[#8BE000] transition">
-                    {t.course3Title}
-                  </h3>
-
-                  <p className="text-xs text-neutral-600 line-clamp-2">
-                    {t.course3Sub}
-                  </p>
-                </div>
-
-                <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
-                  <div>
-                    <span className="text-xs text-neutral-400 block font-mono">{t.commonOneTime}</span>
-                    <span className="text-2xl font-display font-bold text-[#0B0B0B]">
-                      {formatPrice(59)}
-                    </span>
-                  </div>
-                  <Link href="/courses/equity-research-valuation">
-                    <MagneticButton className="btn-black text-xs px-4 py-2">
-                      {t.btnViewCourse}
-                    </MagneticButton>
-                  </Link>
-                </div>
-              </Pressable>
-            </Reveal>
-          </div>
+                      <div className="p-6 pt-0 flex items-center justify-between border-t border-[#D9D9D9] mt-4 bg-white">
+                        <div>
+                          <span className="text-xs text-neutral-400 block font-mono">
+                            {crs.is_subscription ? t.commonSubscription : t.commonOneTime}
+                          </span>
+                          <span className="text-2xl font-display font-bold text-[#0B0B0B]">
+                            {formatPrice(crs.price || 0)}
+                            {crs.is_subscription && (
+                              <span className="text-xs text-neutral-500 font-mono">/{t.commonMonth}</span>
+                            )}
+                          </span>
+                        </div>
+                        <Link href={`/courses/${crs.slug || crs.id}`}>
+                          <MagneticButton className="btn-black text-xs px-4 py-2">
+                            {t.btnViewCourse}
+                          </MagneticButton>
+                        </Link>
+                      </div>
+                    </Pressable>
+                  </Reveal>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 

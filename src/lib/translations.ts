@@ -160,6 +160,8 @@ export interface TranslationDictionary {
   headerSignOut: string;
   headerSearch: string;
   headerStocks: string;
+  headerForgotPassword: string;
+  headerResetPassword: string;
 
   commonCertified: string;
   commonCourse: string;
@@ -500,6 +502,8 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     headerSignOut: "Sign Out",
     headerSearch: "Search...",
     headerStocks: "STOCKS",
+    headerForgotPassword: "Forgot Password?",
+    headerResetPassword: "Reset Password",
 
     commonCertified: "CERTIFIED",
     commonCourse: "COURSE",
@@ -831,6 +835,8 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     headerSignOut: "サインアウト",
     headerSearch: "検索...",
     headerStocks: "株式",
+    headerForgotPassword: "パスワードをお忘れですか？",
+    headerResetPassword: "パスワード再設定",
 
     commonCertified: "認証済み",
     commonCourse: "コース",
@@ -1162,6 +1168,8 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     headerSignOut: "退出登录",
     headerSearch: "搜索...",
     headerStocks: "股票",
+    headerForgotPassword: "忘记密码？",
+    headerResetPassword: "重置密码",
 
     commonCertified: "已认证",
     commonCourse: "课程",
