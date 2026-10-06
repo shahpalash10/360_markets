@@ -25,7 +25,7 @@ export function SplitTextReveal({
   return (
     <div ref={ref} className={className}>
       {lines.map((line, index) => (
-        <div key={index} className="overflow-hidden py-0.5">
+        <div key={index} className="overflow-hidden py-0.5 pr-4">
           <motion.div
             initial={{ y: "110%", opacity: 0 }}
             animate={isInView ? { y: "0%", opacity: 1 } : { y: "110%", opacity: 0 }}
