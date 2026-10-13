@@ -10,6 +10,10 @@ import {
   ChevronDown,
   Zap,
   KeyRound,
+  Menu,
+  X,
+  User,
+  LogOut,
 } from "lucide-react";
 import { CommandPalette } from "@/motion/components/CommandPalette";
 import { UnlockModal } from "@/components/modals/UnlockModal";
@@ -23,9 +27,17 @@ export function Header() {
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+
+  // Close mobile drawer and menus on route transition
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setShowRoleMenu(false);
+    setShowLangMenu(false);
+  }, [pathname]);
 
   // Keyboard shortcut listener for Mac (⌘K) and Windows (Ctrl+K)
   useEffect(() => {
@@ -58,7 +70,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Hide header completely during dedicated full-screen onboarding & login (AFTER all hooks)
+  // Hide header completely during dedicated full-screen onboarding & login
   if (pathname === "/register" || pathname === "/login") {
     return null;
   }
@@ -73,6 +85,10 @@ export function Header() {
     { href: "/traders", label: t.navTraders, isPro: false },
   ];
 
+  // Active VIP invitation status only applies when a user is authenticated
+  const activeUnlocked = Boolean(user && isUnlocked);
+  const activeCode = user ? unlockedCode : null;
+
   return (
     <>
       <header
@@ -81,8 +97,8 @@ export function Header() {
         }`}
       >
         {/* Full-Bleed Edge-to-Edge Production Navbar */}
-        <div className="w-full px-4 sm:px-6 lg:px-10 h-full flex items-center justify-between gap-4 lg:gap-8">
-          {/* Left Side: Pushed Brand Logo & Compact Single-Line Navigation */}
+        <div className="w-full px-4 sm:px-6 lg:px-10 h-full flex items-center justify-between gap-3 lg:gap-8">
+          {/* Left Side: Brand Logo & Desktop Navigation */}
           <div className="flex items-center gap-6 lg:gap-8 min-w-0">
             <Link href="/" className="flex items-center gap-2.5 group shrink-0 focus:outline-none">
               <div className="w-9 h-9 bg-[#8BE000] text-black font-mono font-bold text-lg flex items-center justify-center tracking-tighter group-hover:scale-105 transition-transform">
@@ -122,9 +138,9 @@ export function Header() {
             </nav>
           </div>
 
-          {/* Right Side: Raycast Search + Language Selector + User Profile Badge */}
-          <div className="flex items-center gap-3 lg:gap-4 shrink-0">
-            {/* Sleek Raycast-Style Command Palette Trigger */}
+          {/* Right Side: Command Trigger + Invitation Code + Language + User Profile + Mobile Hamburger */}
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0">
+            {/* Sleek Raycast-Style Command Palette Trigger (Desktop / Tablet) */}
             <button
               onClick={() => {
                 if (!user) {
@@ -133,7 +149,7 @@ export function Header() {
                   setCommandPaletteOpen(true);
                 }
               }}
-              className="hidden md:flex items-center gap-2 bg-[#161616] border border-[#262626] hover:border-[#8BE000] px-3 py-2 text-xs font-mono text-neutral-400 transition group rounded-none h-9 w-44 lg:w-56 justify-between focus:outline-none"
+              className="hidden md:flex items-center gap-2 bg-[#161616] border border-[#262626] hover:border-[#8BE000] px-3 py-2 text-xs font-mono text-neutral-400 transition group rounded-none h-9 w-40 lg:w-56 justify-between focus:outline-none"
             >
               <div className="flex items-center gap-2 min-w-0 overflow-hidden">
                 <Search className="w-3.5 h-3.5 text-[#8BE000] shrink-0 group-hover:scale-110 transition-transform" />
@@ -146,47 +162,47 @@ export function Header() {
               </span>
             </button>
 
-            {/* Role-Aware Invitation Code Action */}
+            {/* Role-Aware Invitation Code Action (Hidden on small mobile to prevent overlap; accessible via mobile menu) */}
             {role === "TRADER" ? (
               <Link
                 href="/trader"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-[#8BE000]/40 bg-[#8BE000]/10 text-[#8BE000] hover:bg-[#8BE000]/20 transition shrink-0 h-9"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-[#8BE000]/40 bg-[#8BE000]/10 text-[#8BE000] hover:bg-[#8BE000]/20 transition shrink-0 h-9"
                 title="Manage & Issue Subscriber VIP Passes"
               >
                 <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
-                <span className="hidden sm:inline font-bold">{t.headerIssueCodes}</span>
+                <span className="font-bold">{t.headerIssueCodes}</span>
               </Link>
             ) : role === "ADMIN" ? (
               <Link
                 href="/admin"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-[#8BE000]/40 bg-[#8BE000]/10 text-[#8BE000] hover:bg-[#8BE000]/20 transition shrink-0 h-9"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-[#8BE000]/40 bg-[#8BE000]/10 text-[#8BE000] hover:bg-[#8BE000]/20 transition shrink-0 h-9"
                 title="Manage All Platform Invitation Codes"
               >
                 <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
-                <span className="hidden sm:inline font-bold">{t.headerManageCodes}</span>
+                <span className="font-bold">{t.headerManageCodes}</span>
               </Link>
             ) : (
               <button
                 onClick={() => setUnlockModalOpen(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border transition shrink-0 h-9 focus:outline-none ${
-                  isUnlocked
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border transition shrink-0 h-9 focus:outline-none ${
+                  activeUnlocked
                     ? "bg-[#8BE000]/15 border-[#8BE000] text-[#8BE000] hover:bg-[#8BE000]/25"
                     : "bg-[#161616] border-[#262626] hover:border-[#8BE000] text-neutral-300 hover:text-white"
                 }`}
-                title={isUnlocked ? `Active VIP: ${unlockedCode}` : "Enter Educator Invitation Code"}
+                title={activeUnlocked ? `Active VIP: ${activeCode}` : "Enter Educator Invitation Code"}
               >
                 <KeyRound className="w-3.5 h-3.5 text-[#8BE000]" />
-                <span className="hidden sm:inline font-bold">
-                  {isUnlocked ? (unlockedCode ? `VIP: ${unlockedCode}` : `${t.commonActive} ✓`) : t.headerRedeemCode}
+                <span className="font-bold">
+                  {activeUnlocked ? (activeCode ? `VIP: ${activeCode}` : `${t.commonActive} ✓`) : t.headerRedeemCode}
                 </span>
               </button>
             )}
 
-            {/* Minimal Language Selector */}
+            {/* Language Selector */}
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowLangMenu(!showLangMenu)}
-                className="flex items-center gap-1 text-xs font-mono text-neutral-300 hover:text-[#8BE000] transition py-2 px-2.5 border border-[#262626] bg-[#161616] h-9 focus:outline-none"
+                className="flex items-center gap-1 text-xs font-mono text-neutral-300 hover:text-[#8BE000] transition py-2 px-2 sm:px-2.5 border border-[#262626] bg-[#161616] h-9 focus:outline-none"
               >
                 {language === "EN" && <span className="font-bold text-white">EN $</span>}
                 {language === "JA" && <span className="font-bold text-[#8BE000]">JA ¥</span>}
@@ -251,15 +267,15 @@ export function Header() {
               <div className="relative shrink-0">
                 <button
                   onClick={() => setShowRoleMenu(!showRoleMenu)}
-                  className="flex items-center gap-2.5 bg-[#161616] border border-[#262626] hover:border-[#8BE000] px-3 py-1.5 transition text-left h-9 shadow-lg focus:outline-none"
+                  className="flex items-center gap-2 bg-[#161616] border border-[#262626] hover:border-[#8BE000] px-2.5 sm:px-3 py-1.5 transition text-left h-9 shadow-lg focus:outline-none"
                 >
                   <img
                     src={user.avatarUrl}
                     alt={user.name}
-                    className="w-6 h-6 object-cover border border-[#333333] shrink-0"
+                    className="w-5 h-5 sm:w-6 sm:h-6 object-cover border border-[#333333] shrink-0"
                   />
-                  <div className="flex flex-col text-left leading-tight min-w-0">
-                    <span className="text-xs font-semibold text-white flex items-center gap-1 font-sans truncate max-w-[100px] sm:max-w-[120px]">
+                  <div className="hidden sm:flex flex-col text-left leading-tight min-w-0">
+                    <span className="text-xs font-semibold text-white flex items-center gap-1 font-sans truncate max-w-[90px] sm:max-w-[120px]">
                       {user.name}
                       {user.isCertified && <span className="text-[#8BE000] font-bold text-[10px]">✓</span>}
                     </span>
@@ -301,9 +317,10 @@ export function Header() {
                             setShowRoleMenu(false);
                             router.push("/login");
                           }}
-                          className="w-full text-left px-3 py-2 text-red-400 hover:bg-[#262626] focus:outline-none"
+                          className="w-full text-left px-3 py-2 text-red-400 hover:bg-[#262626] focus:outline-none flex items-center gap-1.5"
                         >
-                          {t.headerSignOut}
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>{t.headerSignOut}</span>
                         </button>
                       </div>
                     </div>
@@ -311,17 +328,168 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 font-mono text-xs shrink-0">
-                <Link href="/login" className="text-neutral-300 hover:text-white px-3 py-1.5 focus:outline-none font-semibold">
+              <div className="hidden sm:flex items-center gap-2 font-mono text-xs shrink-0">
+                <Link href="/login" className="text-neutral-300 hover:text-white px-2.5 py-1.5 focus:outline-none font-semibold">
                   {t.headerSignIn}
                 </Link>
-                <Link href="/register" className="btn-lime px-4 py-2 focus:outline-none font-bold">
+                <Link href="/register" className="btn-lime px-3.5 py-2 focus:outline-none font-bold">
                   {t.headerGetStarted}
                 </Link>
               </div>
             )}
+
+            {/* Mobile Hamburger Menu Button (Visible on screens < lg) */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+              className="lg:hidden flex items-center justify-center w-9 h-9 bg-[#161616] border border-[#262626] hover:border-[#8BE000] text-neutral-200 hover:text-white transition focus:outline-none shrink-0"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-4 h-4 text-[#8BE000]" />
+              ) : (
+                <Menu className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Responsive Mobile Drawer Menu (No overlapping, full item access) */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden border-b border-[#262626] bg-[#0E0E0E]/98 backdrop-blur-2xl px-5 py-6 space-y-6 overflow-hidden max-h-[calc(100vh-5rem)] overflow-y-auto"
+            >
+              {/* Quick Search trigger */}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (!user) router.push("/login");
+                  else setCommandPaletteOpen(true);
+                }}
+                className="w-full flex items-center justify-between bg-[#161616] border border-[#262626] p-3 text-xs font-mono text-neutral-300 hover:border-[#8BE000] transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-[#8BE000]" />
+                  <span>{t.headerSearch}</span>
+                </div>
+                <span className="bg-[#262626] text-[10px] text-white px-2 py-0.5 font-bold font-mono">⌘K</span>
+              </button>
+
+              {/* Navigation Links */}
+              <div className="space-y-1 font-mono text-xs">
+                <span className="text-[10px] text-neutral-500 uppercase tracking-widest block px-3 py-1 font-bold">
+                  MENU DIRECTORY
+                </span>
+                {NAV_LINKS.map((link) => {
+                  const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`px-3 py-3 transition flex items-center justify-between border-l-2 ${
+                        isActive
+                          ? "border-[#8BE000] bg-[#161616] text-[#8BE000] font-bold"
+                          : "border-transparent text-neutral-300 hover:bg-[#161616] hover:text-white"
+                      }`}
+                    >
+                      <span className="text-sm">{link.label}</span>
+                      {link.isPro && (
+                        <span className="text-[10px] bg-[#8BE000] text-black font-bold px-2 py-0.5">PRO</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Invitation Code Action */}
+              <div className="pt-2 border-t border-[#222]">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setUnlockModalOpen(true);
+                  }}
+                  className={`w-full flex items-center justify-center gap-2 p-3 text-xs font-mono border transition ${
+                    activeUnlocked
+                      ? "bg-[#8BE000]/15 border-[#8BE000] text-[#8BE000]"
+                      : "bg-[#161616] border-[#262626] hover:border-[#8BE000] text-neutral-300"
+                  }`}
+                >
+                  <KeyRound className="w-4 h-4 text-[#8BE000]" />
+                  <span className="font-bold">
+                    {activeUnlocked ? (activeCode ? `VIP ACCESS: ${activeCode}` : `${t.commonActive} ✓`) : t.headerRedeemCode}
+                  </span>
+                </button>
+              </div>
+
+              {/* User Account / Auth Section */}
+              {user ? (
+                <div className="pt-2 border-t border-[#222] space-y-3">
+                  <div className="flex items-center gap-3 bg-[#161616] p-3 border border-[#262626]">
+                    <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 object-cover border border-[#333] shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-white truncate flex items-center gap-1">
+                        {user.name}
+                        {user.isCertified && <span className="text-[#8BE000] font-bold text-xs">✓</span>}
+                      </div>
+                      <div className="text-[10px] text-[#8BE000] font-mono uppercase font-bold tracking-wider">{user.role}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                    {role === "INVESTOR" && (
+                      <Link href="/investor" onClick={() => setMobileMenuOpen(false)} className="btn-black p-3 text-center border border-[#333] text-white">
+                        {t.navTerminal}
+                      </Link>
+                    )}
+                    {role === "TRADER" && (
+                      <Link href="/trader" onClick={() => setMobileMenuOpen(false)} className="btn-black p-3 text-center border border-[#333] text-white">
+                        {t.navTraderHub}
+                      </Link>
+                    )}
+                    {role === "ADMIN" && (
+                      <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="btn-black p-3 text-center border border-[#333] text-red-400">
+                        {t.navAdmin}
+                      </Link>
+                    )}
+                    <button
+                      onClick={async () => {
+                        await signOut();
+                        setMobileMenuOpen(false);
+                        router.push("/login");
+                      }}
+                      className="p-3 text-center border border-red-900/60 bg-red-950/20 text-red-400 font-mono text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>{t.headerSignOut}</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#222]">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="btn-black p-3 text-center border border-[#333] text-white text-xs font-mono"
+                  >
+                    {t.headerSignIn}
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="btn-lime p-3 text-center text-black font-bold text-xs font-mono"
+                  >
+                    {t.headerGetStarted}
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Command Palette Modal (⌘K on Mac) */}

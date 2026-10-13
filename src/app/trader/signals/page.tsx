@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -21,6 +21,7 @@ import {
   Check,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function TraderSignalsStudioPage() {
   const router = useRouter();
@@ -41,8 +42,24 @@ export default function TraderSignalsStudioPage() {
   const [codeCopied, setCodeCopied] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successStatus, setSuccessStatus] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("GLOBAL");
+
+  // Load available courses for channel routing
+  useEffect(() => {
+    async function loadCourses() {
+      try {
+        const res = await fetch("/api/courses");
+        const data = await res.json();
+        if (data.courses) {
+          setCourses(data.courses.filter((c: any) => c.title && c.title.toLowerCase() !== "test"));
+        }
+      } catch (e) {}
+    }
+    loadCourses();
+  }, []);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(customInviteCode);
@@ -54,9 +71,20 @@ export default function TraderSignalsStudioPage() {
     e.preventDefault();
     setErrorMsg("");
     setSuccessStatus(null);
+
+    // Item 9: Restrict investors from publishing signals
+    if (role !== "TRADER" && role !== "ADMIN") {
+      setErrorMsg("Access Denied: You are signed in as an Investor. Signal publishing is restricted to certified Providers only.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      const selectedCourse = courses.find((c) => c.id === selectedCourseId);
+      const courseSlug = selectedCourse?.slug || (selectedCourseId !== "GLOBAL" ? selectedCourseId : undefined);
+      const courseName = selectedCourse?.title;
+
       const res = await fetch("/api/signals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -70,6 +98,10 @@ export default function TraderSignalsStudioPage() {
           timeframe,
           notes,
           traderId: user?.id,
+          userRole: role,
+          courseId: selectedCourseId !== "GLOBAL" ? selectedCourseId : undefined,
+          courseSlug,
+          courseName,
           providerName: user?.displayName || user?.name || "Verified Quantitative Trader",
           providerAvatar: user?.avatarUrl,
         }),
@@ -81,7 +113,7 @@ export default function TraderSignalsStudioPage() {
       }
 
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-      setSuccessStatus(`Signal for ${symbol} successfully broadcasted & pushed to ntfy.sh (topic: 360markets_signals)!`);
+      setSuccessStatus(`Signal for ${symbol} successfully broadcasted & pushed to ntfy.sh (topic: ${data.topic})!`);
 
       // Register custom provider voucher directly into Database Ledger
       try {
@@ -90,7 +122,8 @@ export default function TraderSignalsStudioPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             code: customInviteCode,
-            scope: "SIGNALS",
+            scope: selectedCourseId !== "GLOBAL" ? "COURSE" : "SIGNALS",
+            targetCourseId: selectedCourseId !== "GLOBAL" ? selectedCourseId : undefined,
             creatorRole: "TRADER",
             creatorId: user?.id,
             creatorName: user?.displayName || user?.name || "Verified Educator",
@@ -108,8 +141,9 @@ export default function TraderSignalsStudioPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white py-16 font-mono selection:bg-[#8BE000] selection:text-black">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <AuthGuard allowedRoles={["TRADER", "ADMIN"]}>
+      <div className="min-h-screen bg-[#080808] text-white py-16 font-mono selection:bg-[#8BE000] selection:text-black">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-neutral-500">
           <Link href="/trader" className="hover:text-white">Trader Hub</Link>
@@ -189,6 +223,38 @@ export default function TraderSignalsStudioPage() {
 
         {/* Signal Publishing Form */}
         <form onSubmit={handlePublishSignal} className="bg-[#111111] border border-[#262626] p-6 sm:p-8 space-y-6">
+          {/* Target Course Notification Channel */}
+          <div className="space-y-2 pb-4 border-b border-[#222]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <label className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">
+                NOTIFICATION CHANNEL / COURSE SCOPE
+              </label>
+              <span className="text-[10px] text-[#8BE000] font-mono">
+                {selectedCourseId === "GLOBAL"
+                  ? "ntfy.sh/360markets_signals"
+                  : `ntfy.sh/360markets_signals_${(courses.find((c) => c.id === selectedCourseId)?.slug || selectedCourseId).toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "")}`}
+              </span>
+            </div>
+            <select
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(e.target.value)}
+              className="w-full bg-[#181818] border border-[#333] focus:border-[#8BE000] text-white p-3 font-mono text-xs focus:outline-none"
+            >
+              <option value="GLOBAL">🌐 Global Feed (ntfy.sh/360markets_signals - All Subscribers)</option>
+              {courses.map((course) => {
+                const cleanSlug = (course.slug || course.id).toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "");
+                return (
+                  <option key={course.id} value={course.id}>
+                    📚 {course.title} (ntfy.sh/360markets_signals_{cleanSlug})
+                  </option>
+                );
+              })}
+            </select>
+            <p className="text-[10px] text-neutral-500 font-sans">
+              Choose whether this signal is broadcast to all platform users or restricted exclusively to students enrolled in a specific course.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Asset Symbol */}
             <div className="space-y-2">
@@ -337,7 +403,15 @@ export default function TraderSignalsStudioPage() {
           <div className="pt-4 border-t border-[#262626] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-neutral-400 text-xs font-sans">
               <Bell className="w-4 h-4 text-[#8BE000]" />
-              <span>Will push immediately to <strong>ntfy.sh/360markets_signals</strong></span>
+              <span>
+                Will push immediately to{" "}
+                <strong>
+                  ntfy.sh/
+                  {selectedCourseId === "GLOBAL"
+                    ? "360markets_signals"
+                    : `360markets_signals_${(courses.find((c) => c.id === selectedCourseId)?.slug || selectedCourseId).toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "")}`}
+                </strong>
+              </span>
             </div>
 
             <button
@@ -352,5 +426,6 @@ export default function TraderSignalsStudioPage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   );
 }

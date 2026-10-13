@@ -48,6 +48,10 @@
     "providerAvatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
     "isVerified": true,
     "status": "ACTIVE",
-    "createdAt": "2026-10-05T08:34:11.322Z"
+    "createdAt": "2026-10-05T08:34:11.322Z",
+    "courseId": "stocks-the-beginning-to-the-end",
+    "courseSlug": "stocks_the_beginning_to_the_end",
+    "courseName": "Stocks: the beginning to the end",
+    "channelTopic": "360markets_signals_stocks_the_beginning_to_the_end"
   }
 ]

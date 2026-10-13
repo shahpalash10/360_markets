@@ -30,8 +30,37 @@ export default function LandingPage() {
   const { t, language, currency } = useLanguage();
   const [courses, setCourses] = useState<any[]>([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [stats, setStats] = useState({
+    verifiedTraders: 3,
+    payoutsToEducators: 482.9,
+    verificationRate: 99.4,
+    activeInvestors: 12,
+    verifiedCourses: 1,
+    liveWebinars: 1,
+    platformSplit: "70/30",
+  });
+
+  const isRealCourse = (c: any) => {
+    if (!c || !c.title) return false;
+    const lower = c.title.toLowerCase().trim();
+    if (lower === "test" || lower === "sample" || lower.startsWith("test ") || lower.includes("placeholder")) {
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
+    async function fetchDbStats() {
+      try {
+        const res = await fetch("/api/stats");
+        const data = await res.json();
+        if (data.success && data.stats) {
+          setStats(data.stats);
+        }
+      } catch (e) {}
+    }
+    fetchDbStats();
+
     async function fetchRealCourses() {
       try {
         let loaded: any[] = [];
@@ -39,7 +68,7 @@ export default function LandingPage() {
           const apiRes = await fetch("/api/courses");
           const apiData = await apiRes.json();
           if (apiData.success && apiData.courses && apiData.courses.length > 0) {
-            loaded = apiData.courses.filter((c: any) => c.published !== false);
+            loaded = apiData.courses.filter((c: any) => c.published !== false && isRealCourse(c));
           }
         } catch (e) {}
 
@@ -61,7 +90,9 @@ export default function LandingPage() {
             .eq("published", true)
             .order("created_at", { ascending: false });
 
-          if (data && data.length > 0) loaded = data;
+          if (data && data.length > 0) {
+            loaded = data.filter(isRealCourse);
+          }
         }
 
         setCourses(loaded);
@@ -124,23 +155,23 @@ export default function LandingPage() {
                 </Link>
               </Reveal>
 
-              {/* Trust Indicators */}
+              {/* Trust Indicators (DB Controlled) */}
               <Reveal delay={0.45} className="pt-6 border-t border-[#D9D9D9] grid grid-cols-3 gap-6 text-xs font-mono text-neutral-500">
                 <div>
                   <div className="text-xl font-display font-semibold text-[#0B0B0B]">
-                    <NumberCounter value={1284} />
+                    <NumberCounter value={stats.verifiedTraders} />
                   </div>
                   <div>{t.statVerifiedTraders}</div>
                 </div>
                 <div>
                   <div className="text-xl font-display font-semibold text-[#0B0B0B]">
-                    {getCurrencySymbol()}<NumberCounter value={482.9} decimals={1} suffix="K" />
+                    {getCurrencySymbol()}<NumberCounter value={stats.payoutsToEducators} decimals={1} suffix="K" />
                   </div>
                   <div>{t.statPayoutsToEducators}</div>
                 </div>
                 <div>
                   <div className="text-xl font-display font-semibold text-[#8BE000] bg-black px-1.5 py-0.5 inline-block text-white">
-                    <NumberCounter value={99.4} decimals={1} suffix="%" />
+                    <NumberCounter value={stats.verificationRate} decimals={1} suffix="%" />
                   </div>
                   <div>{t.statVerificationRate}</div>
                 </div>
@@ -155,14 +186,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 2. STATS BANNER */}
+      {/* 2. STATS BANNER (DB Controlled) */}
       <section className="bg-[#0B0B0B] text-white border-b border-[#262626] py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             <Reveal delay={0.1} className="border-l-2 border-[#8BE000] pl-6 space-y-1">
               <div className="text-xs text-neutral-400 font-mono uppercase tracking-widest">{t.statActiveInvestors}</div>
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
-                <NumberCounter value={28492} />
+                <NumberCounter value={stats.activeInvestors} />
               </div>
               <div className="text-xs text-neutral-500 font-mono">{t.statFootnote1}</div>
             </Reveal>
@@ -170,7 +201,7 @@ export default function LandingPage() {
             <Reveal delay={0.2} className="border-l-2 border-[#D9D9D9] pl-6 space-y-1">
               <div className="text-xs text-neutral-400 font-mono uppercase tracking-widest">{t.statVerifiedCourses}</div>
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
-                <NumberCounter value={4821} />
+                <NumberCounter value={stats.verifiedCourses} />
               </div>
               <div className="text-xs text-neutral-500 font-mono">{t.statFootnote2}</div>
             </Reveal>
@@ -178,7 +209,7 @@ export default function LandingPage() {
             <Reveal delay={0.3} className="border-l-2 border-[#8BE000] pl-6 space-y-1">
               <div className="text-xs text-neutral-400 font-mono uppercase tracking-widest">{t.statLiveWebinars}</div>
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
-                <NumberCounter value={128} suffix=".00" />
+                <NumberCounter value={stats.liveWebinars} />
               </div>
               <div className="text-xs text-neutral-500 font-mono">{t.statFootnote3}</div>
             </Reveal>
@@ -186,7 +217,7 @@ export default function LandingPage() {
             <Reveal delay={0.4} className="border-l-2 border-[#D9D9D9] pl-6 space-y-1">
               <div className="text-xs text-neutral-400 font-mono uppercase tracking-widest">{t.statPlatformSplit}</div>
               <div className="text-4xl lg:text-5xl font-display font-light text-white tracking-tight">
-                70<span className="text-[#8BE000] font-normal">/30</span>
+                {stats.platformSplit}
               </div>
               <div className="text-xs text-neutral-500 font-mono">{t.statFootnote4}</div>
             </Reveal>

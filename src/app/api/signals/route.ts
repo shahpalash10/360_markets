@@ -20,6 +20,10 @@ export interface TechnicalSignal {
   isVerified: boolean;
   status: "ACTIVE" | "TARGET_REACHED" | "STOPPED";
   createdAt: string;
+  courseId?: string;
+  courseSlug?: string;
+  courseName?: string;
+  channelTopic?: string;
 }
 
 const SIGNALS_FILE = path.join(process.cwd(), "data", "signals.json");
@@ -41,6 +45,10 @@ const SEED_SIGNALS: TechnicalSignal[] = [
     isVerified: true,
     status: "ACTIVE",
     createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    courseId: "stocks-the-beginning-to-the-end",
+    courseSlug: "stocks_the_beginning_to_the_end",
+    courseName: "Stocks: the beginning to the end",
+    channelTopic: "360markets_signals_stocks_the_beginning_to_the_end",
   },
   {
     id: "sig-002",
@@ -110,6 +118,9 @@ export async function GET() {
       .select("*")
       .order("created_at", { ascending: false });
 
+    const diskFallback = loadDiskSignals();
+    const diskMap = new Map(diskFallback.map((d) => [d.id, d]));
+
     if (!error && sbSignals && sbSignals.length > 0) {
       const formatted: TechnicalSignal[] = sbSignals.map((s: any) => {
         const entry = Number(s.entry_price) || 0;
@@ -118,6 +129,7 @@ export async function GET() {
         const risk = Math.abs(entry - sl);
         const reward = Math.abs(tp - entry);
         const rr = s.risk_reward || (risk > 0 ? `1 : ${(reward / risk).toFixed(2)}` : "1 : 2.5");
+        const diskMatch = diskMap.get(s.id);
 
         return {
           id: s.id,
@@ -135,6 +147,10 @@ export async function GET() {
           isVerified: true,
           status: (s.status as any) || "ACTIVE",
           createdAt: s.created_at || new Date().toISOString(),
+          courseId: s.course_id || diskMatch?.courseId || undefined,
+          courseSlug: s.course_slug || diskMatch?.courseSlug || undefined,
+          courseName: s.course_name || diskMatch?.courseName || undefined,
+          channelTopic: s.channel_topic || diskMatch?.channelTopic || (diskMatch?.courseSlug ? `360markets_signals_${diskMatch.courseSlug}` : undefined),
         };
       });
 
@@ -213,7 +229,19 @@ export async function POST(req: Request) {
       providerName = "Certified Quantitative Trader",
       providerAvatar,
       traderId = "trader",
+      userRole,
+      courseId,
+      courseSlug,
+      courseName,
     } = body;
+
+    // Item 9: Restrict signal publishing to providers only
+    if (userRole && userRole !== "TRADER" && userRole !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Access denied. Signal broadcasting is strictly restricted to certified educators and providers." },
+        { status: 403 }
+      );
+    }
 
     if (!symbol || !entryPrice || !stopLoss || !targetPrice) {
       return NextResponse.json(
@@ -231,6 +259,10 @@ export async function POST(req: Request) {
     const reward = Math.abs(numTP - numEntry);
     const rrRatio = risk > 0 ? `1 : ${(reward / risk).toFixed(2)}` : "1 : 2.5";
     const sigId = `sig-${Date.now()}`;
+
+    // Item 12: Determine course-specific ntfy notification channel
+    const courseSlugClean = (courseSlug || "").toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "");
+    const topicName = courseSlugClean ? `360markets_signals_${courseSlugClean}` : "360markets_signals";
 
     const newSignal: TechnicalSignal = {
       id: sigId,
@@ -250,6 +282,10 @@ export async function POST(req: Request) {
       isVerified: true,
       status: "ACTIVE",
       createdAt: new Date().toISOString(),
+      courseId: courseId || undefined,
+      courseSlug: courseSlugClean || undefined,
+      courseName: courseName || (courseSlugClean ? `Course: ${courseSlugClean}` : "General Broadcast"),
+      channelTopic: topicName,
     };
 
     // 1. Primary: Insert into Supabase Cloud DB Table
@@ -300,18 +336,22 @@ export async function POST(req: Request) {
       saveDiskSignals(currentSignals);
     } catch (e) {}
 
-    // 4. Dispatch real-time Push Notification to ntfy.sh
+    // 4. Dispatch real-time Push Notification to course-specific ntfy.sh channel
     let ntfyStatus = "pending";
     try {
-      const ntfyResponse = await fetch("https://ntfy.sh/360markets_signals", {
+      const channelHeaderTitle = courseName
+        ? `🚨 [${courseName}] ${action} ${symbol.toUpperCase()} @ $${numEntry}`
+        : `🚨 Signal Alert: ${action} ${symbol.toUpperCase()} @ $${numEntry}`;
+
+      const ntfyResponse = await fetch(`https://ntfy.sh/${topicName}`, {
         method: "POST",
         headers: {
-          Title: `🚨 Signal Alert: ${action} ${symbol.toUpperCase()} @ $${numEntry}`,
+          Title: channelHeaderTitle,
           Priority: "high",
           Tags: action === "BUY" ? "chart_with_upwards_trend,moneybag" : "chart_with_downwards_trend,warning",
-          Click: "https://360markets.io/signals",
+          Click: `https://360markets.io/signals?channel=${courseSlugClean || "all"}`,
         },
-        body: `🎯 Target: $${numTP} | 🛑 Stop Loss: $${numSL} | R:R ${rrRatio}\nNotes: ${notes || "No notes provided"}\nBy: ${providerName}`,
+        body: `🎯 Target: $${numTP} | 🛑 Stop Loss: $${numSL} | R:R ${rrRatio}\nChannel: ntfy.sh/${topicName}\nNotes: ${notes || "Breakout confirmation"}\nBy: ${providerName}`,
       });
 
       ntfyStatus = ntfyResponse.ok ? "sent" : "failed";
@@ -324,7 +364,8 @@ export async function POST(req: Request) {
       ok: true,
       signal: newSignal,
       ntfyStatus,
-      topic: "360markets_signals",
+      topic: topicName,
+      channelUrl: `https://ntfy.sh/${topicName}`,
     });
   } catch (err: any) {
     return NextResponse.json(

@@ -221,7 +221,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (event === "SIGNED_OUT") {
         setUser(null);
+        setIsUnlocked(false);
+        setUnlockedCode(null);
+        setSignalSubscription(null);
         localStorage.removeItem("markets_auth_user");
+        localStorage.removeItem("markets_unlocked_code");
+        localStorage.removeItem("markets_signal_subscription");
+        localStorage.removeItem("markets_unlocked_courses");
+        localStorage.removeItem("markets_pending_code");
       }
     });
 
@@ -268,16 +275,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  const [unlockedCode, setUnlockedCode] = useState<string | null>(null);
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
     } catch (e) {}
     setUser(null);
+    setIsUnlocked(false);
+    setUnlockedCode(null);
+    setSignalSubscription(null);
     localStorage.removeItem("markets_auth_user");
+    localStorage.removeItem("markets_unlocked_code");
+    localStorage.removeItem("markets_signal_subscription");
+    localStorage.removeItem("markets_unlocked_courses");
+    localStorage.removeItem("markets_pending_code");
   };
-
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
-  const [unlockedCode, setUnlockedCode] = useState<string | null>(null);
 
   useEffect(() => {
     const savedCode = localStorage.getItem("markets_unlocked_code");

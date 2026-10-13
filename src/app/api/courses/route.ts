@@ -6,6 +6,15 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const traderId = searchParams.get("traderId");
 
+  const isRealCourse = (c: any) => {
+    if (!c || !c.title) return false;
+    const lower = c.title.toLowerCase().trim();
+    if (lower === "test" || lower === "sample" || lower.startsWith("test ") || lower.includes("placeholder")) {
+      return false;
+    }
+    return true;
+  };
+
   // 1. Primary: Cloud Database (Supabase)
   try {
     let query = supabase.from("courses").select("*").order("created_at", { ascending: false });
@@ -16,7 +25,7 @@ export async function GET(req: Request) {
     const { data: sbCourses, error } = await query;
 
     if (!error && sbCourses) {
-      return NextResponse.json({ success: true, courses: sbCourses });
+      return NextResponse.json({ success: true, courses: sbCourses.filter(isRealCourse) });
     }
   } catch (sbErr) {
     console.warn("Supabase courses fetch fallback:", sbErr);

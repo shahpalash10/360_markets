@@ -22,6 +22,15 @@ export default function CoursesListPage() {
     return `$${usd}`;
   };
 
+  const isRealCourse = (c: any) => {
+    if (!c || !c.title) return false;
+    const lower = c.title.toLowerCase().trim();
+    if (lower === "test" || lower === "sample" || lower.startsWith("test ") || lower.includes("placeholder")) {
+      return false;
+    }
+    return true;
+  };
+
   useEffect(() => {
     async function fetchCourses() {
       try {
@@ -30,7 +39,7 @@ export default function CoursesListPage() {
           const apiRes = await fetch("/api/courses");
           const apiData = await apiRes.json();
           if (apiData.success && apiData.courses && apiData.courses.length > 0) {
-            loaded = apiData.courses;
+            loaded = apiData.courses.filter(isRealCourse);
           }
         } catch (e) {}
 
@@ -49,7 +58,7 @@ export default function CoursesListPage() {
               )
             `)
             .eq("published", true);
-          if (data && data.length > 0) loaded = data;
+          if (data && data.length > 0) loaded = data.filter(isRealCourse);
         }
 
         setDbCourses(loaded);

@@ -18,6 +18,10 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
+  Upload,
+  Image as ImageIcon,
+  FileVideo,
+  Check,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -28,6 +32,7 @@ interface LessonDraft {
   title: string;
   durationMinutes: number;
   videoUrl: string;
+  videoFileName?: string;
   resourceFileUrl: string;
 }
 
@@ -119,6 +124,92 @@ export default function CourseBuilderPage() {
     }
     checkCertification();
   }, [user]);
+
+  // Automated cover art generation
+  const handleAutoGenerateCover = () => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 675;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // Dark futuristic fintech gradient
+      const grad = ctx.createLinearGradient(0, 0, 1200, 675);
+      grad.addColorStop(0, "#080808");
+      grad.addColorStop(0.6, "#121212");
+      grad.addColorStop(1, "#0A1702");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 675);
+
+      // Technical grid overlay
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 1200; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 675);
+        ctx.stroke();
+      }
+      for (let y = 0; y < 675; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1200, y);
+        ctx.stroke();
+      }
+
+      // Glowing Neon Stock Momentum Path
+      ctx.strokeStyle = "#8BE000";
+      ctx.lineWidth = 4;
+      ctx.shadowColor = "#8BE000";
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.moveTo(80, 500);
+      for (let x = 120; x <= 1120; x += 40) {
+        const trend = (x / 1120) * 260;
+        const wave = Math.sin(x * 0.03) * 35;
+        const y = Math.max(140, Math.min(540, 500 - trend + wave));
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Badge tag
+      ctx.fillStyle = "#8BE000";
+      ctx.fillRect(80, 80, 260, 36);
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 15px monospace";
+      ctx.fillText("360° VERIFIED CURRICULUM", 95, 104);
+
+      // Course Title
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 44px sans-serif";
+      const displayTitle = (title.trim() || "QUANTITATIVE EQUITY MASTERY").toUpperCase();
+      ctx.fillText(displayTitle.slice(0, 36), 80, 240);
+
+      // Category & Protocol subtitle
+      ctx.fillStyle = "#8BE000";
+      ctx.font = "18px monospace";
+      ctx.fillText(`CATEGORY: ${category.toUpperCase()} • INSTITUTIONAL GRADE`, 80, 290);
+
+      const generatedUrl = canvas.toDataURL("image/jpeg", 0.92);
+      setThumbnailUrl(generatedUrl);
+    } catch (e) {
+      console.warn("Cover generation notice:", e);
+    }
+  };
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setThumbnailUrl(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Module management
   const handleAddModule = () => {
@@ -315,8 +406,97 @@ export default function CourseBuilderPage() {
                 </div>
 
                 <div>
-                  <label className="block text-neutral-400 mb-2 uppercase text-[10px] tracking-wider">COVER IMAGE URL (OPTIONAL)</label>
-                  <input type="url" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} placeholder="https://..." className="w-full bg-[#080808] border border-[#262626] p-3.5 text-white focus:outline-none focus:border-[#8BE000]" />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-neutral-400 uppercase text-[10px] tracking-wider font-mono">
+                      COVER ARTWORK (AUTO-GENERATE OR UPLOAD)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAutoGenerateCover}
+                      className="text-[11px] font-mono text-[#8BE000] hover:underline flex items-center gap-1 bg-[#8BE000]/10 border border-[#8BE000]/40 px-2.5 py-1"
+                    >
+                      <Sparkles className="w-3 h-3 text-[#8BE000]" />
+                      <span>Auto-Generate Cover Art</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {thumbnailUrl ? (
+                      <div className="relative border border-[#262626] bg-[#0A0A0A] p-3 flex flex-col sm:flex-row items-center gap-4">
+                        <img
+                          src={thumbnailUrl}
+                          alt="Course Cover Preview"
+                          className="w-full sm:w-48 h-28 object-cover border border-[#333]"
+                        />
+                        <div className="flex-1 space-y-2 text-xs font-mono">
+                          <div className="text-white font-bold flex items-center gap-1.5 text-[#8BE000]">
+                            <Check className="w-4 h-4" /> Cover Artwork Attached
+                          </div>
+                          <p className="text-neutral-400 text-[11px]">
+                            Previewing cover image. You can re-generate, upload a different file, or change URL.
+                          </p>
+                          <div className="flex items-center gap-4 pt-1">
+                            <button
+                              type="button"
+                              onClick={handleAutoGenerateCover}
+                              className="text-[#8BE000] hover:underline text-[11px] flex items-center gap-1"
+                            >
+                              <Sparkles className="w-3 h-3" /> Re-Generate
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setThumbnailUrl("")}
+                              className="text-red-400 hover:underline text-[11px]"
+                            >
+                              Clear Artwork
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label className="border border-dashed border-[#2E2E2E] hover:border-[#8BE000] bg-[#0E0E0E] p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition text-center group">
+                          <Upload className="w-6 h-6 text-neutral-400 group-hover:text-[#8BE000] transition" />
+                          <span className="text-xs font-mono font-bold text-neutral-200 group-hover:text-white">
+                            Upload Cover Image
+                          </span>
+                          <span className="text-[10px] text-neutral-500 font-mono">
+                            Select PNG, JPG, or WEBP from device
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={handleAutoGenerateCover}
+                          className="border border-dashed border-[#2E2E2E] hover:border-[#8BE000] bg-[#0E0E0E] p-6 flex flex-col items-center justify-center gap-2 transition text-center group"
+                        >
+                          <Sparkles className="w-6 h-6 text-[#8BE000] group-hover:scale-110 transition" />
+                          <span className="text-xs font-mono font-bold text-neutral-200 group-hover:text-white">
+                            Auto-Generate Cover Art
+                          </span>
+                          <span className="text-[10px] text-neutral-500 font-mono">
+                            Institutional stock chart graphic
+                          </span>
+                        </button>
+                      </div>
+                    )}
+
+                    <div>
+                      <input
+                        type="url"
+                        value={thumbnailUrl}
+                        onChange={(e) => setThumbnailUrl(e.target.value)}
+                        placeholder="Or optionally paste image URL (https://...)"
+                        className="w-full bg-[#080808] border border-[#262626] p-2.5 text-xs text-neutral-300 font-mono focus:outline-none focus:border-[#8BE000] placeholder-neutral-600"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -388,12 +568,53 @@ export default function CourseBuilderPage() {
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-                                <div>
-                                  <label className="block text-neutral-400 mb-1 flex items-center gap-1.5">
-                                    <Video className="w-3.5 h-3.5 text-[#8BE000]" />
-                                    <span>VIDEO URL</span>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-neutral-400 flex items-center gap-1.5 text-[10px] uppercase font-bold">
+                                      <Video className="w-3.5 h-3.5 text-[#8BE000]" />
+                                      <span>VIDEO LECTURE</span>
+                                    </label>
+                                    {les.videoFileName && (
+                                      <span className="text-[10px] text-[#8BE000] font-bold">✓ File Attached</span>
+                                    )}
+                                  </div>
+
+                                  {/* Video File Upload */}
+                                  <label className="w-full bg-[#0D0D0D] border border-dashed border-[#2E2E2E] hover:border-[#8BE000] p-3 flex items-center justify-center gap-2 cursor-pointer transition text-neutral-300 hover:text-white group">
+                                    <Upload className="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#8BE000] transition" />
+                                    <span className="text-[11px] truncate font-medium">
+                                      {les.videoFileName || "Upload Video File (MP4, WebM)"}
+                                    </span>
+                                    <input
+                                      type="file"
+                                      accept="video/mp4,video/webm,video/quicktime"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const url = URL.createObjectURL(file);
+                                          handleUpdateLesson(mod.id, les.id, {
+                                            videoUrl: url,
+                                            videoFileName: `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+                                          });
+                                        }
+                                      }}
+                                      className="hidden"
+                                    />
                                   </label>
-                                  <input type="url" placeholder="https://..." value={les.videoUrl} onChange={(e) => handleUpdateLesson(mod.id, les.id, { videoUrl: e.target.value })} className="w-full bg-[#080808] border border-[#262626] p-2.5 text-white focus:outline-none focus:border-[#8BE000]" />
+
+                                  {/* Direct URL input */}
+                                  <input
+                                    type="url"
+                                    placeholder="Or paste Video URL (YouTube, Vimeo, MP4)"
+                                    value={les.videoUrl.startsWith("blob:") ? "" : les.videoUrl}
+                                    onChange={(e) =>
+                                      handleUpdateLesson(mod.id, les.id, {
+                                        videoUrl: e.target.value,
+                                        videoFileName: undefined,
+                                      })
+                                    }
+                                    className="w-full bg-[#080808] border border-[#262626] p-2.5 text-white focus:outline-none focus:border-[#8BE000] text-xs placeholder-neutral-600"
+                                  />
                                 </div>
                                 <div>
                                   <label className="block text-neutral-400 mb-1 flex items-center gap-1.5">
