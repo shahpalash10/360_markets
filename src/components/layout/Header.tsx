@@ -76,13 +76,13 @@ export function Header() {
   }
 
   const NAV_LINKS = [
+    { href: "/user", label: "User App", isPro: false },
+    { href: "/trader", label: "Trader App", isPro: true },
+    { href: "/admin", label: "Admin App", isPro: false },
     { href: "/courses", label: t.navCourses, isPro: false },
-    { href: "/reports", label: t.navReports || "Reports", isPro: false },
     { href: "/signals", label: t.navSignals || "Signals", isPro: false },
     { href: "/pro-masterclass", label: t.navProTrading, isPro: true },
-    { href: "/materials", label: t.navMaterials, isPro: false },
     { href: "/webinars", label: t.navWebinars, isPro: false },
-    { href: "/traders", label: t.navTraders, isPro: false },
   ];
 
   // Active VIP invitation status only applies when a user is authenticated

@@ -49,6 +49,11 @@ export default function AdminDashboardPage() {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
 
+  // Single-Use Invoices & Trader Debt Ledger
+  const [singleUseInvoices, setSingleUseInvoices] = useState<any[]>([]);
+  const [singleUseCodes, setSingleUseCodes] = useState<any[]>([]);
+  const [debtSummary, setDebtSummary] = useState({ totalGmv: 0, totalPlatformDebt: 0, totalRedemptions: 0 });
+
   // Invitation Codes Ledger State
   const [invitationCodes, setInvitationCodes] = useState<any[]>([]);
   const [newCodeString, setNewCodeString] = useState("");
@@ -165,6 +170,25 @@ export default function AdminDashboardPage() {
 
       // 6. Invitation Codes Ledger
       await fetchInvitationCodes();
+
+      // 7. Single-Use Invoices & Trader Debt
+      try {
+        const invRes = await fetch("/api/invoices");
+        const invData = await invRes.json();
+        if (invData.ok) {
+          setSingleUseInvoices(invData.invoices || []);
+          setDebtSummary({
+            totalGmv: invData.totalGmv || 0,
+            totalPlatformDebt: invData.totalPlatformDebt || 0,
+            totalRedemptions: invData.totalRedemptions || 0,
+          });
+        }
+        const codesRes = await fetch("/api/access-codes");
+        const codesData = await codesRes.json();
+        if (codesData.ok) {
+          setSingleUseCodes(codesData.codes || []);
+        }
+      } catch (e) {}
     } catch (err) {
       console.error("Database sync error:", err);
     } finally {
@@ -1466,6 +1490,77 @@ export default function AdminDashboardPage() {
                   </table>
                 </div>
               )}
+
+              {/* TRADER DEBT & SINGLE-USE REDEMPTIONS INVOICES */}
+              <div className="pt-6 border-t border-[#1E1E1E] space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+                  <div>
+                    <h3 className="text-xl font-display font-medium text-white tracking-tight flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span>TRADER ACCOUNT DEBT & SINGLE-USE INVOICING</span>
+                    </h3>
+                    <p className="text-xs text-neutral-400 font-sans">
+                      Redeem access code =&gt; Put a debt on the trader&apos;s account. Real-time platform receivables and invoicing.
+                    </p>
+                  </div>
+                  <div className="text-xs font-mono text-amber-400">
+                    Platform Receivables: <strong className="text-white">{formatPrice(debtSummary.totalPlatformDebt)}</strong>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
+                  <div className="bg-[#111111] border border-[#1E1E1E] p-4 space-y-1">
+                    <div className="text-[10px] text-neutral-400 uppercase">Total Redemptions GMV</div>
+                    <div className="text-2xl font-display text-white">{formatPrice(debtSummary.totalGmv)}</div>
+                    <div className="text-[10px] text-neutral-500">{debtSummary.totalRedemptions} Single-Use Codes Consumed</div>
+                  </div>
+                  <div className="bg-[#111111] border border-amber-900/40 p-4 space-y-1">
+                    <div className="text-[10px] text-amber-400 uppercase">Outstanding Platform Debt</div>
+                    <div className="text-2xl font-display text-amber-400">{formatPrice(debtSummary.totalPlatformDebt)}</div>
+                    <div className="text-[10px] text-neutral-500">20% Platform Commission Debt on Trader Accounts</div>
+                  </div>
+                  <div className="bg-[#111111] border border-[#1E1E1E] p-4 space-y-1">
+                    <div className="text-[10px] text-neutral-400 uppercase">Trader Net Invoiced</div>
+                    <div className="text-2xl font-display text-[#8BE000]">
+                      {formatPrice(debtSummary.totalGmv - debtSummary.totalPlatformDebt)}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">80% Net Realized to Educators</div>
+                  </div>
+                </div>
+
+                {singleUseInvoices.length > 0 && (
+                  <div className="border border-[#1E1E1E] bg-[#111111] overflow-hidden">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead className="bg-[#0B0B0B] border-b border-[#1E1E1E] text-neutral-400 uppercase text-[9px] tracking-wider">
+                        <tr>
+                          <th className="p-4">Invoice #</th>
+                          <th className="p-4">Date</th>
+                          <th className="p-4">Item &amp; Type</th>
+                          <th className="p-4">Trader Name</th>
+                          <th className="p-4">Subscriber</th>
+                          <th className="p-4">Access Code</th>
+                          <th className="p-4">Value</th>
+                          <th className="p-4">Trader Debt</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#1E1E1E]">
+                        {singleUseInvoices.map((inv: any) => (
+                          <tr key={inv.id} className="hover:bg-[#161616] transition-colors">
+                            <td className="p-4 text-white font-bold">{inv.invoiceNumber}</td>
+                            <td className="p-4 text-neutral-400 text-[11px]">{new Date(inv.redeemedAt).toLocaleDateString()}</td>
+                            <td className="p-4 text-white">[{inv.itemType}] {inv.itemName}</td>
+                            <td className="p-4 text-neutral-300">{inv.traderName}</td>
+                            <td className="p-4 text-neutral-400">{inv.subscriberEmail}</td>
+                            <td className="p-4 font-mono text-[#8BE000]">{inv.accessCode}</td>
+                            <td className="p-4 text-white font-bold">{formatPrice(inv.itemPrice)}</td>
+                            <td className="p-4 text-amber-400 font-bold">{formatPrice(inv.debtAmount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 

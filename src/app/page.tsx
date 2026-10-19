@@ -22,6 +22,8 @@ import {
   Clock,
   Star,
   Zap,
+  Radio,
+  KeyRound,
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -221,6 +223,109 @@ export default function LandingPage() {
               </div>
               <div className="text-xs text-neutral-500 font-mono">{t.statFootnote4}</div>
             </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* DEDICATED PLATFORM PORTALS: /user, /trader, /admin */}
+      <section className="bg-[#080808] text-white border-b border-[#262626] py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#1E1E1E] pb-6">
+            <div>
+              <span className="text-[11px] font-mono text-[#8BE000] tracking-widest uppercase flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#8BE000] inline-block animate-pulse" />
+                INSTITUTIONAL ECOSYSTEM
+              </span>
+              <h2 className="text-3xl lg:text-4xl font-display font-light text-white mt-1 tracking-tight">
+                SEPARATE PLATFORM PORTALS.
+              </h2>
+            </div>
+            <p className="text-xs text-neutral-400 font-mono max-w-md">
+              Access the dedicated web application for your specific role with isolated workflows, single-use access passes, and secret signal pipelines.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 1. Investor / Subscriber Web App */}
+            <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-6 hover:border-[#8BE000]/60 transition flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-[#8BE000]/10 border border-[#8BE000]/30 flex items-center justify-center text-[#8BE000]">
+                    <KeyRound className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-mono bg-[#181818] border border-[#2E2E2E] text-neutral-300 px-2 py-0.5">
+                    /user
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-display text-white">Investor Web App</h3>
+                  <p className="text-xs text-neutral-400 font-sans mt-2 leading-relaxed">
+                    Redeem single-use access codes, unlock secret quantitative strategy channels, receive live signal feeds via ntfy, and view itemized invoices.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/user"
+                className="btn-lime text-black font-bold text-xs py-3 px-4 flex items-center justify-between"
+              >
+                <span>Launch Investor Portal (/user)</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* 2. Trader Web App */}
+            <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-6 hover:border-[#8BE000]/60 transition flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-blue-950/40 border border-blue-800/40 flex items-center justify-center text-blue-400">
+                    <Radio className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-mono bg-[#181818] border border-[#2E2E2E] text-[#8BE000] px-2 py-0.5 font-bold">
+                    /trader
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-display text-white">Trader Web App</h3>
+                  <p className="text-xs text-neutral-400 font-sans mt-2 leading-relaxed">
+                    Strategy engine with secret ntfy channel codes, live signal broadcaster with 24h/7d frequency analytics, course builder, and account debt ledger.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/trader"
+                className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] hover:border-[#8BE000] text-white font-bold text-xs py-3 px-4 flex items-center justify-between transition"
+              >
+                <span>Launch Trader Studio (/trader)</span>
+                <ArrowRight className="w-4 h-4 text-[#8BE000]" />
+              </Link>
+            </div>
+
+            {/* 3. Admin Web App */}
+            <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-6 hover:border-red-900/60 transition flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-red-950/40 border border-red-800/40 flex items-center justify-center text-red-400">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-mono bg-[#181818] border border-[#2E2E2E] text-red-400 px-2 py-0.5">
+                    /admin
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-display text-white">Admin Web App</h3>
+                  <p className="text-xs text-neutral-400 font-sans mt-2 leading-relaxed">
+                    Global platform debt accounting, items catalog oversight, master single-use access code auditing, educator certifications, and compliance.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/admin"
+                className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] hover:border-red-600 text-red-400 font-bold text-xs py-3 px-4 flex items-center justify-between transition"
+              >
+                <span>Launch Admin Portal (/admin)</span>
+                <ArrowRight className="w-4 h-4 text-red-400" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

@@ -4,74 +4,108 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
-import { supabase } from "@/lib/supabase";
 import {
-  ShieldCheck,
+  Radio,
+  Send,
+  KeyRound,
   DollarSign,
   Users,
   BookOpen,
   Video,
   Plus,
-  AlertTriangle,
-  Lock,
-  ArrowUpRight,
   RefreshCw,
-  Radio,
-  KeyRound,
   Copy,
   Check,
-  Edit3,
-  Share2,
+  ArrowUpRight,
+  TrendingUp,
+  ShieldCheck,
+  AlertCircle,
+  FileText,
+  Lock,
+  Eye,
+  EyeOff,
   Trash2,
   CheckCircle2,
-  XCircle,
-  Sparkles,
+  Clock,
+  Activity,
+  ExternalLink,
+  Layers,
+  Receipt,
+  Share2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { motion } from "framer-motion";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { motion, AnimatePresence } from "framer-motion";
+import { ItemRecord, StrategySignalRecord, AccessCodeRecord, InvoiceRecord } from "@/lib/items-store";
 
-export default function TraderDashboardPage() {
+export default function TraderStudioPage() {
   const { user } = useAuth();
-  const { t, currency } = useLanguage();
+  const { currency, t } = useLanguage();
 
-  const [certificationStatus, setCertificationStatus] = useState<
-    "loading" | "none" | "pending" | "approved" | "rejected"
-  >("loading");
-  const [certId, setCertId] = useState<string | null>(null);
-  const [grossRevenue, setGrossRevenue] = useState<number>(0);
-  const [totalSubscribers, setTotalSubscribers] = useState<number>(0);
-  const [totalCourses, setTotalCourses] = useState<number>(0);
-  const [totalWebinars, setTotalWebinars] = useState<number>(0);
-  const [coursesList, setCoursesList] = useState<any[]>([]);
-  const [webinarsList, setWebinarsList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "strategies" | "signals" | "courses" | "webinars" | "access_codes" | "invoices"
+  >("overview");
 
-  // Trader Invitation Codes State
-  const [traderCodes, setTraderCodes] = useState<any[]>([]);
-  const [traderCodeString, setTraderCodeString] = useState("");
-  const [traderCodeScope, setTraderCodeScope] = useState<"COURSE" | "TRADER_BUNDLE" | "SIGNALS">("COURSE");
-  const [traderCodeTargetCourseId, setTraderCodeTargetCourseId] = useState("");
-  const [traderCodeDuration, setTraderCodeDuration] = useState<number>(30);
-  const [traderCodeMaxUses, setTraderCodeMaxUses] = useState<number>(50);
-  const [traderCodeNotes, setTraderCodeNotes] = useState("");
-  const [isIssuingCode, setIsIssuingCode] = useState(false);
-  const [issueMsg, setIssueMsg] = useState<{ success: boolean; text: string } | null>(null);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
-  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
+  // Core Data States
+  const [items, setItems] = useState<ItemRecord[]>([]);
+  const [signals, setSignals] = useState<StrategySignalRecord[]>([]);
+  const [signalFrequencies, setSignalFrequencies] = useState({
+    frequency24h: 0,
+    frequency7d: 0,
+    frequency30d: 0,
+    totalCount: 0,
+  });
+  const [accessCodes, setAccessCodes] = useState<AccessCodeRecord[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
+  const [financialStats, setFinancialStats] = useState({
+    totalGmv: 0,
+    totalPlatformDebt: 0,
+    totalRedemptions: 0,
+  });
 
-  // Edit Trader Code State
-  const [editingTraderCode, setEditingTraderCode] = useState<any | null>(null);
-  const [editString, setEditString] = useState("");
-  const [editScope, setEditScope] = useState<"COURSE" | "TRADER_BUNDLE" | "SIGNALS">("COURSE");
-  const [editCourseId, setEditCourseId] = useState("");
-  const [editDuration, setEditDuration] = useState(30);
-  const [editMaxUses, setEditMaxUses] = useState(50);
-  const [editStatus, setEditStatus] = useState<"ACTIVE" | "REVOKED">("ACTIVE");
-  const [editNotes, setEditNotes] = useState("");
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [editErrorMsg, setEditErrorMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Strategy Modal State (Strategy :: Item)
+  const [showCreateStrategyModal, setShowCreateStrategyModal] = useState(false);
+  const [stratName, setStratName] = useState("");
+  const [stratDescription, setStratDescription] = useState("");
+  const [stratPrice, setStratPrice] = useState<number>(299);
+  const [stratCustomId, setStratCustomId] = useState("");
+  const [stratCustomTopic, setStratCustomTopic] = useState("");
+  const [isCreatingStrat, setIsCreatingStrat] = useState(false);
+  const [stratError, setStratError] = useState("");
+
+  // Signal Push State (Strategy ID, Signal -> ntfy.sh)
+  const [selectedStrategyId, setSelectedStrategyId] = useState("");
+  const [signalAction, setSignalAction] = useState<"BUY" | "SELL" | "HOLD" | "ALERT">("BUY");
+  const [signalSymbol, setSignalSymbol] = useState("NVDA");
+  const [signalEntryPrice, setSignalEntryPrice] = useState<number | "">("");
+  const [signalTargetPrice, setSignalTargetPrice] = useState<number | "">("");
+  const [signalStopLoss, setSignalStopLoss] = useState<number | "">("");
+  const [signalRiskReward, setSignalRiskReward] = useState("1 : 2.5");
+  const [signalTimeframe, setSignalTimeframe] = useState("4H / SWING");
+  const [signalNotes, setSignalNotes] = useState("");
+  const [signalTextCustom, setSignalTextCustom] = useState("");
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<{ success: boolean; msg: string } | null>(null);
+
+  // Access Code Issuance State
+  const [issueItemId, setIssueItemId] = useState("");
+  const [issueQuantity, setIssueQuantity] = useState<number>(5);
+  const [isIssuingCodes, setIsIssuingCodes] = useState(false);
+  const [issueFeedback, setIssueFeedback] = useState<{ success: boolean; msg: string } | null>(null);
+
+  // Clipboard & Visibility toggles
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [revealedTopics, setRevealedTopics] = useState<Record<string, boolean>>({});
+
+  // Signal history tag filter (e.g. S0, S1, S2...)
+  const [selectedSignalTag, setSelectedSignalTag] = useState<string | null>(null);
+
+  // Active Invoice View Modal
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRecord | null>(null);
 
   const formatPrice = (usd: number) => {
     if (currency === "JPY") return `¥${Math.floor(usd * 150).toLocaleString()}`;
@@ -79,1153 +113,1545 @@ export default function TraderDashboardPage() {
     return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const isCertified = certificationStatus === "approved";
-
-  const fetchTraderData = async () => {
-    if (!user) return;
+  // Fetch all core studio data
+  const loadStudioData = async () => {
     setIsRefreshing(true);
     try {
-      // 1. Check certification from profiles table
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      // 2. Check trader_profiles for certification data
-      let tpData: any = null;
-      try {
-        const { data: tp } = await supabase
-          .from("trader_profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
-        tpData = tp;
-      } catch (e) {
-        // trader_profiles row may not exist yet
-      }
-
-      // 3. Check trader_applications for submission status
-      let latestApp: any = null;
-      try {
-        const { data: apps } = await supabase
-          .from("trader_applications")
-          .select("*")
-          .eq("user_id", user.id);
-
-        if (apps && apps.length > 0) {
-          // Sort client-side to find latest
-          const sorted = [...apps].sort((a, b) => {
-            const da = new Date(a.submitted_at || a.created_at || 0).getTime();
-            const db = new Date(b.submitted_at || b.created_at || 0).getTime();
-            return db - da;
-          });
-          latestApp = sorted[0];
-        }
-      } catch (e) {
-        // table may not exist
-      }
-
-      // Determine certification status from all sources
-      const profileCertified = prof?.is_certified === true;
-      const tpCertified = tpData?.is_certified === true || tpData?.certification_status === "certified";
-      const appApproved = latestApp?.status === "approved";
-
-      if (profileCertified || tpCertified || appApproved) {
-        setCertificationStatus("approved");
-        setCertId(
-          tpData?.certification_id ||
-          latestApp?.certification_id ||
-          prof?.certification_id ||
-          null
-        );
-      } else if (latestApp?.status === "rejected") {
-        setCertificationStatus("rejected");
-      } else if (latestApp?.status === "pending" || latestApp?.status === "under_review") {
-        setCertificationStatus("pending");
-      } else {
-        setCertificationStatus("none");
-      }
-
-      // 4. Fetch courses & webinars strictly for this educator
-      const traderProfileId = tpData?.id;
-      let userCourses: any[] = [];
-      let cCount = 0;
-
-      if (traderProfileId) {
-        const { data: coursesByProfile, count: cCountProfile } = await supabase
-          .from("courses")
-          .select("*", { count: "exact" })
-          .eq("trader_id", traderProfileId);
-        if (coursesByProfile && coursesByProfile.length > 0) {
-          userCourses = coursesByProfile;
-          cCount = cCountProfile || coursesByProfile.length;
+      // 1. Fetch Items (Strategies, Courses, Webinars)
+      const itemsRes = await fetch("/api/items");
+      const itemsData = await itemsRes.json();
+      if (itemsData.ok) {
+        setItems(itemsData.items || []);
+        if (itemsData.items.length > 0 && !selectedStrategyId) {
+          const firstStrat = itemsData.items.find((i: ItemRecord) => i.type === "STRATEGY");
+          if (firstStrat) {
+            setSelectedStrategyId(firstStrat.strategyId || firstStrat.id);
+          }
+          if (!issueItemId) {
+            setIssueItemId(itemsData.items[0].id);
+          }
         }
       }
 
-      // Also check if trader_id in courses table was stored directly as user.id (profiles.id)
-      if (userCourses.length === 0 && user?.id) {
-        const { data: coursesByUserId, count: cCountUser } = await supabase
-          .from("courses")
-          .select("*", { count: "exact" })
-          .eq("trader_id", user.id);
-        if (coursesByUserId && coursesByUserId.length > 0) {
-          userCourses = coursesByUserId;
-          cCount = cCountUser || coursesByUserId.length;
-        }
+      // 2. Fetch Signals & Frequency History
+      const sigRes = await fetch("/api/items/signals");
+      const sigData = await sigRes.json();
+      if (sigData.ok) {
+        setSignals(sigData.signals || []);
+        setSignalFrequencies({
+          frequency24h: sigData.frequency24h || 0,
+          frequency7d: sigData.frequency7d || 0,
+          frequency30d: sigData.frequency30d || 0,
+          totalCount: sigData.totalCount || 0,
+        });
       }
 
-      setTotalCourses(cCount);
-      setCoursesList(userCourses);
-
-      // Webinars
-      let userWebinars: any[] = [];
-      let wCount = 0;
-      if (traderProfileId) {
-        const { data: webinarsByProfile, count: wCountProfile } = await supabase
-          .from("webinars")
-          .select("*", { count: "exact" })
-          .eq("trader_id", traderProfileId);
-        if (webinarsByProfile) {
-          userWebinars = webinarsByProfile;
-          wCount = wCountProfile || webinarsByProfile.length;
-        }
+      // 3. Fetch Single-Use Access Codes
+      const codesRes = await fetch("/api/access-codes");
+      const codesData = await codesRes.json();
+      if (codesData.ok) {
+        setAccessCodes(codesData.codes || []);
       }
-      if (userWebinars.length === 0 && user?.id) {
-        const { data: webinarsByUserId, count: wCountUser } = await supabase
-          .from("webinars")
-          .select("*", { count: "exact" })
-          .eq("trader_id", user.id);
-        if (webinarsByUserId) {
-          userWebinars = webinarsByUserId;
-          wCount = wCountUser || webinarsByUserId.length;
-        }
+
+      // 4. Fetch Invoices & Trader Account Debt Ledger
+      const invRes = await fetch("/api/invoices");
+      const invData = await invRes.json();
+      if (invData.ok) {
+        setInvoices(invData.invoices || []);
+        setFinancialStats({
+          totalGmv: invData.totalGmv || 0,
+          totalPlatformDebt: invData.totalPlatformDebt || 0,
+          totalRedemptions: invData.totalRedemptions || 0,
+        });
       }
-      setTotalWebinars(wCount);
-      setWebinarsList(userWebinars);
-
-      // 5. Calculate real enrollments & real revenue strictly for this educator's courses
-      if (userCourses && userCourses.length > 0) {
-        const courseIds = userCourses.map((c) => c.id);
-        const { data: enrollmentsData, count: eCount } = await supabase
-          .from("enrollments")
-          .select("*, courses(*)", { count: "exact" })
-          .in("course_id", courseIds);
-
-        setTotalSubscribers(eCount || 0);
-
-        const realGross = (enrollmentsData || []).reduce((acc, en) => {
-          return acc + (en.courses?.price || 0);
-        }, 0);
-        setGrossRevenue(realGross);
-      } else {
-        setTotalSubscribers(0);
-        setGrossRevenue(0);
-      }
-    } catch (e) {
-      console.error("Trader Hub fetch error:", e);
+    } catch (err) {
+      console.error("Trader studio data load error:", err);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
   };
 
-  const fetchTraderCodes = async () => {
-    try {
-      const url = user?.id
-        ? `/api/invitation-codes?creatorId=${encodeURIComponent(user.id)}&creatorRole=TRADER`
-        : `/api/invitation-codes?creatorRole=TRADER`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.ok && data.codes) {
-        setTraderCodes(data.codes);
-      }
-    } catch (e) {
-      console.warn("Failed to load trader codes:", e);
-    }
-  };
+  useEffect(() => {
+    loadStudioData();
+  }, [user]);
 
-  const handleIssueTraderCode = async (e: React.FormEvent) => {
+  // Handle Strategy Creation
+  const handleCreateStrategy = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!traderCodeString.trim()) return;
+    if (!stratName.trim()) {
+      setStratError("Please provide a name for your quantitative strategy.");
+      return;
+    }
 
-    setIsIssuingCode(true);
-    setIssueMsg(null);
-
-    const selectedCourse = coursesList.find((c) => c.id === traderCodeTargetCourseId) || coursesList[0];
+    setIsCreatingStrat(true);
+    setStratError("");
 
     try {
-      const res = await fetch("/api/invitation-codes", {
+      const res = await fetch("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: traderCodeString.trim().toUpperCase(),
-          scope: traderCodeScope,
-          tier: traderCodeScope === "SIGNALS" ? "SIGNALS" : "ALL_ACCESS",
-          targetCourseId: traderCodeScope === "COURSE" ? (traderCodeTargetCourseId || coursesList[0]?.id) : undefined,
-          targetCourseTitle: traderCodeScope === "COURSE" ? (selectedCourse?.title || coursesList[0]?.title) : undefined,
-          targetCourseSlug: traderCodeScope === "COURSE" ? (selectedCourse?.slug || coursesList[0]?.slug) : undefined,
-          durationDays: traderCodeDuration,
-          maxUses: traderCodeMaxUses,
-          notes: traderCodeNotes,
-          creatorRole: "TRADER",
-          creatorId: user?.id || "trader",
-          creatorName: user?.displayName || user?.name || "Verified Educator",
+          type: "STRATEGY",
+          name: stratName.trim(),
+          description: stratDescription.trim(),
+          price: Number(stratPrice) || 0,
+          strategyId: stratCustomId.trim() || undefined,
+          ntfyTopic: stratCustomTopic.trim() || undefined,
+          traderId: user?.id || "trader",
+          traderName: user?.displayName || user?.name || "Alex Morgan",
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Failed to create code");
+        throw new Error(data.error || "Failed to create strategy");
+      }
+
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      setShowCreateStrategyModal(false);
+      setStratName("");
+      setStratDescription("");
+      setStratCustomId("");
+      setStratCustomTopic("");
+      await loadStudioData();
+      setActiveTab("strategies");
+    } catch (err: any) {
+      setStratError(err.message || "An error occurred while creating strategy.");
+    } finally {
+      setIsCreatingStrat(false);
+    }
+  };
+
+  // Handle Signal Push to ntfy.sh
+  const handleBroadcastSignal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStrategyId) {
+      setBroadcastResult({ success: false, msg: "Please select a strategy to broadcast to." });
+      return;
+    }
+
+    setIsBroadcasting(true);
+    setBroadcastResult(null);
+
+    const generatedText =
+      signalTextCustom.trim() ||
+      `${signalAction} ${signalSymbol} @ $${signalEntryPrice || "MKT"} | TP: $${signalTargetPrice || "OPEN"} | SL: $${signalStopLoss || "NONE"}. ${signalNotes}`;
+
+    try {
+      const res = await fetch("/api/items/signals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          strategyId: selectedStrategyId,
+          signalText: generatedText,
+          action: signalAction,
+          symbol: signalSymbol.trim().toUpperCase(),
+          entryPrice: signalEntryPrice ? Number(signalEntryPrice) : undefined,
+          targetPrice: signalTargetPrice ? Number(signalTargetPrice) : undefined,
+          stopLoss: signalStopLoss ? Number(signalStopLoss) : undefined,
+          riskReward: signalRiskReward,
+          timeframe: signalTimeframe,
+          notes: signalNotes,
+          traderId: user?.id || "trader",
+          traderName: user?.displayName || user?.name || "Alex Morgan",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to push signal");
       }
 
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
-      setIssueMsg({ success: true, text: `Code "${data.code.code}" successfully created!` });
-      setTraderCodeString("");
-      setTraderCodeNotes("");
-      await fetchTraderCodes();
-    } catch (err: any) {
-      setIssueMsg({ success: false, text: err.message || "Failed to issue code." });
-    } finally {
-      setIsIssuingCode(false);
-    }
-  };
-
-  const handleCopyCode = (id: string, code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCodeId(id);
-    setTimeout(() => setCopiedCodeId(null), 2000);
-  };
-
-  const handleCopyShareLink = (id: string, code: string) => {
-    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-    const link = `${origin}/redeem?code=${code}`;
-    navigator.clipboard.writeText(link);
-    setCopiedLinkId(id);
-    setTimeout(() => setCopiedLinkId(null), 2000);
-  };
-
-  const handleToggleTraderCode = async (id: string, currentStatus: string) => {
-    const nextStatus = currentStatus === "ACTIVE" ? "REVOKED" : "ACTIVE";
-    try {
-      await fetch("/api/invitation-codes", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status: nextStatus }),
+      setBroadcastResult({
+        success: true,
+        msg: `Signal ${data.signal?.id} pushed live to private channel ${data.ntfyResult}!`,
       });
-      await fetchTraderCodes();
-    } catch (e) {
-      console.error(e);
+      setSignalNotes("");
+      setSignalTextCustom("");
+      await loadStudioData();
+    } catch (err: any) {
+      setBroadcastResult({ success: false, msg: err.message || "Broadcast failed" });
+    } finally {
+      setIsBroadcasting(false);
     }
   };
 
-  const handleDeleteTraderCode = async (id: string) => {
-    try {
-      await fetch(`/api/invitation-codes?id=${id}`, { method: "DELETE" });
-      await fetchTraderCodes();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const openTraderEdit = (code: any) => {
-    setEditingTraderCode(code);
-    setEditString(code.code);
-    setEditScope(code.scope || "COURSE");
-    setEditCourseId(code.targetCourseId || coursesList[0]?.id || "");
-    setEditDuration(code.durationDays || 30);
-    setEditMaxUses(code.maxUses || 50);
-    setEditStatus(code.status || "ACTIVE");
-    setEditNotes(code.notes || "");
-    setEditErrorMsg("");
-  };
-
-  const handleSaveTraderEdit = async (e: React.FormEvent) => {
+  // Handle Batch Single-Use Access Code Issuance
+  const handleIssueAccessCodes = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTraderCode) return;
-    setIsSavingEdit(true);
-    setEditErrorMsg("");
+    if (!issueItemId) {
+      setIssueFeedback({ success: false, msg: "Please select an Item to issue access codes for." });
+      return;
+    }
 
-    const selectedCourse = coursesList.find((c) => c.id === editCourseId);
+    setIsIssuingCodes(true);
+    setIssueFeedback(null);
 
     try {
-      const res = await fetch("/api/invitation-codes", {
-        method: "PUT",
+      const res = await fetch("/api/access-codes", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: editingTraderCode.id,
-          code: editString.trim().toUpperCase(),
-          scope: editScope,
-          targetCourseId: editScope === "COURSE" ? editCourseId : null,
-          targetCourseTitle: editScope === "COURSE" ? (selectedCourse?.title || editingTraderCode.targetCourseTitle) : null,
-          targetCourseSlug: editScope === "COURSE" ? (selectedCourse?.slug || editingTraderCode.targetCourseSlug) : null,
-          durationDays: editDuration,
-          maxUses: editMaxUses,
-          status: editStatus,
-          notes: editNotes,
+          itemId: issueItemId,
+          quantity: Number(issueQuantity) || 1,
+          traderId: user?.id || "trader",
+          traderName: user?.displayName || user?.name || "Alex Morgan",
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Failed to update code");
+        throw new Error(data.error || "Failed to issue access codes");
       }
 
-      setEditingTraderCode(null);
-      await fetchTraderCodes();
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      setIssueFeedback({
+        success: true,
+        msg: `Generated ${data.count} single-use access code(s)! Each can be redeemed exactly once.`,
+      });
+      await loadStudioData();
     } catch (err: any) {
-      setEditErrorMsg(err.message || "Failed to update code.");
+      setIssueFeedback({ success: false, msg: err.message || "Failed to issue access codes" });
     } finally {
-      setIsSavingEdit(false);
+      setIsIssuingCodes(false);
     }
   };
 
-  useEffect(() => {
-    fetchTraderData();
-    fetchTraderCodes();
-  }, [user]);
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-  useEffect(() => {
-    if (coursesList.length > 0 && !traderCodeTargetCourseId) {
-      setTraderCodeTargetCourseId(coursesList[0].id);
-    }
-  }, [coursesList, traderCodeTargetCourseId]);
+  const strategies = items.filter((i) => i.type === "STRATEGY");
+  const courses = items.filter((i) => i.type === "COURSE");
+  const webinars = items.filter((i) => i.type === "WEBINAR");
 
-  const educatorShare = grossRevenue * 0.7;
+  // Filter signals if tag clicked
+  const filteredSignals = selectedSignalTag
+    ? signals.filter((s) => s.id === selectedSignalTag)
+    : signals;
 
   return (
-    <AuthGuard allowedRoles={["TRADER"]}>
-      <div className="min-h-screen bg-[#080808] text-white py-12 lg:py-16 font-mono selection:bg-[#8BE000] selection:text-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[#1E1E1E]">
-            <div className="space-y-2">
+    <AuthGuard allowedRoles={["TRADER", "ADMIN"]}>
+      <div className="min-h-screen bg-[#080808] text-white font-mono selection:bg-[#8BE000] selection:text-black">
+        {/* Top Institutional Header */}
+        <div className="border-b border-[#1E1E1E] bg-[#0C0C0C]/90 sticky top-16 z-40 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
               <div className="flex items-center gap-2 text-[11px] text-[#8BE000] font-bold tracking-widest uppercase">
-                <span className="w-1.5 h-1.5 bg-[#8BE000] rounded-full inline-block animate-pulse" />
-                <span>{t.traderHubPortalBadge}</span>
+                <span className="w-2 h-2 bg-[#8BE000] rounded-full inline-block animate-pulse" />
+                <span>360° MARKETS TRADER WEB APP</span>
+                <span className="text-neutral-500">•</span>
+                <span className="text-neutral-400">INSTITUTIONAL QUANT STUDIO</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl font-display font-light tracking-tight text-white uppercase">
-                {t.traderHubTitle}
+              <h1 className="text-2xl sm:text-3xl font-display font-light text-white tracking-tight uppercase mt-0.5">
+                TRADER HUB & ENGINE.
               </h1>
-              <p className="text-xs text-neutral-400 font-sans max-w-xl leading-relaxed">
-                {t.traderHubSub}
-              </p>
             </div>
 
-            <button
-              onClick={fetchTraderData}
-              disabled={isRefreshing}
-              className="flex items-center gap-2 bg-[#121212] hover:bg-[#1A1A1A] border border-[#262626] px-3.5 py-2 text-xs text-neutral-300 transition focus:outline-none"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#8BE000]" : "text-neutral-400"}`} />
-              <span>{isRefreshing ? t.traderHubSyncing : t.traderHubSyncBtn}</span>
-            </button>
+            {/* Quick Actions Bar */}
+            <div className="flex items-center flex-wrap gap-2">
+              <button
+                onClick={() => setShowCreateStrategyModal(true)}
+                className="bg-[#8BE000] text-black font-bold text-xs px-3.5 py-2 hover:bg-[#9BF500] transition flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Create Strategy</span>
+              </button>
+
+              <Link
+                href="/trader/courses/new"
+                className="bg-[#181818] border border-[#2E2E2E] hover:border-[#8BE000] text-white text-xs px-3.5 py-2 transition flex items-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#8BE000]" />
+                <span>Create Course</span>
+              </Link>
+
+              <Link
+                href="/trader/webinars/new"
+                className="bg-[#181818] border border-[#2E2E2E] hover:border-[#8BE000] text-white text-xs px-3.5 py-2 transition flex items-center gap-1.5"
+              >
+                <Video className="w-3.5 h-3.5 text-[#8BE000]" />
+                <span>Schedule Webinar</span>
+              </Link>
+
+              <button
+                onClick={loadStudioData}
+                disabled={isRefreshing}
+                className="bg-[#121212] border border-[#262626] text-neutral-300 hover:text-white px-3 py-2 text-xs flex items-center gap-1.5 transition"
+                title="Refresh Studio Data"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#8BE000]" : ""}`} />
+                <span className="hidden sm:inline">Sync</span>
+              </button>
+            </div>
           </div>
 
-          {/* Certification Status Banner */}
-          {certificationStatus === "loading" ? (
-            <div className="border border-[#1E1E1E] bg-[#111111] p-6 animate-pulse">
-              <div className="h-4 bg-[#1E1E1E] w-1/3 mb-2" />
-              <div className="h-3 bg-[#1E1E1E] w-2/3" />
-            </div>
-          ) : certificationStatus === "approved" ? (
-            <div className="border border-[#8BE000]/40 bg-[#0A1202] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-[#8BE000]" />
-                <div className="space-y-0.5">
-                  <span className="text-xs text-[#8BE000] font-bold uppercase tracking-wider">
-                    {t.traderHubCertApproved} {certId ? `\u2022 ${certId}` : ""}
-                  </span>
-                  <p className="text-xs text-neutral-400 font-sans">
-                    {t.traderHubCertApprovedDesc}
+          {/* Studio Navigation Tabs */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-1 border-t border-[#1A1A1A] text-xs pt-1">
+            {[
+              { id: "overview", label: "Overview & Metrics", icon: Activity },
+              { id: "strategies", label: `Strategies (${strategies.length})`, icon: Layers },
+              { id: "signals", label: `Signal Broadcaster (${signals.length})`, icon: Radio },
+              { id: "courses", label: `Courses (${courses.length})`, icon: BookOpen },
+              { id: "webinars", label: `Webinars (${webinars.length})`, icon: Video },
+              { id: "access_codes", label: `Single-Use Access Codes (${accessCodes.length})`, icon: KeyRound },
+              { id: "invoices", label: `Invoices & Debt Ledger (${invoices.length})`, icon: Receipt },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-4 py-2.5 whitespace-nowrap transition border-b-2 font-mono ${
+                    isActive
+                      ? "border-[#8BE000] text-[#8BE000] font-bold bg-[#141414]"
+                      : "border-transparent text-neutral-400 hover:text-white hover:bg-[#121212]"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Studio Content Container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          {/* 1. OVERVIEW TAB */}
+          {activeTab === "overview" && (
+            <div className="space-y-8">
+              {/* Financial & Debt Metrics Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-2">
+                  <div className="flex items-center justify-between text-neutral-400 text-xs">
+                    <span className="uppercase tracking-wider">Gross Volume (GMV)</span>
+                    <DollarSign className="w-4 h-4 text-[#8BE000]" />
+                  </div>
+                  <div className="text-3xl font-display text-white">
+                    {formatPrice(financialStats.totalGmv)}
+                  </div>
+                  <p className="text-[11px] text-neutral-500 font-sans">
+                    Total market value of single-use codes redeemed across all items.
+                  </p>
+                </div>
+
+                <div className="bg-[#111111] border border-amber-900/40 p-6 space-y-2">
+                  <div className="flex items-center justify-between text-amber-400 text-xs">
+                    <span className="uppercase tracking-wider">Trader Account Debt</span>
+                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="text-3xl font-display text-amber-400">
+                    {formatPrice(financialStats.totalPlatformDebt)}
+                  </div>
+                  <p className="text-[11px] text-neutral-500 font-sans">
+                    Platform commission debt placed on trader account upon code redemption.
+                  </p>
+                </div>
+
+                <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-2">
+                  <div className="flex items-center justify-between text-neutral-400 text-xs">
+                    <span className="uppercase tracking-wider">Single-Use Redemptions</span>
+                    <KeyRound className="w-4 h-4 text-[#8BE000]" />
+                  </div>
+                  <div className="text-3xl font-display text-white">
+                    {financialStats.totalRedemptions}
+                  </div>
+                  <p className="text-[11px] text-neutral-500 font-sans">
+                    Guaranteed single-use redemptions tracked and invoiced.
+                  </p>
+                </div>
+
+                <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-2">
+                  <div className="flex items-center justify-between text-neutral-400 text-xs">
+                    <span className="uppercase tracking-wider">Live Signal Velocity</span>
+                    <Radio className="w-4 h-4 text-[#8BE000] animate-pulse" />
+                  </div>
+                  <div className="text-3xl font-display text-[#8BE000]">
+                    {signalFrequencies.frequency24h} <span className="text-xs text-neutral-400">/ 24h</span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 font-sans">
+                    {signalFrequencies.frequency7d} in past 7d • {signalFrequencies.frequency30d} in past 30d
                   </p>
                 </div>
               </div>
-              <Link
-                href="/trader/certification"
-                className="bg-[#121212] hover:bg-[#1C1C1C] border border-[#2E2E2E] text-white px-4 py-2 font-mono text-xs shrink-0 transition"
-              >
-                {t.traderHubViewCert}
-              </Link>
-            </div>
-          ) : certificationStatus === "pending" ? (
-            <div className="border border-amber-600/40 bg-[#141005] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                    {t.traderHubCertPending}
-                  </span>
-                  <p className="text-xs text-neutral-300 font-sans">
-                    {t.traderHubCertPendingDesc}
-                  </p>
+
+              {/* Quick Hub Launchers */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-4 hover:border-[#2E2E2E] transition">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 bg-[#8BE000]/10 border border-[#8BE000]/30 flex items-center justify-center text-[#8BE000]">
+                      <Radio className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs bg-[#1C1C1C] px-2 py-0.5 text-neutral-300">
+                      {strategies.length} Active
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-display text-white">Quantitative Strategies</h3>
+                    <p className="text-xs text-neutral-400 font-sans mt-1">
+                      Create strategies with secret ntfy channel topics and push live algorithmic signals.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("strategies")}
+                    className="text-xs text-[#8BE000] flex items-center gap-1 hover:underline font-bold"
+                  >
+                    Manage Strategies →
+                  </button>
+                </div>
+
+                <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-4 hover:border-[#2E2E2E] transition">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 bg-blue-950/40 border border-blue-800/40 flex items-center justify-center text-blue-400">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <Link
+                      href="/trader/courses/new"
+                      className="text-xs bg-[#8BE000] text-black font-bold px-2.5 py-1 hover:bg-[#9BF500]"
+                    >
+                      + Create Course
+                    </Link>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-display text-white">Educational Curriculum</h3>
+                    <p className="text-xs text-neutral-400 font-sans mt-1">
+                      Author comprehensive stock masterclasses with video modules and materials.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("courses")}
+                    className="text-xs text-[#8BE000] flex items-center gap-1 hover:underline font-bold"
+                  >
+                    View Curriculum ({courses.length}) →
+                  </button>
+                </div>
+
+                <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-4 hover:border-[#2E2E2E] transition">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 bg-purple-950/40 border border-purple-800/40 flex items-center justify-center text-purple-400">
+                      <KeyRound className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs bg-[#1C1C1C] px-2 py-0.5 text-neutral-300">
+                      Single-Use Strict
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-display text-white">Access Code Issuance</h3>
+                    <p className="text-xs text-neutral-400 font-sans mt-1">
+                      Issue single-use access codes for items. Redeeming places debt on trader account and invoices.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("access_codes")}
+                    className="text-xs text-[#8BE000] flex items-center gap-1 hover:underline font-bold"
+                  >
+                    Issue Codes ({accessCodes.length}) →
+                  </button>
                 </div>
               </div>
-              <Link
-                href="/trader/certification"
-                className="bg-[#1A1A1A] hover:bg-[#262626] text-white px-4 py-2 font-mono text-xs shrink-0 transition"
-              >
-                {t.traderHubViewAppStatus}
-              </Link>
-            </div>
-          ) : certificationStatus === "rejected" ? (
-            <div className="border border-red-600/40 bg-[#160606] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-xs text-red-400 font-bold uppercase tracking-wider">
-                  {t.traderHubCertRejected}
-                </span>
-                <p className="text-xs text-neutral-300 font-sans">
-                  {t.traderHubCertRejectedDesc}
-                </p>
-              </div>
-              <Link href="/trader/certification" className="bg-red-950 border border-red-700 text-white px-4 py-2 text-xs font-bold">
-                {t.traderHubResubmitDossier}
-              </Link>
-            </div>
-          ) : (
-            /* certificationStatus === "none" — never submitted */
-            <div className="border border-[#1E1E1E] bg-[#111111] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 text-neutral-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
-                    {t.traderHubCertRequired}
-                  </span>
-                  <p className="text-xs text-neutral-400 font-sans">
-                    {t.traderHubCertRequiredDesc}
+
+              {/* Portal Links Bar */}
+              <div className="border border-[#1E1E1E] bg-[#141414] p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                    Separate Platform Portals
+                  </h4>
+                  <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                    Navigate easily between the dedicated portals of the 360° Markets ecosystem.
                   </p>
                 </div>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/user"
+                    className="bg-[#1A1A1A] hover:bg-[#262626] border border-[#333] text-white px-3.5 py-2 text-xs flex items-center gap-1.5 transition"
+                  >
+                    <span>Investor Portal (/user)</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-[#8BE000]" />
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className="bg-[#1A1A1A] hover:bg-[#262626] border border-[#333] text-red-400 px-3.5 py-2 text-xs flex items-center gap-1.5 transition"
+                  >
+                    <span>Admin Portal (/admin)</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-red-400" />
+                  </Link>
+                </div>
               </div>
-              <Link
-                href="/trader/certification"
-                className="btn-lime text-black px-5 py-2.5 font-bold text-xs shrink-0"
-              >
-                {t.traderHubSubmitDossier}
-              </Link>
             </div>
           )}
 
-          {/* Technical Signals Studio Banner */}
-          <div className="bg-[#141414] border border-[#262626] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Radio className="w-4 h-4 text-[#8BE000] animate-pulse" />
-                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  {t.traderHubSignalsBannerTitle}
-                </span>
-              </div>
-              <p className="text-xs text-neutral-400 font-sans max-w-xl">
-                {t.traderHubSignalsBannerDesc}
-              </p>
-            </div>
-            <Link
-              href="/trader/signals"
-              className="btn-lime text-xs px-5 py-2.5 font-bold text-black flex items-center gap-1.5 shrink-0"
-            >
-              <span>{t.traderHubOpenSignalStudio}</span>
-              <ArrowUpRight className="w-4 h-4 text-black" />
-            </Link>
-          </div>
-
-          {/* Revenue & Growth Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
-              <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">{t.traderHubNetPayout}</span>
-                <DollarSign className="w-4 h-4 text-[#8BE000]" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-[#8BE000]">
-                {formatPrice(educatorShare)}
-              </div>
-              <div className="text-[10px] text-neutral-500 font-mono">
-                {t.traderHubGross}: {formatPrice(grossRevenue)}
-              </div>
-            </div>
-
-            <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
-              <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">{t.traderHubPaidEnrollments}</span>
-                <Users className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-white">
-                {totalSubscribers}
-              </div>
-              <div className="text-[10px] text-neutral-500 font-mono">
-                {t.traderHubActiveStudents}
-              </div>
-            </div>
-
-            <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
-              <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">{t.traderHubMyCourses}</span>
-                <BookOpen className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-white">
-                {totalCourses}
-              </div>
-              <div className="text-[10px] text-neutral-500 font-mono">
-                {t.traderHubPublishedCurriculum}
-              </div>
-            </div>
-
-            <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-3 transition-colors hover:border-[#2E2E2E]">
-              <div className="flex items-center justify-between text-neutral-400 text-xs">
-                <span className="tracking-wider uppercase text-[10px]">{t.traderHubLiveWebinars}</span>
-                <Video className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-display font-light tracking-tight text-white">
-                {totalWebinars}
-              </div>
-              <div className="text-[10px] text-neutral-500 font-mono">
-                {t.traderHubScheduledSessions}
-              </div>
-            </div>
-          </div>
-
-          {/* Published Courses */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-[#1E1E1E]">
-              <div>
-                <h3 className="text-xl font-display font-medium text-white tracking-tight">
-                  {t.traderHubMyCurriculum} ({coursesList.length})
-                </h3>
-                <p className="text-xs text-neutral-400 font-sans">
-                  {t.traderHubCoursesAuthored}
-                </p>
-              </div>
-
-              <Link href="/trader/courses/new" className="btn-lime px-4 py-2 text-xs font-bold text-black flex items-center gap-1.5">
-                <Plus className="w-4 h-4" />
-                <span>{t.traderHubCreateNewCourse}</span>
-              </Link>
-            </div>
-
-            {coursesList.length === 0 ? (
-              <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center text-xs text-neutral-500 font-mono space-y-2">
-                <div className="text-neutral-300 font-bold">{t.traderHubNoCoursesYet}</div>
-                {isCertified ? (
-                  <p>{t.traderHubCreateFirstCoursePrompt}</p>
-                ) : (
-                  <p>{t.traderHubCompleteCertPrompt}</p>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {coursesList.map((crs) => (
-                  <div key={crs.id} className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-4 hover:border-[#2E2E2E] transition-colors">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[9px] bg-black text-[#8BE000] font-bold px-1.5 py-0.5 border border-[#222]">
-                        {crs.category || t.commonStockTrading || "Stock Trading"}
-                      </span>
-                      <span className="text-xs text-white font-bold">{formatPrice(crs.price || 0)}</span>
-                    </div>
-
-                    <h4 className="text-lg font-display font-bold text-white leading-snug">{crs.title}</h4>
-                    <p className="text-xs text-neutral-400 line-clamp-2 font-sans">{crs.description}</p>
-
-                    <div className="pt-3 border-t border-[#1E1E1E] flex justify-between items-center text-xs text-neutral-500">
-                      <span>{crs.published ? (t.commonActive || "Published") : "Pending QA"}</span>
-                      <Link href={`/courses/${crs.slug || crs.id}`} className="text-[#8BE000] hover:underline flex items-center gap-1">
-                        <span>{t.btnViewCourse?.replace(" →", "") || "View"}</span>
-                        <ArrowUpRight className="w-3 h-3" />
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* MY LIVE STREAMS & WEBINARS */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-[#1E1E1E]">
-              <div>
-                <h3 className="text-xl font-display font-medium text-white tracking-tight">
-                  {t.traderHubMyLiveWebinars} ({webinarsList.length})
-                </h3>
-                <p className="text-xs text-neutral-400 font-sans">
-                  {t.traderHubWebinarsDesc}
-                </p>
-              </div>
-
-              {isCertified ? (
-                <Link href="/trader/webinars/new" className="btn-lime px-4 py-2 text-xs font-bold text-black flex items-center gap-1.5">
-                  <Radio className="w-4 h-4 text-black" />
-                  <span>{t.traderHubScheduleProSession}</span>
-                </Link>
-              ) : (
-                <div className="flex items-center gap-2 bg-[#111111] border border-[#1E1E1E] px-4 py-2 text-xs text-neutral-500 cursor-not-allowed">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>{t.traderHubCertRequiredToSchedule}</span>
+          {/* 2. STRATEGIES TAB (Strategy :: Item) */}
+          {activeTab === "strategies" && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#1E1E1E]">
+                <div>
+                  <h2 className="text-2xl font-display text-white">Quantitative Strategies</h2>
+                  <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                    Strategy :: Item =&gt; Strategy ID: string, ntfy.sh topic name: string. Secret channel code known only to trader until subscriber redemption.
+                  </p>
                 </div>
-              )}
-            </div>
-
-            {webinarsList.length === 0 ? (
-              <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center text-xs text-neutral-500 font-mono space-y-2">
-                <div className="text-neutral-300 font-bold">{t.traderHubNoWebinarsYet}</div>
-                {isCertified ? (
-                  <p>{t.traderHubScheduleFirstWebinarPrompt}</p>
-                ) : (
-                  <p>{t.traderHubCompleteCertToSchedulePrompt}</p>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {webinarsList.map((web) => (
-                  <div key={web.id} className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-4 hover:border-[#2E2E2E] transition-colors flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="text-[9px] bg-red-950 text-red-400 font-bold px-1.5 py-0.5 border border-red-800">
-                          {web.status || "UPCOMING"}
-                        </span>
-                        <span className="text-xs text-white font-bold">{formatPrice(web.price || 0)}</span>
-                      </div>
-                      <h4 className="text-lg font-display font-bold text-white leading-snug">{web.title}</h4>
-                      <p className="text-xs text-neutral-400 line-clamp-2 font-sans">{web.description}</p>
-                      
-                      <div className="text-[11px] text-neutral-500 space-y-1 font-mono">
-                        <div>Date: {web.date} @ {web.start_time}</div>
-                        <div>Attendees Capacity: {web.filled_seats || 0} / {web.max_attendees} Enrolled</div>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-[#1E1E1E] flex justify-between items-center mt-4">
-                      <span className="text-xs text-neutral-500">{web.duration_minutes} Mins Duration</span>
-                      <Link href={`/webinars/${web.id}/pro-live`} className="bg-[#8BE000] text-black font-bold text-xs px-4 py-2 hover:bg-[#9DFF00] transition flex items-center gap-1.5">
-                        <Radio className="w-3.5 h-3.5 text-black" />
-                        <span>{t.traderHubGoLiveBtn}</span>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* SUBSCRIBER INVITATION CODES & ACCESS ISSUANCE */}
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-[#1E1E1E]">
-              <div>
-                <h3 className="text-xl font-display font-medium text-white tracking-tight flex items-center gap-2">
-                  <KeyRound className="w-5 h-5 text-[#8BE000]" />
-                  <span>{t.traderHubIssueCodesTitle}</span>
-                </h3>
-                <p className="text-xs text-neutral-400 font-sans">
-                  {t.traderHubIssueCodesDesc}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-mono text-neutral-400 bg-[#111] px-3 py-1.5 border border-[#1E1E1E]">
-                <span className="w-2 h-2 rounded-full bg-[#8BE000] animate-pulse" />
-                <span>{traderCodes.length} {t.traderHubSubscriberCodesCount}</span>
-              </div>
-            </div>
-
-            {/* Code Generator Form */}
-            <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
-                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-[#8BE000]" />
-                  <span>{t.traderHubIssueNewCode}</span>
-                </span>
                 <button
-                  type="button"
-                  onClick={() => {
-                    const rand = Math.floor(100 + Math.random() * 900);
-                    const prefix = user?.firstName?.toUpperCase() || "TRD";
-                    setTraderCodeString(`${prefix}-VIP-${rand}`);
-                  }}
-                  className="text-[11px] text-[#8BE000] hover:underline font-mono"
+                  onClick={() => setShowCreateStrategyModal(true)}
+                  className="bg-[#8BE000] text-black font-bold text-xs px-4 py-2.5 hover:bg-[#9BF500] flex items-center gap-2 transition"
                 >
-                  {t.traderHubRandomizeCode}
+                  <Plus className="w-4 h-4" />
+                  <span>Create New Strategy</span>
                 </button>
               </div>
 
-              {issueMsg && (
-                <div
-                  className={`p-3 text-xs font-mono flex items-center gap-2 border ${
-                    issueMsg.success
-                      ? "bg-[#8BE000]/10 border-[#8BE000] text-[#8BE000]"
-                      : "bg-red-950/40 border-red-800 text-red-400"
-                  }`}
-                >
-                  {issueMsg.success ? (
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  ) : (
-                    <XCircle className="w-4 h-4 shrink-0" />
-                  )}
-                  <span>{issueMsg.text}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleIssueTraderCode} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
-                {/* Code String */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    {t.traderHubCodeStringLabel}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. ALEX-VIP"
-                    value={traderCodeString}
-                    onChange={(e) => setTraderCodeString(e.target.value.toUpperCase())}
-                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white uppercase tracking-wider outline-none"
-                  />
-                </div>
-
-                {/* Target Content / Scope */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    {t.traderHubCodeScopeLabel}
-                  </label>
-                  <select
-                    value={traderCodeScope}
-                    onChange={(e) => setTraderCodeScope(e.target.value as any)}
-                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
-                  >
-                    <option value="COURSE">{t.traderHubScopeCourse}</option>
-                    <option value="TRADER_BUNDLE">{t.traderHubScopeBundle}</option>
-                    <option value="SIGNALS">{t.traderHubScopeSignals}</option>
-                  </select>
-                </div>
-
-                {/* Specific Course Select (if scope === COURSE) */}
-                {traderCodeScope === "COURSE" ? (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                      {t.traderHubTargetCourseLabel}
-                    </label>
-                    <select
-                      value={traderCodeTargetCourseId}
-                      onChange={(e) => setTraderCodeTargetCourseId(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
-                    >
-                      {coursesList.map((crs) => (
-                        <option key={crs.id} value={crs.id}>
-                          {crs.title}
-                        </option>
-                      ))}
-                      {coursesList.length === 0 && (
-                        <option value="c-1">Quantitative Stock Trading (Default)</option>
-                      )}
-                    </select>
-                  </div>
-                ) : (
-                  /* Validity / Duration */
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                      {t.traderHubValidityLabel}
-                    </label>
-                    <select
-                      value={traderCodeDuration}
-                      onChange={(e) => setTraderCodeDuration(Number(e.target.value))}
-                      className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
-                    >
-                      <option value={30}>30 Days</option>
-                      <option value={60}>60 Days</option>
-                      <option value={90}>90 Days</option>
-                      <option value={180}>180 Days</option>
-                      <option value={365}>365 Days</option>
-                      <option value={9999}>Lifetime Unlimited</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Max Uses */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    {t.traderHubMaxUsesLabel}
-                  </label>
-                  <select
-                    value={traderCodeMaxUses}
-                    onChange={(e) => setTraderCodeMaxUses(Number(e.target.value))}
-                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
-                  >
-                    <option value={5}>5 Uses (VIP Inner Circle)</option>
-                    <option value={20}>20 Uses (Cohort)</option>
-                    <option value={50}>50 Uses (Webinar Cohort)</option>
-                    <option value={100}>100 Uses (Community)</option>
-                    <option value={500}>500 Uses (Telegram Group)</option>
-                    <option value={99999}>Unlimited Uses</option>
-                  </select>
-                </div>
-
-                {/* Notes */}
-                <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
-                  <label className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                    {t.traderHubNotesLabel}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Free access voucher for Q4 quantitative workshop attendees"
-                    value={traderCodeNotes}
-                    onChange={(e) => setTraderCodeNotes(e.target.value)}
-                    className="w-full bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#8BE000] px-3 py-2 text-white outline-none"
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <div className="flex items-end md:col-span-2 lg:col-span-1">
+              {strategies.length === 0 ? (
+                <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center space-y-3">
+                  <Layers className="w-10 h-10 text-neutral-600 mx-auto" />
+                  <p className="text-sm text-neutral-400">No quantitative strategies created yet.</p>
                   <button
-                    type="submit"
-                    disabled={isIssuingCode || !traderCodeString.trim()}
-                    className="w-full btn-lime text-black font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 disabled:opacity-40"
+                    onClick={() => setShowCreateStrategyModal(true)}
+                    className="btn-lime text-black font-bold text-xs px-4 py-2 inline-block"
                   >
-                    <KeyRound className="w-3.5 h-3.5" />
-                    <span>{isIssuingCode ? t.traderHubCreatingCode : t.traderHubCreateCodeBtn}</span>
+                    Create First Strategy
                   </button>
                 </div>
-              </form>
-            </div>
-
-            {/* Issued Codes Table */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-white uppercase tracking-wider">{t.traderHubActiveCodesTitle}</span>
-                <button
-                  onClick={fetchTraderCodes}
-                  className="text-neutral-400 hover:text-white flex items-center gap-1 text-[11px]"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>{t.traderHubRefreshCodes}</span>
-                </button>
-              </div>
-
-              {traderCodes.length === 0 ? (
-                <div className="border border-[#1E1E1E] bg-[#111111] p-10 text-center text-xs text-neutral-500 font-mono space-y-2">
-                  <div className="text-neutral-300 font-bold">{t.traderHubNoCodesYet}</div>
-                  <p>{t.traderHubNoCodesPrompt}</p>
-                </div>
               ) : (
-                <div className="border border-[#1E1E1E] bg-[#111111] overflow-x-auto">
-                  <table className="w-full text-left text-xs font-mono min-w-[700px]">
-                    <thead className="bg-[#0B0B0B] border-b border-[#1E1E1E] text-neutral-400 uppercase text-[9px] tracking-wider">
-                      <tr>
-                        <th className="p-4">{t.traderHubColCode}</th>
-                        <th className="p-4">{t.traderHubColAccess}</th>
-                        <th className="p-4">{t.traderHubColValidity}</th>
-                        <th className="p-4">{t.traderHubColRedemptions}</th>
-                        <th className="p-4">{t.traderHubColStatus}</th>
-                        <th className="p-4 text-right">{t.traderHubColActions}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#1E1E1E]">
-                      {traderCodes.map((item) => (
-                        <tr key={item.id} className="hover:bg-[#161616] transition-colors">
-                          {/* Code & Link */}
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-[#8BE000] text-sm tracking-wider bg-black px-2 py-0.5 border border-[#222]">
-                                {item.code}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {strategies.map((strat) => {
+                    const isTopicRevealed = revealedTopics[strat.id] || false;
+                    return (
+                      <div
+                        key={strat.id}
+                        className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-4 hover:border-[#2E2E2E] transition flex flex-col justify-between"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[10px] bg-[#181818] border border-[#2E2E2E] text-[#8BE000] px-2 py-0.5 font-bold">
+                              ID: {strat.strategyId}
+                            </span>
+                            <span className="text-sm font-bold text-white">
+                              {formatPrice(strat.price)}
+                            </span>
+                          </div>
+
+                          <h3 className="text-xl font-display text-white">{strat.name}</h3>
+                          <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+                            {strat.description}
+                          </p>
+
+                          {/* Secret ntfy.sh Channel Topic */}
+                          <div className="p-3 bg-[#090909] border border-[#222] space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-neutral-400 flex items-center gap-1.5">
+                                <Radio className="w-3.5 h-3.5 text-[#8BE000]" />
+                                <span>Private ntfy.sh Topic:</span>
                               </span>
                               <button
-                                type="button"
-                                onClick={() => handleCopyCode(item.id, item.code)}
-                                className="text-neutral-500 hover:text-white transition p-1"
-                                title="Copy code"
+                                onClick={() =>
+                                  setRevealedTopics((prev) => ({
+                                    ...prev,
+                                    [strat.id]: !prev[strat.id],
+                                  }))
+                                }
+                                className="text-[10px] text-neutral-400 hover:text-white flex items-center gap-1"
                               >
-                                {copiedCodeId === item.id ? (
-                                  <span className="text-[10px] text-[#8BE000] font-bold">COPIED!</span>
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyShareLink(item.id, item.code)}
-                                className="text-neutral-500 hover:text-[#8BE000] transition p-1"
-                                title="Copy Share Link (/redeem?code=...)"
-                              >
-                                {copiedLinkId === item.id ? (
-                                  <span className="text-[10px] text-[#8BE000] font-bold">LINK COPIED!</span>
-                                ) : (
-                                  <Share2 className="w-3.5 h-3.5" />
-                                )}
+                                {isTopicRevealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                <span>{isTopicRevealed ? "Hide" : "Reveal"}</span>
                               </button>
                             </div>
-                            {item.notes && (
-                              <p className="text-[10px] text-neutral-500 mt-1 max-w-xs truncate">
-                                {item.notes}
-                              </p>
-                            )}
-                          </td>
 
-                          {/* Access Granted */}
-                          <td className="p-4">
-                            <div className="space-y-0.5">
-                              <span
-                                className={`text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider inline-block ${
-                                  item.scope === "COURSE"
-                                    ? "bg-blue-950/60 text-blue-300 border border-blue-800/60"
-                                    : item.scope === "TRADER_BUNDLE"
-                                    ? "bg-purple-950/60 text-purple-300 border border-purple-800/60"
-                                    : "bg-[#8BE000]/15 text-[#8BE000] border border-[#8BE000]/40"
-                                }`}
-                              >
-                                {item.scope === "COURSE" ? t.traderHubScopeCourse : item.scope === "TRADER_BUNDLE" ? t.traderHubScopeBundle : t.traderHubScopeSignals}
+                            <div className="flex items-center justify-between text-xs font-mono text-[#8BE000]">
+                              <span>
+                                {isTopicRevealed ? strat.ntfyTopic : "•••••••••••••••••••• (Trader Secret)"}
                               </span>
-                              {item.targetCourseTitle && (
-                                <div className="text-[11px] text-neutral-300 max-w-xs truncate font-sans">
-                                  {item.targetCourseTitle}
-                                </div>
+                              {isTopicRevealed && strat.ntfyTopic && (
+                                <button
+                                  onClick={() => copyToClipboard(`https://ntfy.sh/${strat.ntfyTopic}`, strat.id)}
+                                  className="text-neutral-400 hover:text-white p-1"
+                                  title="Copy ntfy URL"
+                                >
+                                  {copiedId === strat.id ? (
+                                    <Check className="w-3.5 h-3.5 text-[#8BE000]" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
                               )}
                             </div>
-                          </td>
+                          </div>
 
-                          {/* Validity */}
-                          <td className="p-4 text-neutral-300 text-xs">
-                            {item.durationDays >= 9999 || item.durationDays === 0 ? (
-                              <span className="text-[#8BE000] font-bold">Lifetime</span>
-                            ) : (
-                              `${item.durationDays} Days`
-                            )}
-                          </td>
+                          <div className="grid grid-cols-2 gap-2 text-xs text-neutral-400 pt-2 border-t border-[#1C1C1C]">
+                            <div>Subscribers: <span className="text-white font-bold">{strat.activeSubscribers || 0}</span></div>
+                            <div>Signals Pushed: <span className="text-white font-bold">{strat.signalsCount || 0}</span></div>
+                          </div>
+                        </div>
 
-                          {/* Redemptions */}
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <div className="text-[11px] text-neutral-300">
-                                <strong className="text-white">{item.usedCount || 0}</strong>
-                                <span className="text-neutral-500"> / {item.maxUses >= 99999 ? "∞" : item.maxUses}</span>
-                              </div>
-                              <div className="w-20 bg-[#222] h-1 rounded-full overflow-hidden">
-                                <div
-                                  className="bg-[#8BE000] h-full"
-                                  style={{
-                                    width: `${Math.min(100, ((item.usedCount || 0) / (item.maxUses >= 99999 ? 100 : item.maxUses)) * 100)}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </td>
+                        <div className="pt-4 border-t border-[#1E1E1E] flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedStrategyId(strat.strategyId || strat.id);
+                              setActiveTab("signals");
+                            }}
+                            className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-white text-xs px-3 py-1.5 flex items-center gap-1.5 transition"
+                          >
+                            <Send className="w-3 h-3 text-[#8BE000]" />
+                            <span>Broadcast Signal</span>
+                          </button>
 
-                          {/* Status */}
-                          <td className="p-4">
-                            <span
-                              className={`text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider flex items-center gap-1 w-max ${
-                                item.status === "ACTIVE"
-                                  ? "bg-green-950/60 text-green-400 border border-green-800/60"
-                                  : "bg-red-950/60 text-red-400 border border-red-800/60"
-                              }`}
-                            >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  item.status === "ACTIVE" ? "bg-green-400" : "bg-red-400"
-                                }`}
-                              />
-                              <span>{item.status}</span>
-                            </span>
-                          </td>
-
-                          {/* Actions */}
-                          <td className="p-4 text-right space-x-2 whitespace-nowrap">
-                            <button
-                              onClick={() => openTraderEdit(item)}
-                              className="text-[11px] font-mono px-2 py-1 text-neutral-300 hover:text-white bg-[#1A1A1A] hover:bg-[#252525] border border-[#333] transition inline-flex items-center gap-1"
-                            >
-                              <Edit3 className="w-3 h-3 text-[#8BE000]" />
-                              <span>{t.traderHubEditBtn}</span>
-                            </button>
-
-                            <button
-                              onClick={() => handleToggleTraderCode(item.id, item.status)}
-                              className={`text-[11px] font-mono px-2 py-1 transition border ${
-                                item.status === "ACTIVE"
-                                  ? "text-amber-400 hover:text-amber-300 bg-amber-950/30 border-amber-900/40"
-                                  : "text-green-400 hover:text-green-300 bg-green-950/30 border-green-900/40"
-                              }`}
-                            >
-                              {item.status === "ACTIVE" ? t.traderHubRevokeBtn : t.traderHubReactivateBtn}
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteTraderCode(item.id)}
-                              className="text-neutral-500 hover:text-red-400 transition p-1 inline-block"
-                              title="Delete code"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          <button
+                            onClick={() => {
+                              setIssueItemId(strat.id);
+                              setActiveTab("access_codes");
+                            }}
+                            className="text-xs text-[#8BE000] hover:underline flex items-center gap-1"
+                          >
+                            <KeyRound className="w-3 h-3" />
+                            <span>Issue Single-Use Code</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
-          </div>
+          )}
 
-          {/* EDIT TRADER CODE MODAL */}
-          {editingTraderCode && (
+          {/* 3. SIGNAL BROADCASTER & RECENT HISTORY TAB */}
+          {activeTab === "signals" && (
+            <div className="space-y-8">
+              {/* Top Frequency Indicators Bar */}
+              <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1E1E1E] pb-4">
+                  <div>
+                    <h2 className="text-xl font-display text-white flex items-center gap-2">
+                      <Radio className="w-5 h-5 text-[#8BE000] animate-pulse" />
+                      <span>Signal Velocity & Frequency Statistics</span>
+                    </h2>
+                    <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                      Show frequency of signals: past 24 hours, past week (7d), and past month (30d).
+                    </p>
+                  </div>
+                  <div className="text-xs text-neutral-400">
+                    Total Broadcasts: <span className="text-white font-bold">{signalFrequencies.totalCount}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-[#090909] border border-[#222] p-4 text-center space-y-1">
+                    <div className="text-[11px] text-neutral-400 uppercase tracking-widest">Past 24 Hours</div>
+                    <div className="text-3xl font-display text-[#8BE000]">
+                      {signalFrequencies.frequency24h}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Real-time signals pushed</div>
+                  </div>
+
+                  <div className="bg-[#090909] border border-[#222] p-4 text-center space-y-1">
+                    <div className="text-[11px] text-neutral-400 uppercase tracking-widest">Past Week (7 Days)</div>
+                    <div className="text-3xl font-display text-white">
+                      {signalFrequencies.frequency7d}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Rolling 7-day volume</div>
+                  </div>
+
+                  <div className="bg-[#090909] border border-[#222] p-4 text-center space-y-1">
+                    <div className="text-[11px] text-neutral-400 uppercase tracking-widest">Past Month (30 Days)</div>
+                    <div className="text-3xl font-display text-white">
+                      {signalFrequencies.frequency30d}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Monthly cumulative total</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Signal Broadcast Form (Strategy ID, Signal -> ntfy.sh) */}
+              <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
+                  <h3 className="text-lg font-display text-white flex items-center gap-2">
+                    <Send className="w-4 h-4 text-[#8BE000]" />
+                    <span>Broadcast Signal to Strategy ntfy Channel</span>
+                  </h3>
+                  <span className="text-xs text-neutral-400 font-mono">
+                    Target: Strategy ID::string, Signal::string -&gt; ntfy.sh
+                  </span>
+                </div>
+
+                {broadcastResult && (
+                  <div
+                    className={`p-3 text-xs border flex items-center gap-2 ${
+                      broadcastResult.success
+                        ? "bg-[#8BE000]/10 border-[#8BE000] text-[#8BE000]"
+                        : "bg-red-950/40 border-red-800 text-red-400"
+                    }`}
+                  >
+                    {broadcastResult.success ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    <span>{broadcastResult.msg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleBroadcastSignal} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Strategy ID Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Select Strategy (Strategy ID) *
+                      </label>
+                      <select
+                        value={selectedStrategyId}
+                        onChange={(e) => setSelectedStrategyId(e.target.value)}
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      >
+                        {strategies.map((s) => (
+                          <option key={s.id} value={s.strategyId || s.id}>
+                            [{s.strategyId}] {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Action */}
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Action *
+                      </label>
+                      <select
+                        value={signalAction}
+                        onChange={(e) => setSignalAction(e.target.value as any)}
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      >
+                        <option value="BUY">BUY (Long Entry)</option>
+                        <option value="SELL">SELL (Short / Exit)</option>
+                        <option value="ALERT">ALERT (Stop / Target Update)</option>
+                        <option value="HOLD">HOLD (Position Update)</option>
+                      </select>
+                    </div>
+
+                    {/* Symbol */}
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Ticker Symbol *
+                      </label>
+                      <input
+                        type="text"
+                        value={signalSymbol}
+                        onChange={(e) => setSignalSymbol(e.target.value)}
+                        placeholder="e.g. NVDA, AAPL, 00700.HK"
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quantitative Parameters */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Entry Price ($)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={signalEntryPrice}
+                        onChange={(e) => setSignalEntryPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                        placeholder="128.50"
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Take Profit ($)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={signalTargetPrice}
+                        onChange={(e) => setSignalTargetPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                        placeholder="145.00"
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Stop Loss ($)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={signalStopLoss}
+                        onChange={(e) => setSignalStopLoss(e.target.value === "" ? "" : Number(e.target.value))}
+                        placeholder="122.00"
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Risk : Reward</label>
+                      <input
+                        type="text"
+                        value={signalRiskReward}
+                        onChange={(e) => setSignalRiskReward(e.target.value)}
+                        placeholder="1 : 2.5"
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notes / Signal Description */}
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                      Signal Analysis / Rationale
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={signalNotes}
+                      onChange={(e) => setSignalNotes(e.target.value)}
+                      placeholder="e.g. 4H chart breakout confirmation with 2.8x volume surge and institutional dark pool support at $127."
+                      className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-[11px] text-neutral-400">
+                      Dispatches direct push to subscriber channel topic via HTTP POST.
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={isBroadcasting}
+                      className="bg-[#8BE000] text-black font-bold text-xs px-6 py-2.5 hover:bg-[#9BF500] transition flex items-center gap-2"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{isBroadcasting ? "Pushing Signal..." : "Broadcast Signal Now"}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Historical Signals: S0, S1, S2... S16 => S3, S8 (timestamp, signal) */}
+              <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#1E1E1E] pb-4">
+                  <div>
+                    <h3 className="text-lg font-display text-white">Historical Signals Log</h3>
+                    <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                      Historical signals: S0, S1, S2, ... S16 =&gt; Filter specific identifiers (e.g. S3, S8) with timestamp and payload.
+                    </p>
+                  </div>
+
+                  {/* Quick Tag Selector Bar */}
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                    <button
+                      onClick={() => setSelectedSignalTag(null)}
+                      className={`px-2 py-0.5 border text-[11px] transition ${
+                        selectedSignalTag === null
+                          ? "bg-[#8BE000] text-black font-bold border-[#8BE000]"
+                          : "bg-[#181818] text-neutral-400 border-[#2E2E2E] hover:text-white"
+                      }`}
+                    >
+                      ALL
+                    </button>
+                    {signals.slice(0, 10).map((sig) => (
+                      <button
+                        key={sig.id}
+                        onClick={() => setSelectedSignalTag(selectedSignalTag === sig.id ? null : sig.id)}
+                        className={`px-2 py-0.5 border text-[11px] transition ${
+                          selectedSignalTag === sig.id
+                            ? "bg-[#8BE000] text-black font-bold border-[#8BE000]"
+                            : "bg-[#181818] text-neutral-400 border-[#2E2E2E] hover:text-white"
+                        }`}
+                      >
+                        {sig.id}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filteredSignals.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-neutral-500">
+                    No signals found matching the current criteria.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#1E1E1E] text-neutral-500 text-[10px] uppercase">
+                          <th className="py-2.5 px-3">Signal ID</th>
+                          <th className="py-2.5 px-3">Timestamp</th>
+                          <th className="py-2.5 px-3">Strategy ID</th>
+                          <th className="py-2.5 px-3">Action</th>
+                          <th className="py-2.5 px-3">Payload / Signal</th>
+                          <th className="py-2.5 px-3 text-right">Delivery Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#1A1A1A]">
+                        {filteredSignals.map((sig) => (
+                          <tr key={sig.id} className="hover:bg-[#161616] transition">
+                            <td className="py-3 px-3 font-bold text-[#8BE000] whitespace-nowrap">
+                              {sig.id}
+                            </td>
+                            <td className="py-3 px-3 text-neutral-400 whitespace-nowrap">
+                              {new Date(sig.timestamp).toLocaleDateString()} {new Date(sig.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-3 px-3 text-white font-mono whitespace-nowrap">
+                              {sig.strategyId}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span
+                                className={`text-[10px] px-1.5 py-0.5 font-bold ${
+                                  sig.action === "BUY"
+                                    ? "bg-green-950 text-green-400 border border-green-800"
+                                    : sig.action === "SELL"
+                                    ? "bg-red-950 text-red-400 border border-red-800"
+                                    : "bg-amber-950 text-amber-400 border border-amber-800"
+                                }`}
+                              >
+                                {sig.action}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-neutral-300 max-w-md font-sans">
+                              {sig.signalText}
+                            </td>
+                            <td className="py-3 px-3 text-right whitespace-nowrap">
+                              <span className="text-[10px] text-[#8BE000] bg-[#8BE000]/10 border border-[#8BE000]/30 px-2 py-0.5">
+                                {sig.ntfyStatus} (ntfy.sh)
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 4. COURSES TAB (Course :: Item) */}
+          {activeTab === "courses" && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#1E1E1E]">
+                <div>
+                  <h2 className="text-2xl font-display text-white">Curriculum & Courses</h2>
+                  <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                    Course :: Item =&gt; Full course creation option for educator studio, module design, and single-use code issuance.
+                  </p>
+                </div>
+                <Link
+                  href="/trader/courses/new"
+                  className="bg-[#8BE000] text-black font-bold text-xs px-4 py-2.5 hover:bg-[#9BF500] flex items-center gap-2 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create Course</span>
+                </Link>
+              </div>
+
+              {courses.length === 0 ? (
+                <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center space-y-3">
+                  <BookOpen className="w-10 h-10 text-neutral-600 mx-auto" />
+                  <p className="text-sm text-neutral-400">No courses published yet.</p>
+                  <Link
+                    href="/trader/courses/new"
+                    className="btn-lime text-black font-bold text-xs px-4 py-2 inline-block"
+                  >
+                    Launch First Course
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.map((crs) => (
+                    <div
+                      key={crs.id}
+                      className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-4 hover:border-[#2E2E2E] transition flex flex-col justify-between"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <span className="text-[10px] bg-black text-[#8BE000] font-bold px-2 py-0.5 border border-[#222]">
+                            {crs.category || "Equities"}
+                          </span>
+                          <span className="text-xs text-white font-bold">{formatPrice(crs.price)}</span>
+                        </div>
+
+                        <h3 className="text-lg font-display text-white">{crs.name}</h3>
+                        <p className="text-xs text-neutral-400 line-clamp-2 font-sans">{crs.description}</p>
+
+                        <div className="pt-2 text-xs text-neutral-400 flex items-center justify-between border-t border-[#1C1C1C]">
+                          <span>Enrolled: <strong className="text-white">{crs.enrolledCount || 0}</strong></span>
+                          <span>Level: <strong className="text-white">{crs.level || "All Levels"}</strong></span>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-[#1E1E1E] flex items-center justify-between">
+                        <button
+                          onClick={() => {
+                            setIssueItemId(crs.id);
+                            setActiveTab("access_codes");
+                          }}
+                          className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-[#8BE000] text-xs px-3 py-1.5 flex items-center gap-1.5 transition"
+                        >
+                          <KeyRound className="w-3 h-3" />
+                          <span>Issue Single-Use Code</span>
+                        </button>
+                        <Link
+                          href={`/courses/${crs.slug || crs.id}`}
+                          className="text-neutral-400 hover:text-white text-xs flex items-center gap-1"
+                        >
+                          <span>Preview</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 5. WEBINARS TAB (Webinar :: Item) */}
+          {activeTab === "webinars" && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#1E1E1E]">
+                <div>
+                  <h2 className="text-2xl font-display text-white">Live Masterclasses & Webinars</h2>
+                  <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                    Webinar :: Item =&gt; Schedule interactive live rooms, set capacity, and issue single-use passes.
+                  </p>
+                </div>
+                <Link
+                  href="/trader/webinars/new"
+                  className="bg-[#8BE000] text-black font-bold text-xs px-4 py-2.5 hover:bg-[#9BF500] flex items-center gap-2 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Schedule Webinar</span>
+                </Link>
+              </div>
+
+              {webinars.length === 0 ? (
+                <div className="border border-[#1E1E1E] bg-[#111111] p-12 text-center space-y-3">
+                  <Video className="w-10 h-10 text-neutral-600 mx-auto" />
+                  <p className="text-sm text-neutral-400">No live webinars scheduled yet.</p>
+                  <Link
+                    href="/trader/webinars/new"
+                    className="btn-lime text-black font-bold text-xs px-4 py-2 inline-block"
+                  >
+                    Schedule Live Session
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {webinars.map((web) => (
+                    <div
+                      key={web.id}
+                      className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-4 hover:border-[#2E2E2E] transition flex flex-col justify-between"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <span className="text-[10px] bg-red-950 text-red-400 font-bold px-2 py-0.5 border border-red-800">
+                            UPCOMING
+                          </span>
+                          <span className="text-xs text-white font-bold">{formatPrice(web.price)}</span>
+                        </div>
+                        <h3 className="text-xl font-display text-white">{web.name}</h3>
+                        <p className="text-xs text-neutral-400 line-clamp-2 font-sans">{web.description}</p>
+                        <div className="text-xs text-neutral-400 space-y-1 font-mono pt-2 border-t border-[#1C1C1C]">
+                          <div>Schedule: <strong className="text-white">{web.date} @ {web.startTime}</strong></div>
+                          <div>Duration: <strong className="text-white">{web.durationMinutes} mins</strong></div>
+                          <div>Capacity: <strong className="text-white">{web.filledSeats || 0} / {web.maxAttendees || 100}</strong> seats filled</div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-[#1E1E1E] flex items-center justify-between">
+                        <button
+                          onClick={() => {
+                            setIssueItemId(web.id);
+                            setActiveTab("access_codes");
+                          }}
+                          className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-[#8BE000] text-xs px-3 py-1.5 flex items-center gap-1.5 transition"
+                        >
+                          <KeyRound className="w-3 h-3" />
+                          <span>Issue Single-Use Code</span>
+                        </button>
+                        <Link
+                          href={web.meetingUrl || "/webinars"}
+                          className="btn-lime text-black text-xs px-3.5 py-1.5 font-bold flex items-center gap-1.5"
+                        >
+                          <Radio className="w-3 h-3 text-black" />
+                          <span>Go Live</span>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 6. SINGLE-USE ACCESS CODES TAB */}
+          {activeTab === "access_codes" && (
+            <div className="space-y-8">
+              {/* Code Issuance Form */}
+              <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
+                  <div>
+                    <h3 className="text-lg font-display text-white flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-[#8BE000]" />
+                      <span>Issue Single-Use Access Codes for Item</span>
+                    </h3>
+                    <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                      "Traders can issue access code for an item. Each access code can only be redeemed once."
+                    </p>
+                  </div>
+                  <span className="text-xs text-[#8BE000] font-bold bg-[#8BE000]/10 border border-[#8BE000]/30 px-2 py-0.5">
+                    Single-Use Guarantee (maxUses: 1)
+                  </span>
+                </div>
+
+                {issueFeedback && (
+                  <div
+                    className={`p-3 text-xs border flex items-center gap-2 ${
+                      issueFeedback.success
+                        ? "bg-[#8BE000]/10 border-[#8BE000] text-[#8BE000]"
+                        : "bg-red-950/40 border-red-800 text-red-400"
+                    }`}
+                  >
+                    {issueFeedback.success ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    <span>{issueFeedback.msg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleIssueAccessCodes} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Item Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Select Target Item (Strategy, Course, Webinar) *
+                      </label>
+                      <select
+                        value={issueItemId}
+                        onChange={(e) => setIssueItemId(e.target.value)}
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      >
+                        {items.map((it) => (
+                          <option key={it.id} value={it.id}>
+                            [{it.type}] {it.name} — {formatPrice(it.price)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Quantity */}
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Quantity of Single-Use Codes to Generate
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={issueQuantity}
+                        onChange={(e) => setIssueQuantity(Math.max(1, Math.min(50, Number(e.target.value))))}
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-[11px] text-neutral-400 font-sans">
+                      Redeeming this code by an investor automatically generates an invoice and puts platform fee debt on your trader account.
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={isIssuingCodes}
+                      className="bg-[#8BE000] text-black font-bold text-xs px-6 py-2.5 hover:bg-[#9BF500] transition flex items-center gap-2"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>{isIssuingCodes ? "Generating..." : "Generate Codes"}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Issued Codes Table */}
+              <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
+                  <h3 className="text-lg font-display text-white">Issued Single-Use Codes Ledger</h3>
+                  <div className="text-xs text-neutral-400">
+                    Total Codes: <span className="text-white font-bold">{accessCodes.length}</span>
+                  </div>
+                </div>
+
+                {accessCodes.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-neutral-500">
+                    No access codes issued yet. Use the generator above.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#1E1E1E] text-neutral-500 text-[10px] uppercase">
+                          <th className="py-2.5 px-3">Access Code</th>
+                          <th className="py-2.5 px-3">Target Item</th>
+                          <th className="py-2.5 px-3">Item Price</th>
+                          <th className="py-2.5 px-3">Single-Use Status</th>
+                          <th className="py-2.5 px-3">Redeemed By</th>
+                          <th className="py-2.5 px-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#1A1A1A]">
+                        {accessCodes.map((cd) => (
+                          <tr key={cd.id} className="hover:bg-[#161616] transition">
+                            <td className="py-3 px-3 font-bold text-[#8BE000] font-mono whitespace-nowrap">
+                              {cd.code}
+                            </td>
+                            <td className="py-3 px-3 text-white">
+                              <span className="text-[10px] text-neutral-400 mr-1.5">[{cd.itemType}]</span>
+                              <span>{cd.itemName}</span>
+                            </td>
+                            <td className="py-3 px-3 text-neutral-300 whitespace-nowrap">
+                              {formatPrice(cd.itemPrice)}
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              {cd.isRedeemed ? (
+                                <span className="text-[10px] bg-neutral-800 text-neutral-400 px-2 py-0.5 border border-neutral-700">
+                                  CONSUMED (1/1 USED)
+                                </span>
+                              ) : (
+                                <span className="text-[10px] bg-[#8BE000]/15 text-[#8BE000] px-2 py-0.5 border border-[#8BE000]/40 font-bold">
+                                  AVAILABLE (0/1 USED)
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-neutral-400 whitespace-nowrap">
+                              {cd.redeemedByUserEmail || "Not yet redeemed"}
+                            </td>
+                            <td className="py-3 px-3 text-right whitespace-nowrap">
+                              <button
+                                onClick={() => copyToClipboard(cd.code, cd.id)}
+                                className="bg-[#1C1C1C] hover:bg-[#2A2A2A] text-white px-2.5 py-1 text-[11px] border border-[#333] transition"
+                              >
+                                {copiedId === cd.id ? "Copied ✓" : "Copy Code"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 7. INVOICING & TRADER ACCOUNT DEBT LEDGER TAB */}
+          {activeTab === "invoices" && (
+            <div className="space-y-8">
+              {/* Debt Explanation Banner */}
+              <div className="border border-amber-900/50 bg-[#140F04] p-6 space-y-2">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Single-Use Redemption Account Debt Rule</span>
+                </div>
+                <p className="text-xs text-neutral-300 font-sans leading-relaxed">
+                  "Redeem an access code =&gt; Put a debt on the trader's account. We also do invoicing on this to track application performance."
+                  When an investor redeems an access code, 360° Markets records the total item value ($GMV) and registers the 20% platform commission fee as an unsettled debt on the trader's ledger.
+                </p>
+              </div>
+
+              {/* Debt & Performance Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-1">
+                  <div className="text-xs text-neutral-400 uppercase tracking-widest">Total Redemptions Volume</div>
+                  <div className="text-3xl font-display text-white">{formatPrice(financialStats.totalGmv)}</div>
+                  <div className="text-[11px] text-neutral-500">{financialStats.totalRedemptions} Access Codes Consumed</div>
+                </div>
+
+                <div className="bg-[#111111] border border-amber-900/50 p-6 space-y-1">
+                  <div className="text-xs text-amber-400 uppercase tracking-widest">Platform Debt Outstanding</div>
+                  <div className="text-3xl font-display text-amber-400">{formatPrice(financialStats.totalPlatformDebt)}</div>
+                  <div className="text-[11px] text-neutral-500">20% Platform Fee Debt on Redemptions</div>
+                </div>
+
+                <div className="bg-[#111111] border border-[#1E1E1E] p-6 space-y-1">
+                  <div className="text-xs text-neutral-400 uppercase tracking-widest">Trader Net Value</div>
+                  <div className="text-3xl font-display text-[#8BE000]">
+                    {formatPrice(financialStats.totalGmv - financialStats.totalPlatformDebt)}
+                  </div>
+                  <div className="text-[11px] text-neutral-500">80% Net Platform Realization</div>
+                </div>
+              </div>
+
+              {/* Invoices Table */}
+              <div className="border border-[#1E1E1E] bg-[#111111] p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#1E1E1E] pb-3">
+                  <h3 className="text-lg font-display text-white">Itemized Redemptions & Debt Invoices</h3>
+                  <div className="text-xs text-neutral-400">
+                    Invoices Generated: <span className="text-white font-bold">{invoices.length}</span>
+                  </div>
+                </div>
+
+                {invoices.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-neutral-500">
+                    No redemption invoices generated yet. Invoices appear as subscribers redeem access codes.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#1E1E1E] text-neutral-500 text-[10px] uppercase">
+                          <th className="py-2.5 px-3">Invoice No.</th>
+                          <th className="py-2.5 px-3">Redeemed At</th>
+                          <th className="py-2.5 px-3">Item Unlocked</th>
+                          <th className="py-2.5 px-3">Access Code</th>
+                          <th className="py-2.5 px-3">Item Price</th>
+                          <th className="py-2.5 px-3">Trader Net</th>
+                          <th className="py-2.5 px-3">Account Debt</th>
+                          <th className="py-2.5 px-3 text-right">View</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#1A1A1A]">
+                        {invoices.map((inv) => (
+                          <tr key={inv.id} className="hover:bg-[#161616] transition">
+                            <td className="py-3 px-3 font-bold text-white whitespace-nowrap font-mono">
+                              {inv.invoiceNumber}
+                            </td>
+                            <td className="py-3 px-3 text-neutral-400 whitespace-nowrap">
+                              {new Date(inv.redeemedAt).toLocaleDateString()}
+                            </td>
+                            <td className="py-3 px-3 text-white max-w-xs truncate">
+                              <span className="text-[10px] text-neutral-400 mr-1">[{inv.itemType}]</span>
+                              <span>{inv.itemName}</span>
+                            </td>
+                            <td className="py-3 px-3 font-mono text-[#8BE000] whitespace-nowrap">
+                              {inv.accessCode}
+                            </td>
+                            <td className="py-3 px-3 text-white whitespace-nowrap">
+                              {formatPrice(inv.itemPrice)}
+                            </td>
+                            <td className="py-3 px-3 text-neutral-300 whitespace-nowrap">
+                              {formatPrice(inv.traderNet)}
+                            </td>
+                            <td className="py-3 px-3 font-bold text-amber-400 whitespace-nowrap">
+                              {formatPrice(inv.debtAmount)}
+                            </td>
+                            <td className="py-3 px-3 text-right whitespace-nowrap">
+                              <button
+                                onClick={() => setSelectedInvoice(inv)}
+                                className="bg-[#1A1A1A] hover:bg-[#262626] border border-[#333] text-white px-2.5 py-1 text-[11px]"
+                              >
+                                View Invoice
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* MODAL: CREATE QUANT STRATEGY (Strategy :: Item) */}
+        <AnimatePresence>
+          {showCreateStrategyModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-lg bg-[#111111] border border-[#2E2E2E] p-6 text-white font-mono space-y-6 shadow-2xl"
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#111111] border border-[#2E2E2E] w-full max-w-xl p-6 sm:p-8 space-y-6 shadow-2xl"
               >
-                <div className="flex justify-between items-center border-b border-[#222] pb-3">
-                  <div className="flex items-center gap-2">
-                    <Edit3 className="w-4 h-4 text-[#8BE000]" />
-                    <h4 className="text-base font-display font-bold">
-                      MODIFY CODE: <span className="text-[#8BE000]">{editingTraderCode.code}</span>
-                    </h4>
+                <div className="flex items-center justify-between border-b border-[#222] pb-3">
+                  <div>
+                    <h3 className="text-xl font-display text-white">Create Quantitative Strategy</h3>
+                    <p className="text-xs text-neutral-400 font-sans mt-0.5">
+                      Strategy :: Item =&gt; Strategy ID: string, ntfy.sh topic name: string
+                    </p>
                   </div>
                   <button
-                    onClick={() => setEditingTraderCode(null)}
-                    className="text-neutral-500 hover:text-white text-sm"
+                    onClick={() => setShowCreateStrategyModal(false)}
+                    className="text-neutral-500 hover:text-white text-lg font-bold"
                   >
                     ✕
                   </button>
                 </div>
 
-                {editErrorMsg && (
-                  <div className="bg-red-950/40 border border-red-800 p-3 text-xs text-red-400 flex items-center gap-2">
-                    <XCircle className="w-4 h-4 shrink-0" />
-                    <span>{editErrorMsg}</span>
+                {stratError && (
+                  <div className="p-3 bg-red-950/40 border border-red-800 text-red-400 text-xs">
+                    {stratError}
                   </div>
                 )}
 
-                <form onSubmit={handleSaveTraderEdit} className="space-y-4 text-xs">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-neutral-400 uppercase">Code String</label>
-                      <input
-                        type="text"
-                        required
-                        value={editString}
-                        onChange={(e) => setEditString(e.target.value.toUpperCase())}
-                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white font-bold uppercase focus:border-[#8BE000] outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-neutral-400 uppercase">What it Unlocks</label>
-                      <select
-                        value={editScope}
-                        onChange={(e) => setEditScope(e.target.value as any)}
-                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
-                      >
-                        <option value="COURSE">Specific Course</option>
-                        <option value="TRADER_BUNDLE">All My Courses + Signals</option>
-                        <option value="SIGNALS">Signals Only</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {editScope === "COURSE" && (
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-neutral-400 uppercase">Target Course</label>
-                      <select
-                        value={editCourseId}
-                        onChange={(e) => setEditCourseId(e.target.value)}
-                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
-                      >
-                        {coursesList.map((crs) => (
-                          <option key={crs.id} value={crs.id}>
-                            {crs.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-neutral-400 uppercase">Duration (Days)</label>
-                      <select
-                        value={editDuration}
-                        onChange={(e) => setEditDuration(Number(e.target.value))}
-                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
-                      >
-                        <option value={30}>30 Days</option>
-                        <option value={60}>60 Days</option>
-                        <option value={90}>90 Days</option>
-                        <option value={180}>180 Days</option>
-                        <option value={365}>365 Days</option>
-                        <option value={9999}>Lifetime Unlimited</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-neutral-400 uppercase">Max Redemptions</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={editMaxUses}
-                        onChange={(e) => setEditMaxUses(Number(e.target.value))}
-                        className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-neutral-400 uppercase">Status</label>
-                    <select
-                      value={editStatus}
-                      onChange={(e) => setEditStatus(e.target.value as any)}
-                      className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
-                    >
-                      <option value="ACTIVE">ACTIVE</option>
-                      <option value="REVOKED">REVOKED</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-neutral-400 uppercase">Notes</label>
+                <form onSubmit={handleCreateStrategy} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                      Strategy Name *
+                    </label>
                     <input
                       type="text"
-                      value={editNotes}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-[#333] px-3 py-2 text-white focus:border-[#8BE000] outline-none"
+                      value={stratName}
+                      onChange={(e) => setStratName(e.target.value)}
+                      placeholder="e.g. NVDA Institutional Volatility Breakout"
+                      className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
                     />
                   </div>
 
-                  <div className="pt-4 flex justify-end gap-3 border-t border-[#222]">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                      Description & Quantitative Edge
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={stratDescription}
+                      onChange={(e) => setStratDescription(e.target.value)}
+                      placeholder="e.g. Algorithmic trend following across NASDAQ-100 equities with dynamic ATR stop-loss positioning."
+                      className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Access Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={stratPrice}
+                        onChange={(e) => setStratPrice(Number(e.target.value))}
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                        Custom Strategy ID (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={stratCustomId}
+                        onChange={(e) => setStratCustomId(e.target.value)}
+                        placeholder="e.g. STRAT-NVDA-QUANT"
+                        className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
+                      Secret ntfy.sh Topic Name (Optional — Auto-generated if left blank)
+                    </label>
+                    <input
+                      type="text"
+                      value={stratCustomTopic}
+                      onChange={(e) => setStratCustomTopic(e.target.value)}
+                      placeholder="e.g. 360m_strat_nvda_quant_882"
+                      className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
+                    />
+                    <p className="text-[10px] text-neutral-500 mt-1">
+                      * Secret topic code: only you know this until an investor redeems an access code!
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-[#222]">
                     <button
                       type="button"
-                      onClick={() => setEditingTraderCode(null)}
-                      className="px-4 py-2 bg-[#1A1A1A] hover:bg-[#252525] border border-[#333] text-neutral-300"
+                      onClick={() => setShowCreateStrategyModal(false)}
+                      className="bg-[#1A1A1A] text-neutral-300 px-4 py-2 text-xs hover:text-white"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      disabled={isSavingEdit}
-                      className="btn-lime text-black font-bold px-5 py-2 flex items-center gap-1.5"
+                      disabled={isCreatingStrat}
+                      className="bg-[#8BE000] text-black font-bold text-xs px-6 py-2 hover:bg-[#9BF500] transition"
                     >
-                      <span>{isSavingEdit ? "Saving..." : "Save Changes"}</span>
+                      {isCreatingStrat ? "Creating..." : "Save Strategy"}
                     </button>
                   </div>
                 </form>
               </motion.div>
             </div>
           )}
+        </AnimatePresence>
 
-          {/* Action Hubs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">
-              <h3 className="text-xl font-display font-medium text-white tracking-tight uppercase">{t.traderHubActionPublishTitle}</h3>
-              <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                {t.traderHubActionPublishDesc}
-              </p>
-              <Link href="/trader/courses/new" className="btn-lime px-6 py-3 text-xs font-bold inline-block text-black">
-                {t.traderHubCreateNewCourse}
-              </Link>
-            </div>
+        {/* MODAL: INVOICE VIEWER */}
+        <AnimatePresence>
+          {selectedInvoice && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#111111] border border-[#2E2E2E] w-full max-w-lg p-6 sm:p-8 space-y-6 shadow-2xl"
+              >
+                <div className="flex items-center justify-between border-b border-[#222] pb-4">
+                  <div>
+                    <span className="text-[10px] text-[#8BE000] font-bold tracking-widest uppercase">
+                      360° MARKETS OFFICIAL INVOICE
+                    </span>
+                    <h3 className="text-xl font-display text-white mt-0.5">{selectedInvoice.invoiceNumber}</h3>
+                  </div>
+                  <button
+                    onClick={() => setSelectedInvoice(null)}
+                    className="text-neutral-500 hover:text-white text-lg font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-            <div className="bg-[#111111] border border-[#1E1E1E] p-8 space-y-4 hover:border-[#2E2E2E] transition-colors">
-              <h3 className="text-xl font-display font-medium text-white tracking-tight uppercase">{t.traderHubActionSettlementTitle}</h3>
-              <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                {t.traderHubActionSettlementDesc}
-              </p>
-              <Link href="/trader/earnings" className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-white px-6 py-3 text-xs font-mono inline-block transition">
-                {t.traderHubViewRevenueLedger}
-              </Link>
+                <div className="space-y-4 text-xs font-mono">
+                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-[#222]">
+                    <div>
+                      <span className="text-neutral-500 block text-[10px]">REDEEMED AT</span>
+                      <span className="text-white">
+                        {new Date(selectedInvoice.redeemedAt).toLocaleDateString()} {new Date(selectedInvoice.redeemedAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[10px]">SUBSCRIBER</span>
+                      <span className="text-white truncate block">{selectedInvoice.subscriberEmail}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 py-2">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Item Name:</span>
+                      <span className="text-white font-bold">{selectedInvoice.itemName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Item Type:</span>
+                      <span className="text-[#8BE000] font-bold">[{selectedInvoice.itemType}]</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Access Code Consumed:</span>
+                      <span className="text-white font-mono">{selectedInvoice.accessCode}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-[#0A0A0A] border border-[#222] space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Gross Item Value (GMV):</span>
+                      <span className="text-white font-bold">{formatPrice(selectedInvoice.itemPrice)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Platform Fee (20%):</span>
+                      <span className="text-amber-400 font-bold">{formatPrice(selectedInvoice.platformFee)}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-[#222]">
+                      <span className="text-neutral-300 font-bold">Trader Net Credited:</span>
+                      <span className="text-[#8BE000] font-bold text-sm">{formatPrice(selectedInvoice.traderNet)}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-amber-950/20 border border-amber-900/40 text-amber-400 text-[11px] leading-relaxed">
+                    Account Debt Status: <strong>{selectedInvoice.debtStatus}</strong>.
+                    Debt of {formatPrice(selectedInvoice.debtAmount)} placed on trader account for single-use coupon settlement.
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => setSelectedInvoice(null)}
+                    className="bg-[#1A1A1A] hover:bg-[#262626] border border-[#333] text-white px-5 py-2 text-xs"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        </div>
+          )}
+        </AnimatePresence>
       </div>
     </AuthGuard>
   );

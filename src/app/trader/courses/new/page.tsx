@@ -299,6 +299,28 @@ export default function CourseBuilderPage() {
         }).then(() => {}, () => {});
       } catch (e) {}
 
+      // 3. Sync to unified Item Store (Course :: Item) for single-use access code issuance & debt invoicing
+      try {
+        await fetch("/api/items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "COURSE",
+            name: title,
+            description,
+            price: Number(price) || 0,
+            traderId: user.id,
+            traderName: user.displayName || user.name || "Alex Morgan",
+            slug: generatedSlug,
+            category,
+            level,
+            thumbnail: thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+          }),
+        });
+      } catch (itemErr) {
+        console.warn("Item sync warning:", itemErr);
+      }
+
       confetti({ particleCount: 150, spread: 85, origin: { y: 0.6 } });
       setTimeout(() => router.push("/trader"), 1000);
     } catch (err: any) {
@@ -308,9 +330,8 @@ export default function CourseBuilderPage() {
     }
   };
 
-  // If not certified, show locked state
   return (
-    <AuthGuard allowedRoles={["TRADER"]}>
+    <AuthGuard allowedRoles={["TRADER", "ADMIN"]}>
       <div className="min-h-screen bg-[#080808] text-white py-12 lg:py-16 font-mono selection:bg-[#8BE000] selection:text-black">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           {/* Header */}

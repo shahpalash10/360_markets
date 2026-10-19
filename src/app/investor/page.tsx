@@ -60,6 +60,38 @@ export default function InvestorDashboardPage() {
     setIsRedeeming(true);
     setRedeemFeedback(null);
     try {
+      // 1. First check single-use access code engine
+      try {
+        const itemRes = await fetch("/api/access-codes/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: targetCode,
+            subscriberId: user?.id || "user-subscriber",
+            subscriberEmail: user?.email || "investor@360markets.io",
+            subscriberName: user?.displayName || user?.name || "Verified Investor",
+          }),
+        });
+        const itemData = await itemRes.json();
+        if (itemData.ok) {
+          confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
+          setRedeemFeedback({
+            type: "success",
+            message: itemData.message || `Code "${targetCode.toUpperCase()}" successfully redeemed!`,
+          });
+          setRedeemCodeInput("");
+          setShowRedeemForm(false);
+          return;
+        } else if (itemData.error && itemData.error.includes("already been redeemed")) {
+          setRedeemFeedback({
+            type: "error",
+            message: itemData.error,
+          });
+          return;
+        }
+      } catch (e) {}
+
+      // 2. Fallback to legacy invitation code engine
       const res = await redeemSignalCode(targetCode);
       if (res.success) {
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
