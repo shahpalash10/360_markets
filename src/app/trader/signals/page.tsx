@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
+import { getTraderChannelHash } from "@/lib/channel-hash";
 import {
   Send,
   Radio,
@@ -46,6 +47,16 @@ export default function TraderSignalsStudioPage() {
   const [successStatus, setSuccessStatus] = useState<string | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>("GLOBAL");
+
+  // Non-readable unique hash channel derived from trader credentials (name & email)
+  const activeHashChannel = useMemo(() => {
+    return getTraderChannelHash({
+      traderId: user?.id,
+      traderEmail: user?.email,
+      traderName: user?.displayName || user?.name || "Trader",
+      scopeId: selectedCourseId,
+    });
+  }, [user, selectedCourseId]);
 
   // Load available courses for channel routing
   useEffect(() => {
@@ -98,10 +109,12 @@ export default function TraderSignalsStudioPage() {
           timeframe,
           notes,
           traderId: user?.id,
+          traderEmail: user?.email,
           userRole: role,
           courseId: selectedCourseId !== "GLOBAL" ? selectedCourseId : undefined,
           courseSlug,
           courseName,
+          channelTopic: activeHashChannel,
           providerName: user?.displayName || user?.name || "Verified Quantitative Trader",
           providerAvatar: user?.avatarUrl,
         }),
@@ -113,7 +126,7 @@ export default function TraderSignalsStudioPage() {
       }
 
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-      setSuccessStatus(`Signal for ${symbol} successfully broadcasted & pushed to ntfy.sh (topic: ${data.topic})!`);
+      setSuccessStatus(`Signal for ${symbol} successfully broadcasted to your private hash channel: ntfy.sh/${data.topic || activeHashChannel}`);
 
       // Register custom provider voucher directly into Database Ledger
       try {
@@ -227,12 +240,13 @@ export default function TraderSignalsStudioPage() {
           <div className="space-y-2 pb-4 border-b border-[#222]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <label className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">
-                NOTIFICATION CHANNEL / COURSE SCOPE
+                TRADER PRIVATE HASH CHANNEL (NON-READABLE)
               </label>
-              <span className="text-[10px] text-[#8BE000] font-mono">
-                {selectedCourseId === "GLOBAL"
-                  ? "ntfy.sh/360markets_signals"
-                  : `ntfy.sh/360markets_signals_${(courses.find((c) => c.id === selectedCourseId)?.slug || selectedCourseId).toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "")}`}
+              <span className="text-[10px] text-[#8BE000] font-mono flex items-center gap-1.5">
+                <span className="text-neutral-500">Channel:</span>
+                <span className="bg-[#181818] border border-[#333] px-2 py-0.5 text-[#8BE000] font-bold">
+                  ntfy.sh/{activeHashChannel}
+                </span>
               </span>
             </div>
             <select
@@ -240,18 +254,25 @@ export default function TraderSignalsStudioPage() {
               onChange={(e) => setSelectedCourseId(e.target.value)}
               className="w-full bg-[#181818] border border-[#333] focus:border-[#8BE000] text-white p-3 font-mono text-xs focus:outline-none"
             >
-              <option value="GLOBAL">🌐 Global Feed (ntfy.sh/360markets_signals - All Subscribers)</option>
+              <option value="GLOBAL">
+                🔒 Primary Private Hash Channel ({getTraderChannelHash({ traderId: user?.id, traderEmail: user?.email, traderName: user?.displayName || user?.name, scopeId: "GLOBAL" })})
+              </option>
               {courses.map((course) => {
-                const cleanSlug = (course.slug || course.id).toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "");
+                const courseHash = getTraderChannelHash({
+                  traderId: user?.id,
+                  traderEmail: user?.email,
+                  traderName: user?.displayName || user?.name,
+                  scopeId: course.id || course.slug,
+                });
                 return (
                   <option key={course.id} value={course.id}>
-                    📚 {course.title} (ntfy.sh/360markets_signals_{cleanSlug})
+                    📚 {course.title} (Channel: {courseHash})
                   </option>
                 );
               })}
             </select>
             <p className="text-[10px] text-neutral-500 font-sans">
-              Choose whether this signal is broadcast to all platform users or restricted exclusively to students enrolled in a specific course.
+              Non-readable private channel generated uniquely from your trader credentials (name &amp; email). Only authorized subscribers who redeem your access code can receive signals.
             </p>
           </div>
 
@@ -404,12 +425,9 @@ export default function TraderSignalsStudioPage() {
             <div className="flex items-center gap-2 text-neutral-400 text-xs font-sans">
               <Bell className="w-4 h-4 text-[#8BE000]" />
               <span>
-                Will push immediately to{" "}
-                <strong>
-                  ntfy.sh/
-                  {selectedCourseId === "GLOBAL"
-                    ? "360markets_signals"
-                    : `360markets_signals_${(courses.find((c) => c.id === selectedCourseId)?.slug || selectedCourseId).toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "")}`}
+                Will push immediately to trader private hash channel:{" "}
+                <strong className="text-[#8BE000] font-mono">
+                  ntfy.sh/{activeHashChannel}
                 </strong>
               </span>
             </div>

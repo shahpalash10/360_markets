@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getTraderChannelHash } from "@/lib/channel-hash";
 
 export type ItemType = "STRATEGY" | "COURSE" | "WEBINAR";
 
@@ -110,8 +111,22 @@ function ensureDataDir() {
 }
 
 // ---------------------------------------------------------------------------
-// DEFAULT SEED DATA
+// DEFAULT SEED DATA (Non-readable hash channels unique to educator)
 // ---------------------------------------------------------------------------
+
+const DEFAULT_NVDA_TOPIC = getTraderChannelHash({
+  traderId: "user-alex-demo",
+  traderName: "Alex Morgan",
+  traderEmail: "alex@markets.io",
+  scopeId: "STRAT-NVDA-QUANT",
+});
+
+const DEFAULT_TECH_TOPIC = getTraderChannelHash({
+  traderId: "user-alex-demo",
+  traderName: "Alex Morgan",
+  traderEmail: "alex@markets.io",
+  scopeId: "STRAT-TECH-ALPHA",
+});
 
 const DEFAULT_ITEMS: ItemRecord[] = [
   {
@@ -123,7 +138,7 @@ const DEFAULT_ITEMS: ItemRecord[] = [
     traderId: "user-alex-demo",
     traderName: "Alex Morgan",
     strategyId: "STRAT-NVDA-QUANT",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     signalsCount: 16,
     activeSubscribers: 42,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
@@ -138,7 +153,7 @@ const DEFAULT_ITEMS: ItemRecord[] = [
     traderId: "user-alex-demo",
     traderName: "Alex Morgan",
     strategyId: "STRAT-TECH-ALPHA",
-    ntfyTopic: "360m_strat_tech_alpha_419",
+    ntfyTopic: DEFAULT_TECH_TOPIC,
     signalsCount: 9,
     activeSubscribers: 28,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
@@ -195,7 +210,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 2.54",
     timeframe: "4H / SWING",
     notes: "Consolidation breakout confirmed on 4-hour chart. Dark pool order flow shows heavy support at $127.",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 75).toISOString(), // ~1 hour ago
   },
@@ -214,7 +229,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 2.54",
     timeframe: "4H / SWING",
     notes: "Target 1 reached. Protecting initial capital by moving stop loss to entry.",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(), // 4 hours ago
   },
@@ -233,7 +248,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 3.18",
     timeframe: "SWING",
     notes: "Call wall shift higher to $280 strike. Gamma profile indicates strong upward squeeze probability.",
-    ntfyTopic: "360m_strat_tech_alpha_419",
+    ntfyTopic: DEFAULT_TECH_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(), // 14 hours ago (past 24h!)
   },
@@ -252,7 +267,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 3.07",
     timeframe: "POSITION",
     notes: "Southbound fund inflow acceleration. Retesting 50-day EMA support with decreasing volume on pullbacks.",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago (past week!)
   },
@@ -271,7 +286,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 2.33",
     timeframe: "INTRADAY",
     notes: "Clean bounce off the daily POC with institutional bid volume supporting $223.50.",
-    ntfyTopic: "360m_strat_tech_alpha_419",
+    ntfyTopic: DEFAULT_TECH_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(), // 4 days ago (past week!)
   },
@@ -290,7 +305,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 3.00",
     timeframe: "SWING",
     notes: "Controlled stop loss executed according to risk parameters. Loss: -3.89%.",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 130).toISOString(), // 5.5 days ago (past week!)
   },
@@ -309,7 +324,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 2.25",
     timeframe: "SWING",
     notes: "Enterprise cloud contract pipeline strength reported. Break above 20-day moving average.",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(), // 12 days ago (past month!)
   },
@@ -328,7 +343,7 @@ const DEFAULT_SIGNALS: StrategySignalRecord[] = [
     riskReward: "1 : 2.25",
     timeframe: "SWING",
     notes: "Final target reached on high volume. Trade completed successfully.",
-    ntfyTopic: "360m_strat_nvda_quant_882",
+    ntfyTopic: DEFAULT_NVDA_TOPIC,
     ntfyStatus: "SENT",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(), // 14 days ago (past month!)
   },
@@ -595,9 +610,12 @@ export async function createItem(data: {
       strategyId = `STRAT-${cleanName || "QUANT"}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     }
     if (!ntfyTopic) {
-      const secretHash = Math.random().toString(36).substring(2, 8);
-      const cleanSlug = strategyId.toLowerCase().replace(/[^a-z0-9]/g, "_");
-      ntfyTopic = `360m_${cleanSlug}_${secretHash}`;
+      ntfyTopic = getTraderChannelHash({
+        traderId: data.traderId,
+        traderName: data.traderName,
+        traderEmail: (data as any).traderEmail,
+        scopeId: strategyId,
+      });
     }
   }
 
@@ -684,7 +702,13 @@ export async function pushSignal(data: {
     return { ok: false, signal: null as any, error: `Strategy with ID "${data.strategyId}" not found.` };
   }
 
-  const topic = strategy.ntfyTopic || `360m_strat_${strategy.strategyId?.toLowerCase()}`;
+  const topic =
+    strategy.ntfyTopic ||
+    getTraderChannelHash({
+      traderId: data.traderId,
+      traderName: data.traderName,
+      scopeId: strategy.strategyId || strategy.id,
+    });
   const signals = loadSignals();
   const sigIndex = signals.length;
   const sigId = `S${sigIndex}`;

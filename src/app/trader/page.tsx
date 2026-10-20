@@ -200,6 +200,7 @@ export default function TraderStudioPage() {
           ntfyTopic: stratCustomTopic.trim() || undefined,
           traderId: user?.id || "trader",
           traderName: user?.displayName || user?.name || "Alex Morgan",
+          traderEmail: user?.email,
         }),
       });
 
@@ -255,6 +256,7 @@ export default function TraderStudioPage() {
           notes: signalNotes,
           traderId: user?.id || "trader",
           traderName: user?.displayName || user?.name || "Alex Morgan",
+          traderEmail: user?.email,
         }),
       });
 
@@ -298,6 +300,7 @@ export default function TraderStudioPage() {
           quantity: Number(issueQuantity) || 1,
           traderId: user?.id || "trader",
           traderName: user?.displayName || user?.name || "Alex Morgan",
+          traderEmail: user?.email,
         }),
       });
 
@@ -1529,17 +1532,17 @@ export default function TraderStudioPage() {
 
                   <div>
                     <label className="block text-xs font-bold text-neutral-300 uppercase mb-1">
-                      Secret ntfy.sh Topic Name (Optional — Auto-generated if left blank)
+                      Secret ntfy.sh Hash Channel (Optional — Auto-generated non-readable hash from your credentials if left blank)
                     </label>
                     <input
                       type="text"
                       value={stratCustomTopic}
                       onChange={(e) => setStratCustomTopic(e.target.value)}
-                      placeholder="e.g. 360m_strat_nvda_quant_882"
+                      placeholder="e.g. 360m_ch_8f4d92a10b47e2c91834dfa5"
                       className="w-full bg-[#181818] border border-[#2E2E2E] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8BE000]"
                     />
                     <p className="text-[10px] text-neutral-500 mt-1">
-                      * Secret topic code: only you know this until an investor redeems an access code!
+                      * Non-readable hash channel: uniquely generated from your trader credentials (name &amp; email). Kept secret until an investor redeems an access code!
                     </p>
                   </div>
 

@@ -23,6 +23,7 @@ import {
 import { Reveal } from "@/motion/components/Reveal";
 import { SplitTextReveal } from "@/motion/components/SplitTextReveal";
 import { useLanguage } from "@/lib/language-context";
+import { getTraderChannelHash } from "@/lib/channel-hash";
 import { useAuth } from "@/lib/auth-context";
 import { UnlockModal } from "@/components/modals/UnlockModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,6 +48,7 @@ interface TechnicalSignal {
   courseSlug?: string;
   courseName?: string;
   channelTopic?: string;
+  traderId?: string;
 }
 
 function SignalsContent() {
@@ -130,23 +132,17 @@ function SignalsContent() {
     fetchSignals();
   }, []);
 
-  // Compute active ntfy topic based on selected channel
+  // Compute active ntfy topic based on selected channel (private non-readable hash channels)
   const activeTopic = useMemo(() => {
-    if (selectedChannel === "ALL" || selectedChannel === "GLOBAL") {
-      return "360markets_signals";
+    if (selectedChannel && selectedChannel !== "ALL" && selectedChannel !== "GLOBAL") {
+      const matched = signals.find((s) => s.channelTopic && (s.courseSlug === selectedChannel || s.courseId === selectedChannel));
+      if (matched?.channelTopic) return matched.channelTopic;
+      return getTraderChannelHash({ scopeId: selectedChannel });
     }
-    const course = courses.find(
-      (c) =>
-        (c.slug && c.slug.toLowerCase().replace(/[^a-z0-9_-]/g, "_") === selectedChannel) ||
-        c.id === selectedChannel ||
-        c.slug === selectedChannel
-    );
-    const cleanSlug = (course?.slug || selectedChannel)
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]/g, "_")
-      .replace(/^_+|_+$/g, "");
-    return `360markets_signals_${cleanSlug}`;
-  }, [selectedChannel, courses]);
+    const firstWithTopic = signals.find((s) => s.channelTopic);
+    if (firstWithTopic?.channelTopic) return firstWithTopic.channelTopic;
+    return getTraderChannelHash({ scopeId: "default" });
+  }, [selectedChannel, signals]);
 
   // Listen to active ntfy.sh SSE stream for live real-time push events!
   useEffect(() => {
@@ -367,7 +363,7 @@ function SignalsContent() {
                     : "bg-[#181818] border border-[#333] text-neutral-400 hover:text-white"
                 }`}
               >
-                📢 Global Feed (360markets_signals)
+                🔒 Primary Private Channels
               </button>
 
               {courses.map((course) => {
@@ -478,7 +474,7 @@ function SignalsContent() {
               const isBuy = signal.action === "BUY";
               const hasAccess = canAccessSignal(signal);
               const isCourseSignal = Boolean(signal.courseId || signal.courseSlug);
-              const signalTopic = signal.channelTopic || (signal.courseSlug ? `360markets_signals_${signal.courseSlug}` : "360markets_signals");
+              const signalTopic = signal.channelTopic || getTraderChannelHash({ traderId: signal.traderId, traderName: signal.providerName, scopeId: signal.courseSlug || signal.id });
 
               return (
                 <motion.div
@@ -507,7 +503,7 @@ function SignalsContent() {
                           rel="noreferrer"
                           className="text-[#8BE000] hover:underline font-mono ml-2 shrink-0 flex items-center gap-0.5"
                         >
-                          <span>ntfy/{signalTopic.replace("360markets_signals_", "")}</span>
+                          <span>ntfy/{signalTopic.length > 20 ? signalTopic.slice(0, 16) + "..." : signalTopic}</span>
                           <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                       </div>

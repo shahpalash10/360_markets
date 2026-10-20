@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
+import { getTraderChannelHash } from "@/lib/channel-hash";
 
 export interface TechnicalSignal {
   id: string;
@@ -48,7 +49,7 @@ const SEED_SIGNALS: TechnicalSignal[] = [
     courseId: "stocks-the-beginning-to-the-end",
     courseSlug: "stocks_the_beginning_to_the_end",
     courseName: "Stocks: the beginning to the end",
-    channelTopic: "360markets_signals_stocks_the_beginning_to_the_end",
+    channelTopic: getTraderChannelHash({ traderId: "alex-morgan", traderName: "Alex Morgan", traderEmail: "alex@markets.io", scopeId: "stocks-the-beginning-to-the-end" }),
   },
   {
     id: "sig-002",
@@ -150,7 +151,7 @@ export async function GET() {
           courseId: s.course_id || diskMatch?.courseId || undefined,
           courseSlug: s.course_slug || diskMatch?.courseSlug || undefined,
           courseName: s.course_name || diskMatch?.courseName || undefined,
-          channelTopic: s.channel_topic || diskMatch?.channelTopic || (diskMatch?.courseSlug ? `360markets_signals_${diskMatch.courseSlug}` : undefined),
+          channelTopic: s.channel_topic || diskMatch?.channelTopic || (diskMatch?.courseSlug ? getTraderChannelHash({ traderId: s.trader_id, scopeId: diskMatch.courseSlug }) : undefined),
         };
       });
 
@@ -260,9 +261,16 @@ export async function POST(req: Request) {
     const rrRatio = risk > 0 ? `1 : ${(reward / risk).toFixed(2)}` : "1 : 2.5";
     const sigId = `sig-${Date.now()}`;
 
-    // Item 12: Determine course-specific ntfy notification channel
+    // Determine unique non-readable hash channel derived from trader credentials (name + email + id)
     const courseSlugClean = (courseSlug || "").toLowerCase().replace(/[^a-z0-9_-]/g, "_").replace(/^_+|_+$/g, "");
-    const topicName = courseSlugClean ? `360markets_signals_${courseSlugClean}` : "360markets_signals";
+    const topicName =
+      body.channelTopic ||
+      getTraderChannelHash({
+        traderId,
+        traderEmail: body.traderEmail || body.email,
+        traderName: providerName,
+        scopeId: courseId || courseSlugClean || "global",
+      });
 
     const newSignal: TechnicalSignal = {
       id: sigId,
